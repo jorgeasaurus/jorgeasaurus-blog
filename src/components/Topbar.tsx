@@ -7,7 +7,7 @@ export default function Topbar() {
     <nav className="topbar glass-panel" style={{ gridArea: 'topbar' }}>
       <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 14 }}>
         <div className="brand-mark" />
-        <span style={{ fontWeight: 700, fontSize: '1.05rem', color: '#fff' }}>Jorge Asaurus</span>
+        <span style={{ fontWeight: 700, fontSize: '1.05rem', color: '#fff' }}>Jorgeasaurus</span>
       </Link>
       <div style={{ display: 'flex', gap: 10 }}>
         <Link
