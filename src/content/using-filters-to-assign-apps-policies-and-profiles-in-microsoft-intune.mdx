@@ -1,0 +1,164 @@
+---
+title: "Using Filters to Assign Apps, Policies, and Profiles in Microsoft Intune"
+date: "2023-05-14"
+description: "A comprehensive guide to using Intune device filters to dynamically target devices based on properties like manufacturer, model, OS version, ownership, and more."
+tags: ["intune", "device-management", "microsoft", "tutorial"]
+---
+
+Filters, not just for social media anymore.
+
+Microsoft Intune provides a comprehensive set of tools for managing devices and applications. One of the features of Intune is filters, which are used to assign policies, apps, and profiles to devices based on the rules you create. Filters allow you to narrow the assignment scope of a policy and dynamically target devices based on device properties you enter.
+
+The following attributes can be used to either include or exclude devices from an assignment:
+
+- Device Name
+- Manufacturer
+- Model
+- Device Category
+- OS Version
+- IsRooted
+- Device Ownership
+- Enrollment Profile Name
+- Operating System SKU
+
+## How Filters Work
+
+Filters dynamically assess applicability of policies on devices:
+
+1. First, you create a filter that is reusable for any platform based on specific device properties, such as personal devices.
+2. Next, you assign a policy or app to a group and include or exclude the filter in the assignment.
+3. The filter is evaluated when a device enrolls, checks in with the Intune service, or when a policy evaluation occurs.
+4. Finally, you can view the filter results based on the evaluation.
+
+Here are some examples of how you can use filters:
+
+- Deploy a Windows device restriction policy to only the corporate devices in the Marketing department while excluding personal devices.
+- Deploy an iOS/iPadOS app to only the iPad devices in the Finance users group.
+- Deploy an Android mobile phone compliance policy to all users in the company, and exclude Android meeting room devices that don't support the mobile phone compliance policy settings.
+
+Filters are available for Android device administrator, Android Enterprise, iOS/iPadOS, macOS, and Windows 10/11.
+
+## Device Properties
+
+### Device Name
+
+```powershell
+(device.deviceName -eq "Jorge's Device")
+(device.deviceName -in ["Jorge's device", "Jon's device"])
+(device.deviceName -startsWith "J")
+```
+
+### Manufacturer
+
+```powershell
+(device.manufacturer -eq "Microsoft")
+(device.manufacturer -startsWith "mac")
+```
+
+### Model
+
+```powershell
+(device.model -eq "Surface Book 3")
+(device.model -in ["Surface Book 3", "Surface Book 2"])
+(device.model -startsWith "Surface Book")
+```
+
+### Device Category
+
+```powershell
+(device.deviceCategory -eq "Engineering devices")
+(device.deviceCategory -contains "Engineering")
+```
+
+### OS Version
+
+```powershell
+(device.osVersion -eq "14.2.1")
+(device.osVersion -startsWith "10.0.18362")
+```
+
+> Note: For Apple devices, the OSVersion property doesn't include Apple's Security Patch Version (SPV) information.
+
+### Rooted or Jailbroken Devices
+
+```powershell
+(device.isRooted -eq "True")
+```
+
+### Device Ownership
+
+```powershell
+(device.deviceOwnership -eq "Personal")
+```
+
+### Enrollment Profile
+
+```powershell
+(device.enrollmentProfileName -eq "DEP iPhones")
+(device.enrollmentProfileName -startsWith "Autopilot Profile")
+(device.enrollmentProfileName -ne $null)
+```
+
+### Operating System SKU
+
+```powershell
+(device.operatingSystemSKU -eq "Enterprise")
+(device.operatingSystemSKU -in ["Enterprise", "EnterpriseS", "EnterpriseN", "EnterpriseEval"])
+```
+
+## Advanced Rule Editing
+
+### Supported Operators
+
+| Operator | Description | Example |
+|----------|-------------|---------|
+| `-or` | Logical OR | `(device.manufacturer -eq "Samsung") or (device.model -contains "Galaxy Note")` |
+| `-and` | Logical AND | `(device.manufacturer -eq "Samsung") and (device.model -contains "Galaxy Note")` |
+| `-eq` | Equals | `(device.manufacturer -eq "Samsung")` |
+| `-ne` | Not equals | `(device.manufacturer -ne "Samsung")` |
+| `-startsWith` | Starts with | `(device.manufacturer -startsWith "Sams")` |
+| `-in` | In array | `(device.manufacturer -in ["Samsung","Lenovo","Microsoft"])` |
+| `-notIn` | Not in array | `(device.manufacturer -notIn ["Samsung","Lenovo","Microsoft"])` |
+| `-contains` | Contains substring | `(device.manufacturer -contains "Samsung")` |
+| `-notContains` | Does not contain | `(device.manufacturer -notContains "Samsung")` |
+
+### Additional Example Filters
+
+**Filter by all Windows 10 and 11 major versions:**
+
+A comprehensive OS version filter covering all major Windows 10 and 11 releases using `-startsWith` operators combined with `or`.
+
+**Filter by all iOS/iPadOS by major version:**
+
+```powershell
+Device.osVersion -startswith ("16")
+or Device.osVersion -startswith ("15")
+or Device.osVersion -startswith ("14")
+```
+
+**Filter by device model:**
+
+```powershell
+(device.model -eq "Virtual Machine")
+```
+
+**Filter by enrollment profile name:**
+
+```powershell
+(device.enrollmentProfileName -eq "CAD Design")
+```
+
+**Filter by device manufacturer:**
+
+```powershell
+(device.manufacturer -eq "LENOVO")
+```
+
+In conclusion, filters are an essential feature of Microsoft Intune that enable IT admins to assign policies, apps, and profiles based on specific criteria. By using filters, you can ensure that your devices are managed efficiently and effectively, saving time and resources.
+
+Recommended additional resources:
+
+- [Microsoft Docs: Filters in Intune](https://learn.microsoft.com/en-us/mem/intune/fundamentals/filters)
+- [Scott Duffey's Blog](https://scottduf.medium.com/)
+
+I hope this helps.

@@ -1,0 +1,445 @@
+---
+title: "How I Use LLMs to Build Projects Like This Blog"
+date: "2026-05-02"
+description: "A rough outline for a practical tutorial on using LLMs, GitHub Copilot, skills, model switching, voice prompts, and deployment platforms to build real projects."
+tags: ["ai", "llm", "github-copilot", "developer-tools", "tutorial"]
+---
+
+This is a working outline for how I use LLMs to build and maintain projects like this blog. The goal is not to turn AI into a magic button. The goal is to build a repeatable workflow where I can move faster, stay organized, and still understand what is happening.
+
+## Working Title Ideas
+
+- How I Use LLMs to Build Real Projects
+- My AI-Assisted Development Workflow
+- Building Projects with GitHub Copilot, Skills, and Model Switching
+- From Prompt to Production: My LLM Development Stack
+
+## The Big Idea
+
+Open with the core thesis:
+
+LLMs are most useful when they are treated like a team of specialized assistants, not a single chatbot. I use GitHub Copilot as the orchestration layer, specialized skills for domain-specific work, model switching when the task calls for it, and supporting tools like SuperWhisper, VS Code tasks, and deployment platforms to reduce friction.
+
+Key points to expand:
+
+- AI works best when the human owns direction, taste, and final judgment.
+- The model is not the workflow. The workflow is the system around the model.
+- Better prompts help, but better context, repeatable tasks, and specialized tools help more.
+- The goal is faster iteration without giving up review, testing, or ownership.
+
+## My Overall Workflow
+
+Describe the flow at a high level:
+
+1. Capture the idea quickly, often by voice using SuperWhisper.
+2. Use GitHub Copilot as the main driver to inspect the repo, plan the work, and orchestrate changes.
+3. Bring in specialized skills when the work needs domain expertise.
+4. Switch models when the current model is not the best fit for the task.
+5. Use VS Code tasks and existing project scripts to keep common actions repeatable.
+6. Validate the result with build, lint, tests, preview, or manual review.
+7. Deploy with GitHub Pages, Vercel, or a more custom hosting setup depending on project complexity.
+
+## GitHub Copilot as the Orchestrator
+
+Explain that GitHub Copilot is the main interface for project work:
+
+- It can inspect the codebase and understand existing conventions.
+- It can make surgical edits instead of dumping disconnected snippets.
+- It can run commands, check output, and iterate on failures.
+- It can coordinate multiple steps: discovery, implementation, validation, and cleanup.
+- It keeps the workflow close to the repository instead of moving code back and forth between random chat windows.
+
+Things to include from my own process:
+
+- How I ask Copilot to first inspect the repo before changing files.
+- How I ask for rough plans when the task is unclear.
+- How I ask it to preserve existing conventions.
+- How I use it for both code and writing tasks, like drafting blog posts.
+- How I treat Copilot output as a pull request from a teammate: useful, but still reviewed.
+
+## Installed Skills I Use
+
+Frame skills as specialized playbooks that give the LLM better behavior for specific kinds of work.
+
+### PowerShell Skills
+
+Skills to discuss:
+
+- `powershell-expert`
+- `powershell-code-review`
+- `powershell-module-scaffold`
+
+How I use them:
+
+- Writing production-ready PowerShell scripts and modules.
+- Designing parameters, pipeline behavior, and error handling.
+- Reviewing scripts for enterprise readiness.
+- Scaffolding modules with tests, analyzer rules, CI, and VS Code support.
+- Turning one-off scripts into reusable tooling.
+
+Possible example:
+
+I might start with a rough PowerShell idea, then use the PowerShell expert skill to shape it into an advanced function, the scaffold skill to turn it into a module, and the code review skill to challenge whether the result is actually production ready.
+
+### Microsoft Graph Skill
+
+Skill to discuss:
+
+- `msgraph`
+
+How I use it:
+
+- Finding the right Microsoft Graph endpoint.
+- Understanding resource schemas and permissions.
+- Comparing raw Graph API calls with Microsoft Graph PowerShell SDK cmdlets.
+- Building Intune, Entra ID, and Microsoft 365 automation faster.
+
+Possible section angle:
+
+The Graph skill matters because Graph work is easy to get almost right. The endpoint, permission, paging behavior, and object shape all matter.
+
+### Code Simplifier Skill
+
+Skill to discuss:
+
+- `code-simplifier`
+
+How I use it:
+
+- Cleaning up code after the first working version.
+- Removing unnecessary abstractions.
+- Improving readability without changing behavior.
+- Making code easier for future-me and future-agents to understand.
+
+Possible section angle:
+
+First make it work, then make it obvious. The simplifier skill is useful after the initial implementation, when the code is technically functional but still feels noisy.
+
+### Front-End Design Skill
+
+Skill to discuss:
+
+- `frontend-design`
+
+How I use it:
+
+- Creating better-looking UI components.
+- Avoiding generic AI-generated layouts.
+- Improving spacing, hierarchy, typography, and visual polish.
+- Turning a functional app into something I would actually want to show people.
+
+Possible example:
+
+For a blog, this might mean improving cards, navigation, post layouts, dark mode, hero sections, or visual details that make the site feel less like a default template.
+
+### Other Skills Worth Mentioning
+
+Briefly mention supporting skills depending on the project:
+
+- `diagnose` for debugging hard failures.
+- `tdd` or `tdd-red-green-refactor` for test-first work.
+- `playwright-testing` for end-to-end browser tests.
+- `typed-service-contracts` for TypeScript services and CLIs.
+- `karpathy-guidelines` for keeping changes simple and avoiding common LLM coding mistakes.
+- `improve-codebase-architecture` for finding deeper refactoring opportunities.
+
+## YOLO Mode and Fleet Mode
+
+Explain this carefully because these modes can be powerful and dangerous.
+
+### YOLO Mode
+
+Things to cover:
+
+- What I mean by the YOLO flag in my workflow.
+- When I use it: low-risk experiments, disposable branches, quick prototypes, or tasks where speed matters more than perfect supervision.
+- When I do not use it: production credentials, destructive operations, billing changes, database migrations, or anything that could cause real damage.
+- Why branch discipline matters.
+
+Possible phrasing:
+
+YOLO mode is not "I do not care what happens." It is "I am intentionally giving the agent more room to operate inside a safe boundary."
+
+### Fleet Mode
+
+Things to cover:
+
+- What I mean by the FLEET flag for complex operations.
+- Using multiple agents or parallel workstreams for larger tasks.
+- Letting different agents inspect different parts of a project.
+- Using orchestration for research, implementation, testing, and review.
+- Keeping the human responsible for merge decisions and final review.
+
+Possible example:
+
+For a complex refactor, one agent can inspect the routing layer, another can review content loading, another can run tests, and the orchestrator can combine the findings into a single plan.
+
+## Switching Models with CPM
+
+Resource:
+
+- [CPM by Burke Holland](https://burkeholland.github.io/cpm/)
+
+Topics to cover:
+
+- Why model switching matters.
+- Some models are better at planning.
+- Some models are better at code edits.
+- Some models are cheaper for repetitive tasks.
+- Some models are better for long-context reasoning.
+- Switching models should be intentional, not random.
+
+Possible examples:
+
+- Use a stronger model for architecture decisions or messy debugging.
+- Use a faster or cheaper model for summarization, small edits, or repetitive cleanup.
+- Switch when a model is stuck instead of repeating the same prompt ten times.
+
+## Using OpenRouter for Cost-Effective Models
+
+Topics to cover:
+
+- OpenRouter gives access to many hosted models through one API.
+- It can be useful for experimenting with open source or lower-cost models.
+- Different models have different strengths, context windows, speed, and price.
+- Cost-effective does not always mean best, but it can be perfect for the right task.
+
+Billing and spending control:
+
+- Set up billing with a budget in mind.
+- Use hard limits or alerts where available.
+- Start with small credits before connecting workflows.
+- Track which tasks actually need premium models.
+- Do not put API keys directly in repos.
+- Use environment variables, secret stores, or platform-level secret management.
+
+Possible section angle:
+
+The goal is not to always use the cheapest model. The goal is to match the model to the value of the task.
+
+## Faster Prompting with SuperWhisper
+
+Explain how voice changes the workflow:
+
+- It is faster to brain-dump context by speaking than typing.
+- It helps capture messy ideas before they disappear.
+- It is useful for long instructions, outlines, and review notes.
+- It works well when paired with Copilot because the prompt can include intent, constraints, and examples.
+
+Tips to include:
+
+- Speak in structured chunks: goal, context, constraints, done criteria.
+- After transcription, skim the prompt before sending.
+- Use voice for direction, not for blindly approving changes.
+- SuperWhisper is especially helpful for writing, planning, and describing bugs.
+
+Possible example prompt structure:
+
+```text
+Goal: Add a new blog post outline.
+Context: This is a Vite React MDX blog.
+Constraints: Match existing frontmatter and do not touch unrelated files.
+Done: The post exists in src/content and appears in the post index.
+```
+
+## VS Code Tasks as Workflow Shortcuts
+
+Explain that repeated actions should become tasks:
+
+- Build the project.
+- Run tests.
+- Start the dev server.
+- Generate content.
+- Format or lint files.
+- Run deployment checks.
+
+Why this matters with LLMs:
+
+- The assistant can invoke known tasks instead of guessing commands.
+- Tasks document the project workflow.
+- Repetition becomes safer.
+- New contributors and future agents have an obvious path.
+
+Possible section angle:
+
+If you want an LLM to work well in your repo, make the repo easy to operate. VS Code tasks are one way to turn tribal knowledge into buttons and commands.
+
+## Deployment Options
+
+Organize deployment by complexity.
+
+### GitHub Pages
+
+Best for:
+
+- Static sites.
+- Blogs.
+- Documentation.
+- Simple project pages.
+
+Why I might choose it:
+
+- It is close to the repo.
+- It is inexpensive.
+- It works well for static output.
+- It fits projects that do not need backend logic.
+
+### Vercel
+
+Best for:
+
+- Front-end apps.
+- Preview deployments.
+- Framework-based sites.
+- Projects where branch previews are useful.
+
+Why I might choose it:
+
+- Great developer experience.
+- Easy previews for every change.
+- Useful when the project grows beyond a basic static site.
+
+### Custom Hosting
+
+Best for:
+
+- APIs.
+- Databases.
+- Background jobs.
+- Authentication-heavy apps.
+- Projects with special networking, compliance, or runtime needs.
+
+Decision point:
+
+Use the simplest platform that supports the actual complexity of the project. Do not over-host a blog. Do not under-host an application with real backend needs.
+
+## Practical Walkthrough Structure
+
+This could become the main tutorial body.
+
+### Step 1: Start with the Project Goal
+
+Explain:
+
+- What am I building?
+- Who is it for?
+- What does done look like?
+- What should the agent avoid touching?
+
+### Step 2: Ask Copilot to Inspect the Repo
+
+Example prompt:
+
+```text
+Inspect this repository and explain how content is stored, how routes are wired, and what conventions a new post should follow. Do not make changes yet.
+```
+
+### Step 3: Choose the Right Skill
+
+Examples:
+
+- PowerShell automation: use PowerShell skills.
+- Graph API work: use the Microsoft Graph skill.
+- UI polish: use the front-end design skill.
+- Cleanup: use the code simplifier skill.
+- Hard bug: use the diagnose skill.
+
+### Step 4: Decide Whether This Is Safe for YOLO or Needs Supervision
+
+Questions:
+
+- Is this on a branch?
+- Are secrets involved?
+- Can I easily revert it?
+- Is the operation destructive?
+- Do I understand the expected output?
+
+### Step 5: Switch Models if Needed
+
+Use CPM or another model-switching flow when:
+
+- The task needs deeper reasoning.
+- The current model is stuck.
+- The task is repetitive and can use a cheaper model.
+- I want to compare outputs from different models.
+
+### Step 6: Validate with Tasks and Existing Scripts
+
+Examples:
+
+- `npm run build`
+- `npm run lint`
+- project-specific test commands
+- local preview
+- deployment preview
+
+### Step 7: Review Like a Human
+
+Things to check:
+
+- Did the agent touch unrelated files?
+- Does the change match the project style?
+- Are there hidden assumptions?
+- Are secrets or generated junk included?
+- Would I be comfortable explaining this code later?
+
+## Guardrails I Use
+
+Important safety and quality practices:
+
+- Work on branches.
+- Keep commits small.
+- Do not paste secrets into prompts.
+- Use environment variables for keys.
+- Set billing limits for model providers.
+- Review diffs before committing.
+- Run existing tests and builds.
+- Prefer reversible changes.
+- Ask the model to explain tradeoffs, not just produce code.
+- Treat AI output as a draft until verified.
+
+## Common Mistakes
+
+Things to warn readers about:
+
+- Using the most expensive model for everything.
+- Letting the agent make broad changes without constraints.
+- Skipping review because the output looks confident.
+- Not giving the model enough repository context.
+- Prompting in vague terms like "make it better."
+- Forgetting to set spending controls.
+- Building workflows around tools instead of outcomes.
+- Deploying before understanding how rollback works.
+
+## Example End-to-End Scenario
+
+Use this blog as the example:
+
+1. I dictate a messy idea with SuperWhisper.
+2. Copilot inspects `src/content` and finds the post format.
+3. Copilot drafts an MDX outline.
+4. I ask the code simplifier or writing-focused workflow to tighten it.
+5. I use front-end design help if the post layout or cards need polish.
+6. I run the existing build task.
+7. I deploy to GitHub Pages, Vercel, or whatever platform fits the site.
+
+## What I Still Do Myself
+
+Make the human role explicit:
+
+- Decide what is worth building.
+- Provide the domain context.
+- Review architecture and tradeoffs.
+- Check accuracy.
+- Own security and billing decisions.
+- Decide when to stop iterating.
+- Add the personal experience that makes the post worth reading.
+
+## Conclusion
+
+Close with the main message:
+
+The best AI development workflow is not about one perfect model or one perfect prompt. It is about building a system: Copilot for orchestration, skills for specialization, model switching for fit, voice input for speed, tasks for repeatability, and deployment platforms that match the complexity of the project.
+
+The more I make my workflow explicit, the more useful the LLM becomes.
+

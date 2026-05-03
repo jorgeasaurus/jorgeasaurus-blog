@@ -1,0 +1,123 @@
+---
+title: "Supercharge Microsoft Graph API Data Retrieval with PowerShell Batch Requests"
+date: "2025-07-15"
+description: "What should be a simple data export turns into an hours-long ordeal. Sound familiar?"
+tags: ["powershell", "microsoft-graph", "performance", "api", "automation"]
+---
+
+## The Challenge That Started It
+
+Picture this: You're tasked with exporting all sign-in logs from your organization's Microsoft 365 tenant for a security audit. You fire up PowerShell, run `Get-MgBetaAuditLogSignIn -All`, and then... you wait. And wait. And wait some more.
+
+What should be a simple data export turns into an hours-long ordeal. Sound familiar?
+
+This is the story of how I transformed a painfully slow process into a lightning-fast data retrieval system, reducing wait times by up to 88% using Microsoft Graph API's batch processing capabilities.
+
+## The Numbers Don't Lie
+
+Before diving into the solution, let me share some real-world performance metrics from my testing with actual production data:
+
+| Endpoint | Objects | Traditional Method | Optimized Batch Method | Improvement |
+|----------|---------|-------------------|----------------------|-------------|
+| Devices | 68,677 | 4m 7s | 1m 34s (Memory Managed) | **62% faster** |
+| Groups | 13,585 | 43.7s | 18.1s (Memory Managed) | **59% faster** |
+| Users | 24,284 | 3m 24s | 2m 2s (Sequential) | **40% faster** |
+| Applications | 347 | 1.4s | 0.8s (Parallel) | **45% faster** |
+
+These aren't theoretical improvements – they're actual results from production environments with real enterprise datasets.
+
+## Understanding the Root Problem
+
+Microsoft Graph API uses pagination to prevent overwhelming clients with massive datasets. When you request data, you typically get:
+
+- A page of results (default: 100 items, max: 999)
+- A "nextLink" URL pointing to the next page
+- Repeat until all data is retrieved
+
+The traditional approach looks like this:
+
+```powershell
+# The slow way - sequential pagination
+$allItems = @()
+$uri = "https://graph.microsoft.com/beta/users"
+
+do {
+    $response = Invoke-MgGraphRequest -Uri $uri
+    $allItems += $response.value
+    $uri = $response.'@odata.nextLink'
+} while ($uri)
+```
+
+For 10,000 users across 100 pages, that's 100 sequential HTTP requests. Each with its own:
+
+- Network latency
+- API processing time
+- Authentication overhead
+
+There had to be a better way.
+
+## The Breakthrough: Batch Requests
+
+[Microsoft Graph supports batch requests](https://learn.microsoft.com/en-us/graph/json-batching) – the ability to bundle multiple API calls into a single HTTP request. Instead of 100 sequential calls, we can make 5 batch requests, each containing 20 individual requests.
+
+Here's the game-changer: those 5 batch requests can run in parallel.
+
+## Core Capabilities
+
+- **Multi-cloud environment detection** - Automatically supports Global, USGov, China, and Germany clouds
+- **Intelligent nextLink handling** - Uses complete URLs instead of token extraction for reliability
+- **Parallel and sequential processing** - Configurable based on dataset size and performance needs
+- **Memory monitoring and warnings** - Built-in thresholds to prevent memory exhaustion
+- **Comprehensive error handling** - Robust HTTP status monitoring and debugging support
+
+## Usage Examples
+
+### Basic Usage
+
+```powershell
+# Simple batch retrieval
+$users = Invoke-mgBatchRequest -Endpoint "users"
+
+# With filtering
+$windowsDevices = Invoke-mgBatchRequest -Endpoint "deviceManagement/managedDevices" -Filter "operatingSystem eq 'Windows'"
+
+# With expanded properties
+$mobileAppsWithAssignments = Invoke-mgBatchRequest -Endpoint "deviceAppManagement/mobileApps" -ExpandProperty "assignments"
+```
+
+### Optimized for Large Datasets
+
+```powershell
+# For enterprise-scale datasets (based on test results)
+$allDevices = Invoke-mgBatchRequest -Endpoint "devices" -MemoryThreshold 100
+$allUsers = Invoke-mgBatchRequest -Endpoint "users"  # Sequential is optimal for 33K+ users
+
+# Only use parallel processing for specific scenarios
+$auditLogs = Invoke-mgBatchRequest -Endpoint "auditLogs/signIns" -UseParallelProcessing -MaxConcurrentJobs 5
+```
+
+## Real-World Impact
+
+### Performance Gains by Dataset Size:
+
+- **Small datasets** (< 1K objects): 30-50% improvement
+- **Medium datasets** (1K-50K objects): 40-60% improvement
+- **Large datasets** (50K+ objects): Up to 62% improvement
+
+### Key Learnings:
+
+1. **Sequential batching often outperforms parallel processing** for medium datasets due to reduced overhead
+2. **Memory management is crucial** for datasets over 10K objects
+3. **Multi-cloud support is essential** for enterprise environments
+4. **Proper URL handling** prevents HTTP 400 errors that plagued earlier versions
+
+## Get Started
+
+Ready to transform your Microsoft Graph data retrieval?
+
+1. **Download** the latest version from [GitHub](https://github.com/jorgeasaurus/MgBatchRequest)
+2. **Test** with your datasets using `Test-MgBatchRequest.ps1`
+3. **Optimize** your specific endpoints for maximum performance
+4. **Deploy** with confidence using the production-ready commands
+
+The era of waiting hours for Graph API data is over. Welcome to the age of optimized, intelligent data retrieval.

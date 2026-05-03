@@ -1,0 +1,133 @@
+---
+title: "Finding WMI Usage Before Microsoft Finds It For You"
+date: "2025-10-12"
+description: "Those WMI aliases you typed quickly at 2am (`gwmi`, `iwmi`, etc.)"
+tags: ["powershell", "wmi", "cim", "windows", "scripting"]
+---
+
+Microsoft has a habit of deprecating things we've been using for years, and this time they're coming for WMI. Well, not WMI itself—just the way we've been accessing it. Starting with Windows 11 version 25H2, the WMIC command-line tool and those trusty old PowerShell WMI cmdlets are getting the axe.
+
+If you're anything like me, you've probably got years worth of scripts littered with `Get-WmiObject` calls, some `gwmi` aliases for "efficiency," and maybe even a few `wmic` commands that you've been copy-pasting since the Windows 7 days. Time to find them all before your scripts start breaking in production.
+
+## The Problem
+
+Here's the thing: we've all known CIM cmdlets were the "right" way to do things for a while now. `Get-CimInstance` is better than `Get-WmiObject` in basically every way—faster, firewall-friendly, cross-platform. But switching requires actually finding all those legacy calls first.
+
+And it's not just cmdlets. There are:
+
+- Those WMI aliases you typed quickly at 2am (`gwmi`, `iwmi`, etc.)
+- The `wmic` commands in your ancient batch files
+- .NET `ManagementClass` references buried in your PowerShell modules
+- COM objects like `SWbemLocator` that someone thought was a good idea in 2008
+
+Manually grepping for all of these? That's a recipe for missing stuff.
+
+## The Solution (Or: I Made a Thing)
+
+I built **Find-WmiUsage** to scan codebases and surface every instance of legacy WMI usage. It's a PowerShell 7 function that leverages parallel processing to tear through thousands of files and tell you exactly where your tech debt is hiding.
+
+### What Makes It Useful
+
+**It catches everything.** The scanner looks for 15 different WMI patterns:
+
+- All five legacy WMI cmdlets and their aliases
+- The `wmic` command
+- .NET classes from `System.Management`
+- COM objects from the WMI scripting library
+
+**It's fast.** Using PowerShell 7's `ForEach-Object -Parallel`, it processes multiple files concurrently. Scanning a repository with hundreds of scripts takes seconds, not minutes.
+
+**It gives you context.** Results include the file path, line number, pattern matched, and the actual line of code. No hunting through files wondering what triggered a match.
+
+### Quick Example
+
+Scan your scripts directory:
+
+```powershell
+git clone https://github.com/jorgeasaurus/Find-WmiUsage.git
+cd Find-WmiUsage
+. .\Find-WmiUsage.ps1
+Find-WmiUsage -Path C:\Scripts
+```
+
+Output tells you exactly what needs fixing:
+
+```
+File                              LineNumber Pattern              LineText
+----                              ---------- -------              --------
+C:\Scripts\inventory.ps1                  12 (?i)\bGet-WmiObject\b Get-WmiObject -Class Win32_ComputerSystem
+C:\Scripts\inventory.ps1                  45 (?i)\bgwmi\b          gwmi Win32_Service -Filter "State='Running'"
+C:\Scripts\legacy-report.ps1              8 (?i)\bwmic\b           wmic process list brief
+```
+
+Need audit-friendly output? Export to CSV or JSON:
+
+```powershell
+Find-WmiUsage -Path C:\MyModules -Output CSV -OutFile .\wmi-audit.csv
+```
+
+## Why This Matters Now
+
+Microsoft isn't playing around with this deprecation:
+
+- **Windows 11 24H2**: New installations already ship without WMIC
+- **Windows 11 25H2**: Complete removal, no going back
+- **Legacy WMI cmdlets**: Deprecated, with CIM as the official path forward
+
+If you're managing enterprise environments, you've got scripts running on dozens (or hundreds) of systems. Finding and migrating legacy WMI usage before it becomes a breaking change is the difference between a planned migration and a production fire drill.
+
+## The Migration Path
+
+Once you've found your legacy WMI calls, here's the cheat sheet:
+
+| Legacy | Modern |
+|--------|--------|
+| `Get-WmiObject` | `Get-CimInstance` |
+| `Invoke-WmiMethod` | `Invoke-CimMethod` |
+| `Set-WmiInstance` | `Set-CimInstance` |
+| `Remove-WmiObject` | `Remove-CimInstance` |
+| `wmic process list` | `Get-CimInstance Win32_Process` |
+
+The syntax is slightly different, but the migration is usually straightforward:
+
+**Before:**
+
+```powershell
+Get-WmiObject -Class Win32_ComputerSystem
+```
+
+**After:**
+
+```powershell
+Get-CimInstance -ClassName Win32_ComputerSystem
+```
+
+## Get It
+
+The tool is available on GitHub with full source, comprehensive Pester tests (40 of them, all passing), and documentation.
+
+**Key features:**
+
+- Scans `.ps1`, `.psm1`, `.psd1` files by default (customizable)
+- Can include or ignore commented lines
+- Adjustable parallelism for large codebases
+- Outputs to table, CSV, or JSON
+
+**Requirements:**
+
+- PowerShell 7.0+ (uses `ForEach-Object -Parallel`)
+- Pester 5.0+ if you want to run the tests
+
+## Final Thoughts
+
+Look, we all have legacy code. That's not the problem. The problem is not knowing where it is when Microsoft decides to deprecate it.
+
+Find-WmiUsage gives you visibility. Run it against your repositories, generate reports, hand them to your team, and start migrating before you're forced to. Your future self (and your incident response team) will thank you.
+
+---
+
+**Links:**
+
+- [Microsoft's WMIC Removal Announcement](https://support.microsoft.com/en-us/topic/windows-management-instrumentation-command-line-wmic-removal-from-windows-e9e83c7f-4992-477f-ba1d-96f694b8665d)
+- [Get-CimInstance Documentation](https://learn.microsoft.com/en-us/powershell/module/cimcmdlets/get-ciminstance)
+- [Find-WmiUsage on GitHub](https://github.com/jorgeasaurus/Find-WmiUsage)

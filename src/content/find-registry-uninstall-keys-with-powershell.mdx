@@ -1,0 +1,118 @@
+---
+title: "Find Registry Uninstall Keys with PowerShell"
+date: "2023-05-07"
+description: "A PowerShell function to search the Windows registry for uninstall keys matching a specified string, with support for 64-bit and 32-bit applications."
+tags: ["powershell", "windows", "registry", "scripting", "uninstall"]
+---
+
+The function `Find-RegistryUninstallKey` is PowerShell logic that searches the Windows registry for uninstall keys that match a specified string. It can be useful for troubleshooting and removing software that may be causing issues on a Windows machine.
+
+The function takes two parameters: `$SearchFor`, which is the string to search for in the registry, and `$Wow6432Node`, which is an optional switch that indicates whether to search for 32-bit or 64-bit applications.
+
+## Add to Your PowerShell Profile
+
+```powershell
+code $profile
+```
+
+Open a PowerShell window and run the above command. This will open or create your user's PowerShell profile.
+
+Paste the following code into your profile:
+
+```powershell
+function Find-RegistryUninstallKey {
+    param($SearchFor, [switch]$Wow6432Node)
+    $results = @()
+    $keys = Get-ChildItem HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall |
+    ForEach-Object {
+        class x64 {
+            [string]$GUID
+            [string]$Publisher
+            [string]$DisplayName
+            [string]$DisplayVersion
+            [string]$InstallLocation
+            [string]$InstallDate
+            [string]$UninstallString
+            [string]$Wow6432Node
+        }
+        $x64 = [x64]::new()
+        $x64.GUID = $_.pschildname
+        $x64.Publisher = $_.GetValue('Publisher')
+        $x64.DisplayName = $_.GetValue('DisplayName')
+        $x64.DisplayVersion = $_.GetValue('DisplayVersion')
+        $x64.InstallLocation = $_.GetValue('InstallLocation')
+        $x64.InstallDate = $_.GetValue('InstallDate')
+        $x64.UninstallString = $_.GetValue('UninstallString')
+        if ($Wow6432Node) { $x64.Wow6432Node = 'No' }
+        $results += $x64
+    }
+    if ($Wow6432Node) {
+        $keys = Get-ChildItem HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall |
+        ForEach-Object {
+            class x86 {
+                [string]$GUID
+                [string]$Publisher
+                [string]$DisplayName
+                [string]$DisplayVersion
+                [string]$InstallLocation
+                [string]$InstallDate
+                [string]$UninstallString
+                [string]$Wow6432Node
+            }
+            $x86 = [x86]::new()
+            $x86.GUID = $_.pschildname
+            $x86.Publisher = $_.GetValue('Publisher')
+            $x86.DisplayName = $_.GetValue('DisplayName')
+            $x86.DisplayVersion = $_.GetValue('DisplayVersion')
+            $x86.InstallLocation = $_.GetValue('InstallLocation')
+            $x86.InstallDate = $_.GetValue('InstallDate')
+            $x86.UninstallString = $_.GetValue('UninstallString')
+            $x86.Wow6432Node = 'Yes'
+            $results += $x86
+        }
+    }
+    $results | Sort-Object DisplayName | Where-Object { $_.DisplayName -match $SearchFor }
+}
+```
+
+Now open a new PowerShell session and give it a try.
+
+## Use Cases
+
+This can be leveraged further by incorporating into scripts for scenarios like:
+
+- Scripted detection logic for Configuration Manager deployed applications.
+- Detection logic for apps deployed via Intune.
+- Uninstall scripts.
+
+### Detect an Application by Version
+
+Search for "notepad" and filter by display version:
+
+```powershell
+$installed = Find-RegistryUninstallKey -SearchFor "notepad" -Wow6432Node | Where-Object { $_.DisplayVersion -eq "8.5.2" }
+
+if ($installed) {
+    return "installed"
+}
+```
+
+### Uninstall an Application by Searching for the Uninstall String
+
+Find the uninstall string for a specific version:
+
+```powershell
+$UninstallString = Find-RegistryUninstallKey -SearchFor "notepad" -Wow6432Node |
+    Where-Object { $_.DisplayVersion -eq "8.5.2" } |
+    Select-Object -ExpandProperty UninstallString | Out-String
+
+# Remove any trailing whitespace
+$UninstallString = $UninstallString.trim()
+
+# Run uninstaller with silent flag
+Start-Process $UninstallString -ArgumentList "/S" -Wait
+```
+
+Ultimately, the convenience of the function is the ability to customize it as needed.
+
+Hopefully this helps you out.

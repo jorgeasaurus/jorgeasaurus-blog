@@ -1,0 +1,157 @@
+---
+title: "Bootstrap Your Intune Tenant in a Single Command"
+date: "2025-12-28"
+description: "This post breaks down what the kit creates, how it keeps you safe, and the fastest ways to get it running."
+tags: ["powershell", "intune", "automation", "microsoft-graph", "devops"]
+---
+
+If you've ever spent an afternoon clicking through the Intune portal to build dynamic groups, compliance policies, device filters, Autopilot profiles, and a starter set of Conditional Access rules, you know how soul-crushing that rinse-and-repeat work can be. I wanted a way to turn a fresh tenant into a best-practice baseline without babysitting the portal. That's why I built **Intune Hydration Kit**—a PowerShell module that bootstraps an Intune tenant end to end with one command.
+
+This post breaks down what the kit creates, how it keeps you safe, and the fastest ways to get it running.
+
+## What It Builds for You
+
+Intune Hydration Kit pulls the latest [OpenIntuneBaseline](https://github.com/SkipToTheEndpoint/OpenIntuneBaseline) and layers on the core objects I set up in every tenant:
+
+- **Dynamic and static groups** for OS, manufacturer, Autopilot, ownership, licensing, and rollout rings (Pilot/UAT/Broad)
+- **Device filters** for Windows, macOS, iOS, Android, and VM detection
+- **Security baselines** (70+ Windows/macOS policies from OpenIntuneBaseline)
+- **Compliance policies** for Windows, macOS, iOS, Android, and Linux
+- **App protection** (Microsoft's App Protection Framework levels 1-3 for iOS/Android)
+- **Mobile apps** (Company Portal, Teams, Slack, Spotify, and more)
+- **Enrollment** (Autopilot deployment profiles + Enrollment Status Page)
+- **Conditional Access starter pack** created **disabled** so you can review before enabling
+
+Everything ships with idempotence baked in—the module skips objects you've already got, so you can re-run it safely as you iterate.
+
+## Two Ways to Authenticate
+
+You only need PowerShell 7 and the Graph authentication module (`Install-Module Microsoft.Graph.Authentication`).
+
+Pick an auth mode:
+
+- **Interactive**: perfect for manual runs while you test changes.
+- **Client secret**: ideal for automation and CI/CD with an app registration.
+
+Clouds beyond commercial are supported (`Global`, `USGov`, `USGovDoD`, `Germany`, `China`).
+
+Required Graph permissions (for your user or app):
+
+`DeviceManagementConfiguration.ReadWrite.All`
+`DeviceManagementServiceConfig.ReadWrite.All`
+`DeviceManagementManagedDevices.ReadWrite.All`
+`DeviceManagementScripts.ReadWrite.All`
+`DeviceManagementApps.ReadWrite.All`
+`Group.ReadWrite.All`
+`Policy.Read.All`
+`Policy.ReadWrite.ConditionalAccess`
+`Application.Read.All`
+`Directory.ReadWrite.All`
+`LicenseAssignment.Read.All`
+`Organization.Read.All`
+
+## Safety Nets
+
+- **Hydration marker**: every object is stamped with `Imported by Intune Hydration Kit`, which is how deletes stay surgical.
+- **Conditional Access protection**: CA policies are created **disabled** and only deleted when they remain disabled—no surprises in prod.
+- **Preview everything**: PowerShell `-WhatIf` is respected everywhere, so you can dry-run before touching a tenant.
+
+## Fastest Quick Start (Parameters)
+
+```powershell
+# Install from PSGallery
+Install-Module -Name IntuneHydrationKit -Scope CurrentUser
+
+# Preview every target with interactive auth
+Invoke-IntuneHydration -TenantId "your-tenant-guid" `
+    -Interactive `
+    -Create `
+    -All `
+    -WhatIf
+
+# Run for real with a minimal set of targets
+Invoke-IntuneHydration -TenantId "your-tenant-guid" `
+    -Interactive `
+    -Create `
+    -DynamicGroups `
+    -DeviceFilters `
+    -ComplianceTemplates `
+    -OpenIntuneBaseline
+```
+
+## Structured Runs (Settings File)
+
+If you want fully repeatable runs, drive everything from JSON:
+
+```json
+{
+  "tenant": {
+    "tenantId": "00000000-0000-0000-0000-000000000000",
+    "tenantName": "contoso.onmicrosoft.com"
+  },
+  "authentication": {
+    "mode": "clientSecret",
+    "clientId": "app-guid",
+    "clientSecret": "your-secret",
+    "environment": "Global"
+  },
+  "options": {
+    "create": true,
+    "delete": false,
+    "dryRun": false
+  },
+  "imports": {
+    "openIntuneBaseline": true,
+    "complianceTemplates": true,
+    "appProtection": true,
+    "notificationTemplates": true,
+    "enrollmentProfiles": true,
+    "dynamicGroups": true,
+    "staticGroups": true,
+    "deviceFilters": true,
+    "conditionalAccess": true,
+    "mobileApps": true
+  }
+}
+```
+
+Run it:
+
+```powershell
+Invoke-IntuneHydration -SettingsPath ./settings.json
+```
+
+## Pick Your Targets (Granular Switches)
+
+Toggling scope is straightforward in parameter mode: `-All` turns on everything, or choose individual switches like `-OpenIntuneBaseline`, `-AppProtection`, `-EnrollmentProfiles`, `-DynamicGroups`, `-StaticGroups`, `-DeviceFilters`, `-ConditionalAccess`, `-MobileApps`, and `-NotificationTemplates`. The same toggles exist under the `imports` block in settings mode.
+
+## Cleanup Without Nuking Prod
+
+Delete mode is intentionally conservative. When you flip on `-Delete` (or `"delete": true` in settings):
+
+- Only objects with the hydration marker are eligible.
+- Conditional Access policies must still be disabled to be removed.
+- Add `-Force` if you want to skip the confirmation prompt.
+
+That makes it safe to test in a lab, iterate, and then cleanly remove the kit's artifacts.
+
+## Logs and Reports
+
+- **Console output** shows `Created`, `Skipped`, `Deleted`, and warnings as it runs.
+- **Logs** land in your OS temp path (or a custom `-ReportOutputPath`), with timestamped files you can hand to auditors.
+- **Reports** ship in Markdown and JSON (`Hydration-Summary.md` and `Hydration-Summary.json`), so you get a human-readable rundown plus machine-friendly data for automation.
+
+## Why This Matters Now
+
+Most Intune work is repeatable ceremony. Building a tenant by hand is slow, error-prone, and hard to audit. Intune Hydration Kit gives you:
+
+- A consistent, opinionated baseline you can stand up in minutes.
+- A reversible path—preview with `-WhatIf`, delete only what the kit created, and keep CA policies disabled until you're confident.
+- A maintainable workflow—parameter mode for quick tests, settings mode for repeatable pipelines.
+
+If you're tired of clicking through the portal or you just want a clean, auditable way to hydrate new tenants, give the module a spin. Start with a `-WhatIf`, review the reports, and then let PowerShell do the heavy lifting.
+
+## Links
+
+- [Intune Hydration Kit](https://intunehydrationkit.com)
+- [GitHub - jorgeasaurus/IntuneHydrationKit](https://github.com/jorgeasaurus/Intune-Hydration-Kit)

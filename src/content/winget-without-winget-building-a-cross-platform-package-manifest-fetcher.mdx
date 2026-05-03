@@ -1,0 +1,130 @@
+---
+title: "WinGet Without WinGet: Building a Cross-Platform Package Manifest Fetcher"
+date: "2025-07-20"
+description: "That's the itch I needed to scratch. And thus, [WinGet Manifest Fetcher](https://github.com/jorgeasaurus/WinGet-Manifest-Fetcher) was born."
+tags: ["powershell", "winget", "cross-platform", "github-api", "devops"]
+---
+
+So here's the thing, I love WinGet. It's transformed how I manage software on Windows. But what happens when you need WinGet package information on a Mac? Or Linux? Or even on a Windows box where WinGet isn't installed yet?
+
+That's the itch I needed to scratch. And thus, [WinGet Manifest Fetcher](https://github.com/jorgeasaurus/WinGet-Manifest-Fetcher) was born.
+
+## The Problem
+
+WinGet is awesome, but it's Windows-only. The package manifests, however, live in a public GitHub repository. Why should we need the WinGet client just to query package information? Spoiler: we don't.
+
+I wanted to:
+
+- Query WinGet packages from my Mac
+- Download installers with hash verification
+- Search for packages by publisher
+- Do all this without needing WinGet installed
+
+## The Solution
+
+Enter PowerShell (yes, on Mac!) and some GitHub API magic. The module I built hits the [microsoft/winget-pkgs](https://github.com/microsoft/winget-pkgs) repository directly, parsing YAML manifests and serving up the data you need.
+
+### Getting Started
+
+First, grab it from the PowerShell Gallery:
+
+```powershell
+Install-Module -Name WinGetManifestFetcher -Scope CurrentUser
+Import-Module WinGetManifestFetcher
+```
+
+### What does it do?
+
+Want to know about a package? Easy:
+
+```powershell
+Get-LatestWingetVersion -App "Microsoft.PowerToys"
+```
+
+This gives you everything - version info, download URLs, hashes, installer types, the works.
+
+Need to actually download an installer? Got you covered:
+
+```powershell
+Save-WingetInstaller -App "7zip.7zip" -Path "./Downloads"
+```
+
+It'll download the installer AND verify the SHA256 hash. Because security matters, even when you're being lazy.
+
+### Publisher Search? Why not?
+
+Ever wondered what packages Microsoft publishes? Or maybe you're looking for all JetBrains tools?
+
+```powershell
+Get-WingetPackagesByPublisher -Publisher "JetBrains" -MaxResults 10
+```
+
+Want version info too? Just add `-IncludeVersions`. Fair warning: this makes extra API calls, so maybe don't do this for publishers with hundreds of packages unless you enjoy watching progress bars.
+
+## The Technical Bits
+
+### Cross-Platform All The Things
+
+The module works on Windows, macOS, and Linux because PowerShell 7+ is everywhere now. The cache directory even respects platform conventions:
+
+- Windows: `%LOCALAPPDATA%\WinGetManifestFetcher\Cache`
+- macOS: `~/Library/Caches/WinGetManifestFetcher`
+- Linux: `~/.cache/WinGetManifestFetcher`
+
+### GitHub API Rate Limits Are Real
+
+Without authentication, GitHub gives you 60 API calls per hour. That's... not a lot. So I added caching (60-minute default) and support for GitHub tokens:
+
+```powershell
+$env:GITHUB_TOKEN = "your_github_personal_access_token"
+```
+
+With a token, you get 5,000 requests per hour. Much better.
+
+### PSStucco Structure Because Standards
+
+I used PSStucco for the module structure because I'm not a barbarian. Public functions in `src/Public/`, private functions in `src/Private/`, tests in `Tests/`. You know, like civilized PowerShell modules do.
+
+## Lessons Learned
+
+### 1. YAML Parsing in PowerShell Is... Special
+
+The `powershell-yaml` module is great, but WinGet manifests can be creative with their YAML. I had to handle edge cases like empty version directories, malformed manifests, and the occasional "this isn't even valid YAML but somehow it's in the repo."
+
+### 2. GitHub's Directory API Has Opinions
+
+When you query a directory in the GitHub API, sometimes you get an array, sometimes you get an object with an `entries` property. Why? Who knows. Just handle both and move on with your life.
+
+### 3. Testing Private Functions Is Annoying
+
+PSStucco's module structure is great until you need to test private functions. `InModuleScope` is your friend, but it makes test code verbose. I ended up creating a `TestHelper.ps1` that builds the module dynamically for testing.
+
+### 4. Cross-Platform Path Handling
+
+Windows uses backslashes. Everyone else uses forward slashes. `Join-Path` handles this, but string concatenation doesn't. Guess how I learned this lesson?
+
+## What's Next?
+
+The module is now on the PowerShell Gallery, so installation is dead simple. I've got some ideas for v2:
+
+- Version history retrieval (not just latest)
+- Manifest validation
+- Maybe even dependency resolution?
+
+But for now, it scratches my itch. I can query WinGet packages from my Mac, download installers with confidence, and search for packages without firing up a Windows VM.
+
+## Try It Out
+
+The module is open source and available now:
+
+```powershell
+Install-Module -Name WinGetManifestFetcher -Scope CurrentUser
+```
+
+Check out the [GitHub repo](https://github.com/jorgeasaurus/WinGet-Manifest-Fetcher) for more examples and documentation. PRs welcome - especially if you find edge cases I missed (and trust me, there are probably dozens).
+
+Because sometimes you need WinGet data without WinGet. And that's okay.
+
+---
+
+_PS: Yes, I used AI to help with some of the documentation. No shame in the AI assistance game. But the bugs? Those are 100% artisanal, hand-crafted by yours truly._

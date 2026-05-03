@@ -9,8 +9,21 @@ export interface PostMeta {
   tags?: string[]
 }
 
+export interface PostImage {
+  src: string
+  alt: string
+  caption?: string
+}
+
+export type PostImageSet = PostImage[]
+
 export function formatDate(dateStr: string): string {
   const date = new Date(dateStr)
+
+  if (Number.isNaN(date.getTime())) {
+    return dateStr
+  }
+
   return date.toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',

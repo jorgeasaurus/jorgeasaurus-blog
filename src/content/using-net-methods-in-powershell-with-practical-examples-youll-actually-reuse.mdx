@@ -1,0 +1,480 @@
+---
+title: "Using .NET Methods in PowerShell (with practical examples you'll actually reuse)"
+date: "2026-02-14"
+description: "Everything below works great in PowerShell 7+ (cross-platform)."
+tags: ["powershell", "dotnet", "scripting", "tutorial"]
+---
+
+PowerShell is already sitting on top of .NET, which means you can call .NET types and methods directly whenever the built-in cmdlets don't quite fit, or when you want more control (performance, precision, or fewer dependencies). This post is a practical tour of the patterns I use most: string and path operations, file I/O, time, crypto/hashing, parsing/validation, collections, and a few "quality of life" helpers.
+
+Everything below works great in PowerShell 7+ (cross-platform).
+
+---
+
+## How to call .NET from PowerShell (the 3 patterns)
+
+### 1) Call static methods on a type
+
+```powershell
+# Create a new GUID
+[System.Guid]::NewGuid()
+# Round to 2 decimals
+[System.Math]::Round(3.14159, 2)
+```
+
+### 2) Create an instance and call instance methods
+
+```powershell
+# Build a string efficiently with StringBuilder
+$sb = [System.Text.StringBuilder]::new()
+$sb.Append("hello").Append(" ").Append("world").ToString()
+```
+
+### 3) Use a type accelerator (short alias PowerShell provides)
+
+```powershell
+# Use type accelerators for common .NET types
+[datetime]::UtcNow
+[regex]::Match("abc123", "\d+").Value
+```
+
+---
+
+## 1) Strings: faster, cleaner transforms with .NET
+
+When you need precise string operations, .NET is often clearer (and sometimes faster) than chaining PowerShell operators.
+
+Trim, normalize whitespace, case-insensitive comparisons:
+
+```powershell
+# Trim whitespace
+$text = "  Jorge   "
+$text.Trim()   # "Jorge"
+# Case-insensitive comparison
+[string]::Equals("A", "a", [System.StringComparison]::OrdinalIgnoreCase)  # True
+```
+
+Null/empty and whitespace checks:
+
+```powershell
+# Null/empty check
+[string]::IsNullOrEmpty($text)       # False
+# Whitespace-only check
+[string]::IsNullOrWhiteSpace("   ")  # True
+```
+
+Quick string helpers:
+
+```powershell
+# Concatenate without +
+[string]::Concat("Hello", " ", "world")
+# Join a collection with a delimiter
+[string]::Join(", ", @("a", "b", "c"))
+# Case-insensitive contains
+"Hello".Contains("he", [System.StringComparison]::OrdinalIgnoreCase)  # True
+# Replace substring
+"report-2026".Replace("2026", "2027")
+```
+
+Use these when you want explicit behavior (like case-insensitive `Contains`) or you are building strings from collections without loops.
+
+Safe formatting without concatenation:
+
+```powershell
+# Starts/ends with comparison rules
+"Report.csv".StartsWith("report", [System.StringComparison]::OrdinalIgnoreCase)
+"Report.csv".EndsWith(".csv", [System.StringComparison]::OrdinalIgnoreCase)
+# Invariant casing for stable comparisons
+"i".ToUpperInvariant()
+# Split with empty entries removed
+"one,,two".Split(@(","), [System.StringSplitOptions]::RemoveEmptyEntries)
+# Join with platform-specific newline
+[string]::Join([System.Environment]::NewLine, @("a", "b"))
+```
+
+```powershell
+# Format with placeholders
+$user = "Jorge"
+$count = 42
+[string]::Format("User {0} has {1} items.", $user, $count)
+```
+
+StringBuilder for building large strings efficiently:
+
+```powershell
+# Build many lines efficiently
+$sb = [System.Text.StringBuilder]::new()
+1..5 | ForEach-Object { [void]$sb.AppendLine("Line $_") }
+$sb.ToString()
+```
+
+---
+
+## 2) Regex: use `[regex]` for control and readability
+
+PowerShell's `-match` is great, but `[regex]` gives you richer capabilities (named groups, options, multiple matches).
+
+Extract all matches:
+
+```powershell
+# Get all ticket IDs
+$text = "Tickets: INC123, INC456, INC789"
+[regex]::Matches($text, "INC\d+").Value
+```
+
+Named groups:
+
+```powershell
+# Parse named groups
+$log = "user=jorge status=200"
+$m = [regex]::Match($log, "user=(?<user>\w+)\s+status=(?<status>\d+)")
+$m.Groups["user"].Value
+$m.Groups["status"].Value
+```
+
+Use RegexOptions (like case-insensitive):
+
+```powershell
+# Case-insensitive regex match
+[regex]::IsMatch("Hello", "^hello$", [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
+```
+
+---
+
+## 3) Paths and filenames: stop fighting separators
+
+PowerShell has `Join-Path`, but .NET gives you a consistent mental model and access to special folder locations.
+
+Combine paths safely:
+
+```powershell
+# Combine paths safely
+[System.IO.Path]::Combine($HOME, "logs", "app.log")
+```
+
+Get file name / extension:
+
+```powershell
+# Extract file name and extension
+[System.IO.Path]::GetFileName("/tmp/report.csv")      # "report.csv"
+[System.IO.Path]::GetExtension("/tmp/report.csv")     # ".csv"
+```
+
+Get a per-user "application data" folder (cross-platform):
+
+```powershell
+# Get the per-user app data folder
+[System.Environment]::GetFolderPath([System.Environment+SpecialFolder]::ApplicationData)
+```
+
+Temp files and extension changes:
+
+```powershell
+# Get temp directory and random name
+$tempRoot = [System.IO.Path]::GetTempPath()
+$tempName = [System.IO.Path]::GetRandomFileName()
+# Change extension without touching the file
+[System.IO.Path]::ChangeExtension("/tmp/report.csv", ".json")
+```
+
+Use these when you need OS-safe temp paths or you are manipulating file names without touching the file system.
+
+---
+
+## 4) File I/O: predictable encoding, fast reads/writes
+
+PowerShell cmdlets are fine, but .NET is handy when you want explicit encoding or raw bytes.
+
+More path and file-system helpers:
+
+```powershell
+# Normalize to a full path
+[System.IO.Path]::GetFullPath("./logs/app.log")
+# Get the parent directory name
+[System.IO.Path]::GetDirectoryName("/tmp/report.csv")
+# Create a temp file name
+[System.IO.Path]::GetTempFileName()
+# Check file/directory existence
+[System.IO.File]::Exists("/tmp/report.csv")
+[System.IO.Directory]::Exists("/tmp")
+# Enumerate subdirectories lazily
+[System.IO.Directory]::EnumerateDirectories($HOME)
+```
+
+Write text with explicit UTF-8 (no surprises):
+
+```powershell
+# Write UTF-8 text explicitly
+$path = [System.IO.Path]::Combine($HOME, "demo.txt")
+[System.IO.File]::WriteAllText($path, "hello", [System.Text.Encoding]::UTF8)
+```
+
+Read all text:
+
+```powershell
+# Read UTF-8 text explicitly
+$content = [System.IO.File]::ReadAllText($path, [System.Text.Encoding]::UTF8)
+```
+
+Write/read bytes (great for hashes, binary formats):
+
+```powershell
+# Write raw bytes
+$bytes = 0..255
+[System.IO.File]::WriteAllBytes($path, $bytes)
+
+# Read raw bytes
+$readBytes = [System.IO.File]::ReadAllBytes($path)
+$readBytes.Length
+```
+
+Enumerate files without loading everything into memory:
+
+```powershell
+# Stream file names without loading all at once
+$root = $HOME
+[System.IO.Directory]::EnumerateFiles($root, "*.log", [System.IO.SearchOption]::AllDirectories) |
+  Select-Object -First 20
+```
+
+```powershell
+# Read lines lazily (streaming)
+[System.IO.File]::ReadLines($path) | Select-Object -First 5
+# Append text without rewriting the file
+[System.IO.File]::AppendAllText($path, "more")
+# File size via FileInfo
+$fileInfo = [System.IO.FileInfo]::new($path)
+$fileInfo.Length
+# Enumerate files with DirectoryInfo
+$dirInfo = [System.IO.DirectoryInfo]::new($HOME)
+$dirInfo.EnumerateFiles("*.log") | Select-Object -First 5
+```
+
+---
+
+## 5) Dates and time: UTC, ISO 8601, and duration math
+
+Use .NET when you want explicit UTC handling or exact formatting.
+
+UTC now:
+
+```powershell
+# Get current UTC time
+[datetime]::UtcNow
+```
+
+ISO 8601 timestamp:
+
+```powershell
+# ISO 8601 string
+[datetime]::UtcNow.ToString("o")    # e.g. 2026-02-13T...
+```
+
+Parse a timestamp safely:
+
+```powershell
+# Parse exact date with invariant culture
+[datetime]::ParseExact("2026-02-13", "yyyy-MM-dd", [System.Globalization.CultureInfo]::InvariantCulture)
+```
+
+TimeSpan (durations):
+
+```powershell
+# Measure elapsed time
+$start = [datetime]::UtcNow
+Start-Sleep -Milliseconds 250
+$elapsed = [datetime]::UtcNow - $start
+$elapsed.TotalMilliseconds
+```
+
+DateTimeOffset and local time zone:
+
+```powershell
+# Use DateTimeOffset for offset-aware timestamps
+[System.DateTimeOffset]::UtcNow.ToString("o")
+# Convert UTC to local time zone
+$localZone = [System.TimeZoneInfo]::Local
+[System.TimeZoneInfo]::ConvertTimeFromUtc([datetime]::UtcNow, $localZone)
+```
+
+Use these when you care about offsets, need round-trippable timestamps, or must convert between time zones.
+
+```powershell
+# Convert Unix epoch seconds to DateTimeOffset
+[System.DateTimeOffset]::FromUnixTimeSeconds(1700000000)
+# Build a TimeSpan from minutes
+[System.TimeSpan]::FromMinutes(5)
+# Measure elapsed time with Stopwatch
+$sw = [System.Diagnostics.Stopwatch]::StartNew()
+Start-Sleep -Milliseconds 120
+$sw.Stop()
+$sw.ElapsedMilliseconds
+```
+
+---
+
+## 6) Hashing and crypto: quick integrity checks
+
+Compute SHA256 of a file (cross-platform):
+
+```powershell
+# Open file and compute SHA256 hash
+$path = [System.IO.Path]::Combine($HOME, "demo.txt")
+
+$stream = [System.IO.File]::OpenRead($path)
+try {
+  $sha = [System.Security.Cryptography.SHA256]::Create()
+  $hashBytes = $sha.ComputeHash($stream)
+}
+finally {
+  $stream.Dispose()
+}
+
+# Convert hash bytes to hex
+$hashHex = [System.Convert]::ToHexString($hashBytes).ToLowerInvariant()
+$hashHex
+```
+
+Generate random bytes (tokens, salts):
+
+```powershell
+# Generate cryptographically strong random bytes
+$bytes = [byte[]]::new(32)
+[System.Security.Cryptography.RandomNumberGenerator]::Fill($bytes)
+# Encode as Base64 for storage or display
+[System.Convert]::ToBase64String($bytes)
+```
+
+```powershell
+# Hash a byte array directly (no stream)
+$hashBytes2 = [System.Security.Cryptography.SHA256]::HashData(
+  [System.Text.Encoding]::UTF8.GetBytes("hello")
+)
+[System.Convert]::ToHexString($hashBytes2).ToLowerInvariant()
+```
+
+---
+
+## 7) Parsing and validation helpers
+
+```powershell
+# TryParse for integers
+$intValue = 0
+[int]::TryParse("42", [ref]$intValue)
+
+# TryParseExact for dates
+$parsedDate = [datetime]::MinValue
+[datetime]::TryParseExact(
+  "2026-02-13",
+  "yyyy-MM-dd",
+  [System.Globalization.CultureInfo]::InvariantCulture,
+  [System.Globalization.DateTimeStyles]::None,
+  [ref]$parsedDate
+)
+
+# TryParse for GUIDs
+$parsedGuid = [guid]::Empty
+[guid]::TryParse("5f2a1f7c-3f9a-4a6b-9a2e-1c5c1b2d3e4f", [ref]$parsedGuid)
+
+# TryParse for enums
+$day = [System.DayOfWeek]::Sunday
+[System.Enum]::TryParse([System.DayOfWeek], "Friday", $true, [ref]$day)
+```
+
+---
+
+## 8) Small quality-of-life helpers I reuse everywhere
+
+GUIDs:
+
+```powershell
+# Create a GUID string
+[guid]::NewGuid().ToString()
+```
+
+Base64 encode/decode:
+
+```powershell
+# Encode and decode Base64
+$text = "hello"
+$b64  = [Convert]::ToBase64String([Text.Encoding]::UTF8.GetBytes($text))
+$back = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($b64))
+$back
+```
+
+Version comparisons:
+
+```powershell
+# Compare versions reliably
+$v1 = [version]"7.4.1"
+$v2 = [version]"7.5.0"
+$v2 -gt $v1
+```
+
+Environment and collections helpers:
+
+```powershell
+# Platform-specific newline and env var lookup
+[System.Environment]::NewLine
+[System.Environment]::GetEnvironmentVariable("PATH")
+
+# Empty typed array and LINQ Any
+$emptyStrings = [System.Array]::Empty[string]()
+[System.Linq.Enumerable]::Any([int[]]@(1, 2, 3))  # True
+```
+
+```powershell
+# Expand environment variables in a string
+[System.Environment]::ExpandEnvironmentVariables("%TEMP%\demo.txt")
+# Read command-line args for the current process
+[System.Environment]::GetCommandLineArgs()
+
+# Start a process with arguments and read output
+$psi = [System.Diagnostics.ProcessStartInfo]::new(
+  "pwsh",
+  "-NoProfile -Command `"Get-Date`""
+)
+$psi.RedirectStandardOutput = $true
+$psi.UseShellExecute = $false
+$proc = [System.Diagnostics.Process]::Start($psi)
+$proc.StandardOutput.ReadToEnd().Trim()
+$proc.WaitForExit()
+```
+
+```powershell
+# Use List for ordered data
+$list = [System.Collections.Generic.List[string]]::new()
+$list.Add("a")
+$list.Add("b")
+$list
+
+# Use HashSet for fast membership checks
+$set = [System.Collections.Generic.HashSet[string]]::new()
+$set.Add("a")
+$set.Contains("a")
+
+# Use Dictionary with TryGetValue
+$dict = [System.Collections.Generic.Dictionary[string, int]]::new()
+$dict["a"] = 1
+$value = 0
+$found = $dict.TryGetValue("a", [ref]$value)
+
+# Convert arrays with Array.ConvertAll
+$numbers = [int[]]@(1, 2, 3)
+$strings = [System.Array]::ConvertAll(
+  $numbers,
+  [System.Converter[int, string]]{ param($n) $n.ToString() }
+)
+$strings
+```
+
+Use these for predictable newline handling, reading environment variables without cmdlet overhead, or working with empty/optional arrays.
+
+---
+
+## A simple rule for when to reach for .NET
+
+If you find yourself writing a 6-line workaround for something "basic" (paths, encoding, hashing, parsing, precise formatting), check whether .NET already has a type built for it. PowerShell is an automation language, but .NET is an enormous standard library you get for free.
+
+You can find a GitHub gist of all the mentioned examples here:  
+[https://gist.github.com/jorgeasaurus/035847545f1f1ddbe9b950315a01e6b2](https://gist.github.com/jorgeasaurus/035847545f1f1ddbe9b950315a01e6b2)

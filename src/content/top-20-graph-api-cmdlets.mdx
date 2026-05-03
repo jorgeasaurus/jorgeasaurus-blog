@@ -1,0 +1,210 @@
+---
+title: "Top 20 Graph API Cmdlets"
+date: "2023-07-31"
+description: "A practical tour of the 20 most useful Microsoft Graph PowerShell cmdlets for managing users, groups, devices, apps, and more in Microsoft 365."
+tags: ["powershell", "microsoft-graph", "microsoft-365", "automation", "tutorial"]
+---
+
+Microsoft Graph API is a powerful resource that allows developers and IT professionals to interact with various Microsoft 365 services programmatically. With the help of PowerShell and the Microsoft.Graph module, managing and automating tasks across different Microsoft 365 services becomes seamless and efficient. In this blog post, we will explore the top 20 Graph API cmdlets that can supercharge your productivity, streamline workflows, and make your Microsoft 365 administration a breeze.
+
+> 💡 You will need the [Microsoft.Graph](https://learn.microsoft.com/en-us/powershell/microsoftgraph/installation?view=graph-powershell-1.0) PowerShell module installed to run these commands, as well as a Microsoft Intune tenant.
+
+## Connect-MgGraph
+
+Establish a connection to the Microsoft Graph API:
+
+```powershell
+Connect-MgGraph -Scopes "User.Read.All", "Group.ReadWrite.All" -UseDeviceAuthentication
+```
+
+## Get-MgContext
+
+Retrieve details about your current Microsoft Graph API session:
+
+```powershell
+Get-MgContext
+```
+
+## Find-MgGraphCommand
+
+Discover which API path a command calls:
+
+```powershell
+Find-MgGraphCommand -Command 'Get-MgUser'
+```
+
+## Get-MgUser
+
+Fetch a list of users in your organization:
+
+```powershell
+$users = Get-MgUser
+$users | Select-Object DisplayName, UserPrincipalName, Id
+```
+
+## Get-MgUserMemberOf
+
+Retrieve all groups where a user is a member:
+
+```powershell
+$user = Get-MgUser -Filter "UserPrincipalName eq 'jorge@jorgeasaur.us'"
+Get-MgUserMemberOf -UserId $user.id
+```
+
+## Get-MgGroup
+
+Retrieve a list of groups from Azure Active Directory:
+
+```powershell
+$groups = Get-MgGroup
+$groups | Select-Object DisplayName, Description, Mail, GroupTypes
+```
+
+## Get-MgDevice
+
+List devices registered in your organization:
+
+```powershell
+$devices = Get-MgDevice
+$devices | Select-Object DisplayName, OperatingSystem, OperatingSystemVersion, Id
+```
+
+## Get-MgDeviceAppManagementMobileApp
+
+Fetch a list of mobile apps in your tenant:
+
+```powershell
+$apps = Get-MgDeviceAppManagementMobileApp
+$apps | Select-Object DisplayName, Description, Publisher, Id
+```
+
+## New-MgUser
+
+Create a new user in Azure Active Directory:
+
+```powershell
+$newUser = @{
+    AccountEnabled    = $true
+    DisplayName       = "John Doe"
+    MailNickname      = "john.doe"
+    UserPrincipalName = "john.doe@jorgeasaur.us"
+    PasswordProfile   = @{
+        ForceChangePasswordNextSignIn = $true
+        Password = "P@ssw0rd123!"
+    }
+}
+New-MgUser -BodyParameter $newUser
+```
+
+## Update-MgUser
+
+Modify existing user accounts:
+
+```powershell
+$user = Get-MgUser -Filter "UserPrincipalName eq 'jorge@jorgeasaur.us'"
+Update-MgUser -UserId $user.id -DisplayName 'Jorge Suarez'
+```
+
+## Remove-MgUser
+
+Delete a user from Azure Active Directory:
+
+```powershell
+$user = Get-MgUser -Filter "UserPrincipalName eq 'john.doe@jorgeasaur.us'"
+Remove-MgUser -Id $user.Id
+```
+
+## New-MgGroup
+
+Create a new group:
+
+```powershell
+$newGroup = @{
+    DisplayName = "New Group"
+    Description = "This is a new group."
+    MailEnabled = $false
+    MailNickname = "newgroup"
+    SecurityEnabled = $true
+}
+New-MgGroup -BodyParameter $newGroup
+```
+
+## New-MgGroupMember
+
+Add members to a specific group:
+
+```powershell
+$group = Get-MgGroup -Filter "DisplayName eq 'New Group'"
+$user = Get-MgUser -Filter "UserPrincipalName eq 'jorge@jorgeasaur.us'"
+New-MgGroupMember -GroupId $group.Id -DirectoryObjectId $user.Id
+```
+
+## Get-MgGroupMember
+
+Fetch members of a group:
+
+```powershell
+$group = Get-MgGroup -Filter "DisplayName eq 'New Group'"
+$members = Get-MgGroupMember -GroupId $group.Id
+```
+
+## Get-MgGroupOwner
+
+Retrieve the owners of a group:
+
+```powershell
+$group = Get-MgGroup -Filter "DisplayName eq 'New Group'"
+$owners = Get-MgGroupOwner -GroupId $group.Id
+```
+
+## Update-MgDevice
+
+Modify existing device attributes:
+
+```powershell
+$device = Get-MgDevice -Filter "DisplayName eq 'New Device'"
+$params = @{ accountEnabled = $false }
+Update-MgDevice -DeviceId $device.Id -BodyParameter $params
+```
+
+## Get-MgDeviceManagementDeviceConfiguration
+
+Fetch device configuration policies:
+
+```powershell
+$policies = Get-MgDeviceManagementDeviceConfiguration
+$policies | Select-Object DisplayName, Description
+```
+
+## Get-MgDeviceAppManagementMobileAppAssignment
+
+Fetch assignments for a mobile app:
+
+```powershell
+$app = Get-MgDeviceAppManagementMobileApp -Filter "DisplayName eq 'Box'"
+Get-MgDeviceAppManagementMobileAppAssignment -MobileAppId $app.Id
+```
+
+## Get-MgMailMessage
+
+Retrieve email messages from a user's mailbox:
+
+```powershell
+$user = Get-MgUser -Filter "UserPrincipalName eq 'john.doe@jorgeasaur.us'"
+$mailMessages = Get-MgUserMessage -UserId $user.id -Top 5
+$mailMessages | Select-Object Subject, From, ReceivedDateTime
+```
+
+## Get-MgUserEvent
+
+Fetch user events from their calendar:
+
+```powershell
+$user = Get-MgUser -Filter "UserPrincipalName eq 'john.doe@jorgeasaur.us'"
+$events = Get-MgUserEvent -UserId $user.id -Top 5
+$events | Select-Object Subject, Start, End
+```
+
+In this blog post, we have covered the top 20 Graph API cmdlets that can supercharge your productivity and make your Microsoft 365 administration tasks more efficient. These cmdlets, when used in conjunction with PowerShell and the Microsoft.Graph module, provide powerful tools to interact with Microsoft 365 services programmatically.
+
+I hope this helps.

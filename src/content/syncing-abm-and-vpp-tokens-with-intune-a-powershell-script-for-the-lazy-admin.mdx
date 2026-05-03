@@ -1,0 +1,107 @@
+---
+title: "Syncing ABM and VPP Tokens with Intune: A PowerShell Script for the Lazy Admin"
+date: "2024-08-31"
+description: "Automate the manual process of syncing Apple Business Manager and Volume Purchase Program tokens in Microsoft Intune with PowerShell."
+tags: ["powershell", "intune", "apple", "abm", "automation"]
+---
+
+Ever found yourself drowning in the sea of device enrollments and app licenses, needing to go into Intune and manually syncing Apple Business Manager? Yeah, me too. This PowerShell script should make things easier. Let's dive into what it does:
+
+```powershell
+# Required Graph API Permissions:
+# DeviceManagementConfiguration.Read.All
+# DeviceManagementConfiguration.ReadWrite.All
+# DeviceManagementServiceConfig.Read.All
+# DeviceManagementServiceConfig.ReadWrite.All
+
+# Import necessary Microsoft Graph modules
+"Authentication",
+"Beta.DeviceManagement",
+"Beta.DeviceManagement.Actions",
+"Beta.DeviceManagement.Enrollment",
+"Beta.Devices.CorporateManagement" | ForEach-Object {
+    Import-Module "Microsoft.Graph.$_"
+}
+
+# Set the security protocol to TLS 1.2
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+# Define connection parameters for Microsoft Graph API
+$connectMgGraph = @{
+    TenantId              = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+    Environment           = "Global"
+    ClientID              = "XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"
+    CertificateThumbprint = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+}
+
+# Connect to Microsoft Graph using provided credentials
+Connect-MgGraph @connectMgGraph -NoWelcome
+```
+
+## Sync Apple Business Manager with Intune
+
+```powershell
+$DepOnboardingSettings = Get-MgBetaDeviceManagementDepOnboardingSetting
+
+foreach ($DepOnboardingSetting in $DepOnboardingSettings) {
+       
+    Write-Output "`nSyncing Apple Business Manager with Intune..."
+
+    # Retrieve and display the last successful sync time and synced device count
+    Get-MgBetaDeviceManagementDepOnboardingSetting `
+        -DepOnboardingSettingId $DepOnboardingSetting.Id | `
+        Select-Object LastSuccessfulSyncDateTime, SyncedDeviceCount
+
+    # Initiate the sync process with Apple Device Enrollment Program (DEP)
+    $DeviceSync = Sync-MgBetaDeviceManagementDepOnboardingSettingWithAppleDeviceEnrollmentProgram `
+        -DepOnboardingSettingId $DepOnboardingSetting.Id `
+        -ErrorAction Stop
+
+    # Pause for 15 seconds to allow the sync to initiate
+    Start-Sleep -Seconds 15
+       
+    Write-Output "`nSync initiated successfully."
+    $DeviceSync
+}
+```
+
+## Sync Intune VPP (Volume Purchase Program) Tokens
+
+```powershell
+$VPPTokens = Get-MgBetaDeviceAppManagementVppToken
+
+foreach ($VPPToken in $VPPTokens) {
+    Write-Output "`nSyncing VPP Token for Apple ID: '$($VPPToken.AppleId)'..."
+
+    # Initiate the VPP token sync process
+    $VPPSync = Sync-MgBetaDeviceAppManagementVppTokenLicense `
+        -VppTokenId $VPPToken.ID `
+        -ErrorAction Stop
+
+    # Pause for 15 seconds to allow the sync to initiate
+    Start-Sleep -Seconds 15
+    
+    Write-Output "`nSync initiated successfully."
+
+    # Retrieve and display the last sync status and time
+    Get-MgBetaDeviceAppManagementVppToken `
+        -VppTokenId $VPPToken.ID | `
+        Select-Object DisplayName, LastSyncDateTime, LastSyncStatus
+}
+```
+
+## Why Should You Care?
+
+This script automates what could be hours of manually triggering Intune syncs. If you're managing a bunch of iPhones or iPads through Intune, this is your new best friend. It keeps everything up to date at a quicker interval, so you don't have to. It's like having a personal assistant for your device management, but without the coffee runs.
+
+## Just Remember:
+
+- Once a device is added to ABM, it will show up in Intune within 12 hours automatically but you can do manual sync once every 15 minutes (hence, this script). Running the script before 15 minutes have passed will throw an error.
+- Swap out the placeholder info (like Tenant ID) with your actual stuff before you run it.
+- Make sure you've got all the permissions and modules installed. If not, you'll be stuck at the door.
+
+That's it. A script that makes your life easier if you're juggling Apple devices in a Microsoft world. Give it a try, and maybe you'll find yourself with a bit more time for that coffee break after all.
+
+Full Script on GitHub: [Invoke-IntuneAbmVppSync.ps1](https://github.com/jorgeasaurus/IntuneScripts/blob/main/Invoke-IntuneAbmVppSync.ps1)
+
+I hope this helps.

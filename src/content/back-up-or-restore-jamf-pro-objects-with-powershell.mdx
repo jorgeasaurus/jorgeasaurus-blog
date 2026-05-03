@@ -1,0 +1,100 @@
+---
+title: "Back Up or Restore Jamf Pro Objects with PowerShell"
+date: "2025-03-23"
+description: "A PowerShell tool for backing up and restoring Jamf Pro configurations with selective exports, OAuth support, and organized backups."
+tags: ["powershell", "jamf", "mdm", "backup", "automation"]
+---
+
+I recently started working a lot with Jamf Pro and have been enjoying it quite a bit. Coming from a heavy background in Intune, there is a lot to learn and understand with a new MDM. This post is about a tool I wrote to help myself and hopefully others with a similar situation.
+
+If you're tinkering with any system, ideally, you'd take a snapshot before making changes—so why not your Jamf configs? I've messed around with clunky backup methods before, but they left me hoping for more functionality. Restores were a pain, everything dumped back at once, names clashed, and versioning was a guessing game. Then I caught ["Back to the Future: Backing Up All (most) of The Objects in Jamf Pro"](https://youtu.be/h-03QKwHyog) from JNUC 2023, and it flipped a switch. I had to build something better for myself.
+
+Enter [PsJamfBackupRestore](https://github.com/jorgeasaurus/PsJamfBackupRestore), a PowerShell tool set that backs up and restores your Jamf Pro setup with finesse. While new and in an alpha state, it's got:
+
+- Selective backups—grab just Computers, Scripts, Policies, or whatever you pick.
+- Support for tons of config types, from Profiles to Prestages.
+- Authentication your way: Username/Password or OAuth Client ID/Secret.
+- Clean backups to a JAMF_Backup folder, organized by resource.
+- Token smarts—auto-renewal and cleanup included.
+
+---
+
+## Usage
+
+Kick things off by cloning the repo:
+
+```powershell
+git clone https://github.com/jorgeasaurus/PsJamfBackupRestore.git
+Set-Location PsJamfBackupRestore
+```
+
+Tweaking config.ps1 with your Jamf Pro details—URL, credentials, etc:
+
+```powershell
+[hashtable]$script:Config = @{
+    BaseUrl      = "https://example.jamfcloud.com"
+    Username     = "username"
+    Password     = "password"
+    DataFolder   = Join-Path (Get-Location) "JAMF_Backup"
+    ApiVersion   = "classic"
+    Token        = $null
+}
+```
+
+Load the configs and functions:
+
+```powershell
+. (Join-Path (Get-Location) "config.ps1")
+. (Join-Path (Get-Location) "JamfBackupRestoreFunctions.ps1")
+```
+
+Then dive in:
+
+**Request a token from Jamf:**
+
+```powershell
+$tokenParams = @{
+    Username    = $script:Config.Username
+    Password    = $script:Config.Password
+    JamfProUrl  = $script:Config.JamfProUrl
+}
+$script:Config.Token = Get-JamfToken @tokenParams
+```
+
+**Backup Everything:** Snag all Scripts (or any resource):
+
+```powershell
+Download-JamfObjects -Resource "scripts" -ClearExports
+```
+
+**Backup One Thing:** Grab a specific config by ID:
+
+```powershell
+Download-JamfObject -ID "3" -Resource "osxconfigurationprofiles"
+```
+
+**Restore a Single Object:**
+
+```powershell
+Upload-JamfObject -Token $Config.Token -FilePath "JAMF_Backup/policies/3_Google_Chrome.xml" -Resource "policies" -Id "3" -Update
+```
+
+**Restore a Batch:** Bring back all Policies:
+
+```powershell
+Upload-JamfObjects -Resource "policies"
+```
+
+**Clean Up:** Revoke your token when you're done:
+
+```powershell
+Invalidate-JamfToken -Token $Config.Token
+```
+
+---
+
+## How It Works
+
+This script chats with the Jamf API, juggling Classic (**/JSSResource**) and v1 (**/api/v1/**) endpoints—v2's wired up too, just waiting for Jamf to fully support it. You set your creds in $Config (Username/Password or OAuth), and it pulls down resources as JSON or XML, depending on the API. Scripts get a bonus .sh file alongside their metadata. Everything lands in JAMF_Backup, split by type. Tokens renew automatically, and you can zap them when you're done for security.
+
+Check the repo's [README](https://github.com/jorgeasaurus/PsJamfBackupRestore/blob/main/README.md) for the full playbook.

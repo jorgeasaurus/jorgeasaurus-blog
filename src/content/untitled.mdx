@@ -1,0 +1,187 @@
+---
+title: "20+ Intune Device Queries to Level Up Your Device Management"
+date: "2024-02-19"
+description: "Leverage Kusto Query Language (KQL) with Intune Device Query to gain deep insights into your device fleet, from BIOS info to installed applications."
+tags: ["intune", "kql", "device-management", "windows", "microsoft"]
+---
+
+As many of us know, managing a fleet of devices can be challenging without the right tools and techniques. Microsoft Intune, a component of Microsoft Endpoint Manager, offers a robust device management solution that helps IT Administrators maintain control over their organization's devices. One of the most powerful features within Intune is the ability to leverage the Kusto Query Language (KQL) for device queries. This capability enables administrators to delve deep into device data, offering insights that drive better decision-making and operational efficiencies.
+
+## Why Use KQL with Intune?
+
+KQL, a rich language designed to query large datasets in Azure Monitor, also finds its application in querying device data ingested from Microsoft Intune into Azure Log Analytics. This integration opens up a plethora of opportunities for IT administrators to perform complex analyses and obtain detailed information about the state, health, and security of devices under management.
+
+## Key Queries for Device Management
+
+### Get BIOS Information
+
+```kql
+BiosInfo
+| project Manufacturer, ReleaseDateTime, SerialNumber, SmBiosVersion
+```
+
+### List Installed Certificates
+
+```kql
+Certificate
+| project SubjectName, Issuer, CommonName, ValidFromDateTime, ValidToDateTime, KeyUsage
+```
+
+### Retrieve CPU Details
+
+```kql
+Cpu
+| project Model, Manufacturer, ProcessorType, CoreCount, CurrentClockSpeed
+```
+
+### Check Disk Drive Information
+
+```kql
+DiskDrive
+| project DriveId, Model, SizeBytes, Manufacturer, InterfaceType
+```
+
+### Encryptable Volume Status
+
+```kql
+EncryptableVolume
+| project VolumeId, WindowsDriveLetter, ProtectionStatus, EncryptionMethod
+```
+
+### Retrieve File Information
+
+```kql
+FileInfo('C:\\Windows\\*')
+| order by LastModifiedDateTime desc
+
+FileInfo('C:\\Windows\\NOTEPAD.EXE')
+| project FileName, FileVersion, ProductVersion
+```
+
+### Local Group Names
+
+```kql
+LocalGroup
+| project GroupId, GroupName
+```
+
+### Local User Accounts
+
+```kql
+LocalUserAccount
+| project Username, UserDescription, HomeDirectory
+```
+
+### Logical Drive Details
+
+```kql
+LogicalDrive
+| project DriveIdentifier, DriveType, FreeSpaceBytes, DiskSizeBytes
+```
+
+### Memory Information
+
+```kql
+MemoryInfo
+| project TotalPhysicalMemory, AvailablePhysicalMemory
+```
+
+### Operating System Version
+
+```kql
+OsVersion
+| project OsName, OsVersion, MajorVersion, MinorVersion
+```
+
+### Running Processes
+
+```kql
+Process
+| project ProcessId, ProcessName, CommandLine
+```
+
+### System Enclosure Details
+
+```kql
+SystemEnclosure
+| project Manufacturer, Model, SecurityBreach, LockEquipped
+```
+
+### System Information
+
+```kql
+SystemInfo
+| project FqdnHostname, HardwareManufacturer, HardwareModel
+```
+
+### TPM Status
+
+```kql
+Tpm
+| project Activated, Enabled, Manufacturer, SpecVersion
+```
+
+### Windows Application Crash Events
+
+```kql
+WindowsAppCrashEvent
+| project AppName, AppVersion, LoggedDateTime
+```
+
+### Windows Driver Information
+
+```kql
+WindowsDriver
+| project FriendlyName, DriverVersion, ProviderName
+```
+
+### Windows Event Logs
+
+```kql
+WindowsEvent('System', 7d)
+| where tostring(EventId) == '19'
+```
+
+Identifying system-related events with Event ID 19 within the last 7 days, specifically for Windows Updates Installations. This can be modified to look for any event ID as needed.
+
+### Windows Quality Fixes (QFEs)
+
+```kql
+WindowsQfe
+| project HotFixId, Caption, InstalledDate
+```
+
+### Windows Registry
+
+```kql
+WindowsRegistry('HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\*')
+```
+
+### Windows Services
+
+```kql
+WindowsService
+| project ServiceName, DisplayName, State, StartMode
+```
+
+### Installed Applications
+
+```kql
+programs
+| project name, version, publisher, uninstall_string, install_date
+```
+
+> 💡 This last one is not shown under available query properties in the Device Query blade, but I have tested it and confirm it works for me. I would also say this is one of the most useful queries in my opinion.
+
+## Enhancing Operational Efficiencies
+
+Leveraging KQL within Intune for device queries not only simplifies the management of a diverse device ecosystem but also enhances operational efficiencies through:
+
+- **Proactive Issue Resolution:** By identifying and addressing potential issues before they impact the end-user experience.
+- **Improved Compliance Posture:** Ensuring devices adhere to organizational security policies and compliance standards.
+- **Streamlined Asset Management:** Offering detailed insights into device configurations, software installations, and hardware lifecycle management.
+
+## Resources
+
+- [Device query in Microsoft Intune](https://learn.microsoft.com/en-us/mem/analytics/device-query)
+- [Kusto Query Language (KQL) overview](https://learn.microsoft.com/en-us/azure/data-explorer/kusto/query/)

@@ -1,0 +1,121 @@
+---
+title: "Proactive Remediation to Remind Windows Users to Reboot"
+date: "2023-05-07"
+description: "Use Intune Proactive Remediations to detect Windows devices that haven't rebooted in 7+ days and display a customizable toast notification reminder."
+tags: ["intune", "powershell", "proactive-remediation", "windows", "toast-notification"]
+---
+
+Regularly rebooting user devices is crucial for maintaining optimal performance and stability. Over time, a computer's resources become strangled by various applications that run automatically on startup and consume memory and processing power. Restarting the device clears all processes and resources, allowing the computer to start afresh. This PowerShell Intune Proactive Remediation helps remind users to reboot their computers by displaying a customizable toast notification reminder.
+
+## Detection Script
+
+The detection script uses `Get-ComputerInfo` to retrieve operating system uptime. If the number of days since the last reboot is >= 7, the script exits with code 1, triggering the remediation:
+
+```powershell
+$Uptime = Get-ComputerInfo | Select-Object OSUptime
+if ($Uptime.OsUptime.Days -ge 7) {
+    Write-Output "Device has not rebooted in $($Uptime.OsUptime.Days) days, notify user to reboot"
+    Exit 1
+} else {
+    Write-Output "Device has rebooted $($Uptime.OsUptime.Days) days ago, all good"
+    Exit 0
+}
+```
+
+## Remediation Script
+
+The remediation script displays a toast notification on the user's device reminding them to restart:
+
+```powershell
+function Display-ToastNotification() {
+    $Load = [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime]
+    $Load = [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime]
+    $ToastXML = New-Object -TypeName Windows.Data.Xml.Dom.XmlDocument
+    $ToastXML.LoadXml($Toast.OuterXml)
+
+    try {
+        [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier($App).Show($ToastXml)
+    }
+    catch {
+        Write-Output "Something went wrong when displaying the toast notification"
+        Write-Output "Make sure the script is running as the logged on user"
+    }
+}
+
+# Setting image variables
+$HeroImageUri = "https://yourcloudstorageprovider.com/logo.png"
+$HeroImage = "$env:TEMP\ToastHeroImage.png"
+$Uptime = Get-ComputerInfo | Select-Object OSUptime
+
+# Fetching image from uri
+Invoke-WebRequest -Uri $HeroImageUri -OutFile $HeroImage
+
+# Toast Notification Settings
+$Scenario = 'reminder'  # Possible values: reminder | short | long
+
+# Load Toast Notification text
+$AttributionText = "`n> Jorgeasaurus"
+$HeaderText = "Computer Restart is Needed!"
+$TitleText = "Your device has not performed a reboot in the last $($Uptime.OsUptime.Days) days"
+$BodyText1 = "For performance and stability reasons we suggest a reboot at least once a week."
+$BodyText2 = "Please save your work and restart your device today. Thank you in advance."
+
+# Register the AppID in the registry for Action Center support
+$RegPath = 'HKCU:\SOFTWARE\Microsoft\Windows\CurrentVersion\Notifications\Settings'
+$App = '{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\WindowsPowerShell\v1.0\powershell.exe'
+
+if (-NOT(Test-Path -Path "$RegPath\$App")) {
+    New-Item -Path "$RegPath\$App" -Force
+    New-ItemProperty -Path "$RegPath\$App" -Name 'ShowInActionCenter' -Value 1 -PropertyType 'DWORD'
+}
+
+# Formatting the toast notification XML
+[xml]$Toast = @"
+<toast scenario="$Scenario">
+    <visual>
+    <binding template="ToastGeneric">
+        <image placement="hero" src="$HeroImage"/>
+        <text placement="attribution">$AttributionText</text>
+        <text>$HeaderText</text>
+        <group>
+            <subgroup>
+                <text hint-style="title" hint-wrap="true">$TitleText</text>
+            </subgroup>
+        </group>
+        <group>
+            <subgroup>
+                <text hint-style="body" hint-wrap="true">$BodyText1</text>
+            </subgroup>
+        </group>
+        <group>
+            <subgroup>
+                <text hint-style="body" hint-wrap="true">$BodyText2</text>
+            </subgroup>
+        </group>
+    </binding>
+    </visual>
+    <actions>
+        <action activationType="system" arguments="dismiss" content="$DismissButtonContent"/>
+    </actions>
+</toast>
+"@
+
+# Send the notification
+Display-ToastNotification
+Exit 0
+```
+
+## Deploying via Intune
+
+Navigate to the Proactive Remediations blade in the Intune console:
+
+1. Click **Create script package**
+2. Enter Name and Description
+3. Upload detection and remediation scripts
+4. Set "Run this script using the logged-on credentials" and "Run script in 64-bit PowerShell" to **Yes**
+5. Set any scope tags as needed
+6. Assign the Proactive Remediation
+
+> ⚠️ Include or Exclude either device groups or user groups. Do not mix user and device groups across include and excluding assignments. This can cause unexpected behavior.
+
+This remediation will be a gentle nudge for users to periodically reboot their devices and will hopefully improve Windows Update metrics among other things.

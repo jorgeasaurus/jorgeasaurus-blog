@@ -1,0 +1,101 @@
+---
+title: "Synchronizing Device Groups with Entra User Groups Using PowerShell"
+date: "2025-02-03"
+description: "Given a list of usernames, automatically find their Intune-managed devices and sync them to a device group using parallel Graph API calls."
+tags: ["powershell", "intune", "entra-id", "microsoft-graph", "automation"]
+---
+
+One fun problem I tend to have on a weekly basis is being given a list of usernames and being asked to deploy a software or policy to their devices. Well, ultimately, I need their device names and not user names to properly deliver on the ask. If done manually, you need to find or create a device group, then locate each user and their respective devices (assuming the devices are Intune managed) and add them to the device group. This process can be tedious if the number of users is high. Additionally, this group needs to be maintained, adding and removing devices based on users added and removed from the source group.
+
+I wrote a simple script to make this process easy and consistent.
+
+## Script Requirements
+
+### 1. PowerShell Version
+
+- PowerShell 7.0 or later is required to utilize `ForEach-Object -Parallel` for concurrent execution.
+
+Check your version with:
+
+```powershell
+$PSVersionTable.PSVersion
+```
+
+### 2. Required PowerShell Modules
+
+- The script relies on the Microsoft.Graph.Beta module.
+
+Install it if not already available:
+
+```powershell
+Install-Module Microsoft.Graph.Beta -Scope CurrentUser -Force
+```
+
+### 3. Microsoft Graph API Permissions
+
+- `Group.ReadWrite.All`
+- `DeviceManagementManagedDevices.Read.All`
+- `Directory.ReadWrite.All`
+
+## How the Script Works
+
+### 1. Connect to Microsoft Graph API
+
+```powershell
+Connect-MgGraph -Scopes "Group.ReadWrite.All", "DeviceManagementManagedDevices.Read.All", "Directory.ReadWrite.All"
+```
+
+### 2. Retrieve the User Group
+
+The script searches for an Entra ID user group by its display name:
+
+```powershell
+$userGroup = Get-MgBetaGroup -Filter "displayName eq '$UserGroupName'" | Select-Object -First 1
+```
+
+### 3. Create or Retrieve the Corresponding Device Group
+
+A device group named `$UserGroupName-Devices` is required. If it does not exist, the script creates it — example: "Finance-Devices". The naming convention can always be modified to suit your needs.
+
+### 4. Retrieve All Users in the User Group and Their Devices
+
+Using `ForEach-Object -Parallel`, the script retrieves devices for each user concurrently to maximize performance:
+
+```powershell
+$deviceIdsFromUsers = $userMembers | ForEach-Object -Parallel {
+    $devices = Get-MgBetaUserManagedDevice -UserId $_.Id -All
+    $devices | ForEach-Object { $_.AzureAdDeviceId }
+} -ThrottleLimit 10
+```
+
+### 5. Compare Desired vs. Current Device Group Membership
+
+```powershell
+$devicesToAdd = $desiredDeviceIds | Where-Object { $_ -notin $currentDeviceIds }
+$devicesToRemove = $currentDeviceIds | Where-Object { $_ -notin $desiredDeviceIds }
+```
+
+### 6. Add Missing Devices and Remove Stale Devices
+
+Both operations leverage parallel execution for speed, adding/removing devices via `New-MgBetaGroupMemberByRef` and `Remove-MgBetaGroupMemberByRef`.
+
+## Key Benefits
+
+✅ **Automated Group Management** – Eliminates manual work, reducing administrative overhead.
+✅ **Real-Time Synchronization** – Ensures device groups always reflect the latest user memberships.
+✅ **Optimized Performance** – Uses PowerShell 7's parallel processing for fast execution.
+✅ **Scalability** – Works efficiently for both small and large organizations.
+
+Full Script on GitHub: [Sync-UserDeviceGroup.ps1](https://github.com/jorgeasaurus/IntuneScripts/blob/main/UserDeviceSync/Sync-UserDeviceGroup.ps1)
+
+## Bonus
+
+I am not sure if this is a bug or a feature:
+
+```powershell
+# This command works
+Get-MgBetaDevice -Filter "DeviceID eq '$deviceID'"
+
+# This does not work
+Get-MgBetaDevice -DeviceID $deviceID
+```

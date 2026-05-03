@@ -10,6 +10,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/post/:slug" element={<Post />} />
         <Route path="/about" element={<About />} />
+        <Route path="/:slug" element={<Post />} />
       </Routes>
     </BrowserRouter>
   )

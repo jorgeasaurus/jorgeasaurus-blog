@@ -1,0 +1,104 @@
+---
+title: "Automating Device Management with PowerShell: Function Invoke-AppInstalledDevicesGroup"
+date: "2024-03-03"
+description: "Build a device group in Intune based on detected application installs — automatically add and remove devices as software appears and disappears."
+tags: ["powershell", "intune", "automation", "microsoft-graph", "scripting"]
+---
+
+This will be a shorter post than normal. Just a quickly put together script that I found useful.
+
+I imagine many Intune admins have been asked in the past "We need a count of all devices with Adobe Acrobat installed, can you get us a list of devices?"
+
+If the software is managed by Intune, then sure no problem. We can see in the Intune portal all the devices that have installed said app via company portal.
+
+However, I have not found a streamlined way to create a device group with this information. So, I wrote something up that hopefully makes our lives that much easier.
+
+## Requirements
+
+```
+Required PowerShell Modules:
+    Microsoft.Graph.Authentication
+    Microsoft.Graph.Beta.DeviceManagement
+    Microsoft.Graph.Beta.Groups
+    Microsoft.Graph.Beta.Identity.DirectoryManagement
+
+Required Microsoft Graph API Permissions:
+    - DeviceManagementConfiguration.ReadWrite.All
+    - DeviceManagementManagedDevices.ReadWrite.All
+    - Directory.ReadWrite.All
+    - Group.ReadWrite.All
+    - GroupMember.ReadWrite.All
+    - Device.ReadWrite.All
+```
+
+We will be using the 'Discovered Apps' blade within Intune as reference.
+
+## How It Works
+
+First, retrieve all detected installations of the target application:
+
+```powershell
+$DetectedInstalls = Get-MgBetaDeviceManagementDetectedApp -Filter "displayname eq 'Adobe Acrobat (64-bit)'"
+```
+
+Next, retrieve the associated device names of the detected installs:
+
+```powershell
+$DetectedInstallHostnames = $DetectedInstalls | ForEach-Object {
+   $DetectedInstall = $_
+   Get-MgBetaDeviceManagementDetectedAppManagedDevice -DetectedAppId $DetectedInstall.id -ErrorAction Stop | Select-Object DeviceName
+}
+```
+
+## Group Management
+
+Check for an existing group, and create it if needed:
+
+```powershell
+$GroupName = "$($AppDisplayName -replace '[^a-zA-Z0-9]', '')_Installed_Devices"
+$GroupDescription = "Devices with [$AppDisplayName] installed"
+
+$Group = Get-MgBetaGroup -Filter "displayName eq '$GroupName'" -ErrorAction Stop | Select-Object -First 1
+
+if (-not $Group) {
+    $GroupParams = @{
+        DisplayName     = $GroupName
+        Description     = $GroupDescription
+        MailEnabled     = $false
+        MailNickname    = $GroupName
+        SecurityEnabled = $true
+        GroupTypes      = @()
+    }
+    $Group = New-MgBetaGroup @GroupParams
+}
+```
+
+## Sync Devices In and Out
+
+The script then compares detected installs against current group membership, adding devices that have the app and removing those that no longer do:
+
+```powershell
+# Add devices that have the app but aren't in the group
+$DetectedInstallHostnames | ForEach-Object {
+    $DetectedInstallHostname = $_
+    $IsInGroup = $CurrentGroupMembers | Where-Object { $_.DisplayName -eq $DetectedInstallHostname.DeviceName }
+    if (-not $IsInGroup) {
+        $deviceObject = Get-MgBetaDevice -Filter "displayname eq '$($DetectedInstallHostname.DeviceName)'" -ErrorAction Stop
+        New-MgBetaGroupMember -GroupId $group.Id -DirectoryObjectId $deviceObject.id -ErrorAction Stop
+    }
+}
+
+# Remove devices from the group if they no longer have the app installed
+$CurrentGroupMembers | ForEach-Object {
+    $GroupMember = $_
+    $IsStillDetected = $DetectedInstallHostnames | Where-Object { $_.DeviceName -eq $GroupMember.DisplayName }
+    if (-not $IsStillDetected) {
+        $deviceObject = Get-MgBetaDevice -Filter "displayname eq '$($GroupMember.DisplayName)'" -ErrorAction Stop
+        Remove-MgBetaGroupMemberByRef -GroupId $group.Id -DirectoryObjectId $deviceObject.id -ErrorAction Stop
+    }
+}
+```
+
+This could be set up to run via an Azure App registration for automated updating, or just ran manually in one-off scenarios. Please use as best fits your needs.
+
+For the full script see: [Invoke-AppInstalledDevicesGroup.ps1](https://github.com/jorgeasaurus/IntuneScripts/blob/main/Invoke-AppInstalledDevicesGroup.ps1)
