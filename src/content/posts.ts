@@ -2,11 +2,11 @@ import { type PostMeta } from '../lib/posts'
 
 const posts: PostMeta[] = [
   {
-    slug: 'how-i-use-llms-to-build-projects-like-this-blog',
-    title: 'How I Use LLMs to Build Projects Like This Blog',
+    slug: 'how-i-use-llms-to-build-real-projects-not-just-scripts',
+    title: 'How I Use LLMs to Build Real Projects (Not Just Scripts)',
     date: '2026-05-02',
     description:
-      'A rough outline for a practical tutorial on using LLMs, GitHub Copilot, skills, model switching, voice prompts, and deployment platforms to build real projects.',
+      'A practical playbook for using LLMs to go from idea to real, shipped tools.',
     tags: ['ai', 'llm', 'github-copilot', 'developer-tools', 'tutorial'],
   },
   {

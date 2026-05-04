@@ -46,10 +46,7 @@ export default function Post() {
       <main className="blog-shell">
         <WallpaperStage />
         <Topbar />
-        <div
-          className="glass-panel"
-          style={{ gridArea: 'content' }}
-        >
+        <div className="content-panel glass-panel">
           <div className="loading-inline">
             <div className="spinner" />
             Loading...
@@ -64,10 +61,7 @@ export default function Post() {
       <main className="blog-shell">
         <WallpaperStage />
         <Topbar />
-        <div
-          className="glass-panel"
-          style={{ gridArea: 'content' }}
-        >
+        <div className="content-panel glass-panel">
           <h1>Post Not Found</h1>
           <p className="hero-copy">
             The post you're looking for doesn't exist.
@@ -83,10 +77,7 @@ export default function Post() {
     <main className="blog-shell">
       <WallpaperStage />
       <Topbar />
-      <article
-        className="glass-panel"
-        style={{ gridArea: 'content' }}
-      >
+      <article className="content-panel glass-panel">
         <header>
           <p className="post-card-date">{formatDate(postMeta.date)}</p>
           <h1>{postMeta.title}</h1>

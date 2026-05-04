@@ -1,4 +1,4 @@
-type SocialIconName = 'github' | 'linkedin'
+type SocialIconName = 'github' | 'linkedin' | 'microsoft'
 
 interface SocialIconProps {
   name: SocialIconName
@@ -26,5 +26,17 @@ export default function SocialIcon({ name }: SocialIconProps) {
       </svg>
     )
   }
+
+  if (name === 'microsoft') {
+    return (
+      <svg className="social-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <rect fill="currentColor" x="3" y="3" width="8" height="8" />
+        <rect fill="currentColor" x="13" y="3" width="8" height="8" />
+        <rect fill="currentColor" x="3" y="13" width="8" height="8" />
+        <rect fill="currentColor" x="13" y="13" width="8" height="8" />
+      </svg>
+    )
+  }
+
   return null
 }

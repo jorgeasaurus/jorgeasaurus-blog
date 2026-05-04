@@ -5,15 +5,12 @@ export default function Topbar() {
   const { pathname } = useLocation()
 
   return (
-    <nav
-      className="topbar glass-panel"
-      style={{ gridArea: 'topbar' }}
-    >
-      <Link to="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 14 }}>
+    <nav className="topbar glass-panel">
+      <Link to="/" className="brand-link">
         <div className="brand-mark" />
-        <span style={{ fontWeight: 700, fontSize: '1.05rem', color: '#fff' }}>&gt; Jorgeasaurus</span>
+        <span className="brand-name">&gt; Jorgeasaurus</span>
       </Link>
-      <div style={{ display: 'flex', gap: 10 }}>
+      <div className="topbar-links">
         <Link
           to="/"
           className={`nav-link ${pathname === '/' ? 'nav-link--active' : ''}`}
@@ -28,21 +25,23 @@ export default function Topbar() {
         </Link>
         <a
           href="https://github.com/jorgeasaurus"
-          className="nav-link"
+          className="nav-link nav-link--icon"
           target="_blank"
-          rel="noreferrer"
+          rel="noopener noreferrer"
+          aria-label="GitHub"
         >
           <SocialIcon name="github" />
-          GitHub
+          <span>GitHub</span>
         </a>
         <a
           href="https://www.linkedin.com/in/jorgeasaurus/"
-          className="nav-link"
+          className="nav-link nav-link--icon"
           target="_blank"
-          rel="noreferrer"
+          rel="noopener noreferrer"
+          aria-label="LinkedIn"
         >
           <SocialIcon name="linkedin" />
-          LinkedIn
+          <span>LinkedIn</span>
         </a>
       </div>
     </nav>
