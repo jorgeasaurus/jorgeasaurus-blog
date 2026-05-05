@@ -281,6 +281,94 @@
   transform: translateY(-2px);
 }
 
+/* ── Social preview card ── */
+.social-card-page {
+  position: relative;
+  width: 100vw;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 42px;
+  overflow: hidden;
+  background: var(--deep-forest);
+}
+
+.social-card-panel {
+  position: relative;
+  z-index: 1;
+  width: min(1120px, calc(100vw - 84px));
+  min-height: min(546px, calc(100vh - 84px));
+  display: grid;
+  align-content: center;
+  gap: 28px;
+  padding: 72px;
+  border: 1px solid rgba(229, 255, 237, 0.32);
+  border-radius: 56px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(4, 18, 12, 0.44) 46%, rgba(0, 0, 0, 0.2)),
+    rgba(2, 9, 6, 0.34);
+  -webkit-backdrop-filter: blur(8px) saturate(1.1) brightness(0.88);
+  backdrop-filter: blur(8px) saturate(1.1) brightness(0.88);
+  box-shadow:
+    0 30px 90px rgba(0, 0, 0, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.26),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.social-card-panel::before {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  z-index: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 12% 0%, rgba(255, 255, 255, 0.24), transparent 28%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.14), transparent 32%, rgba(255, 255, 255, 0.05) 72%, transparent);
+}
+
+.social-card-brand,
+.social-card-panel p {
+  position: relative;
+  z-index: 1;
+}
+
+.social-card-brand {
+  display: flex;
+  align-items: baseline;
+  gap: 24px;
+}
+
+.social-card-brand span {
+  color: var(--sprout-bright);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 7rem;
+  font-weight: 700;
+  line-height: 0.82;
+  text-shadow: 0 0 30px rgba(157, 240, 182, 0.28);
+}
+
+.social-card-brand h1 {
+  max-width: none;
+  font-size: 7.6rem;
+  line-height: 0.84;
+  letter-spacing: -0.07em;
+}
+
+.social-card-panel p {
+  margin: 0 0 0 6px;
+  color: var(--sprout-bright);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  text-shadow:
+    0 2px 10px rgba(0, 0, 0, 0.42),
+    0 0 22px rgba(157, 240, 182, 0.2);
+}
+
 /* ── Content area ── */
 .content-area {
   grid-area: content;
