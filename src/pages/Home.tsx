@@ -60,10 +60,6 @@ export default function Home() {
                 <SocialIcon name="github" />
                 GitHub
               </a>
-              <a href="https://www.linkedin.com/in/jorgeasaurus/" target="_blank" rel="noopener noreferrer">
-                <SocialIcon name="linkedin" />
-                LinkedIn
-              </a>
               <a
                 href="https://mvp.microsoft.com/en-US/MVP/profile/79a79af0-1218-4504-b4ee-082ae4ff75f6"
                 target="_blank"
