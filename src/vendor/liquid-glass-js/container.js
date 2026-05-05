@@ -32,7 +32,6 @@ export class Container {
     this.children = [] // Child buttons/components
     this.existingElement = options.element || null
     this.resizeFrame = 0
-    this.scrollHandler = null
 
     // Add to instances
     Container.instances.push(this)
@@ -85,6 +84,10 @@ export class Container {
       const rect = this.element.getBoundingClientRect()
       let newWidth = Math.ceil(rect.width)
       let newHeight = Math.ceil(rect.height)
+      const position = {
+        x: rect.left + window.scrollX + rect.width / 2,
+        y: rect.top + window.scrollY + rect.height / 2
+      }
 
       // Apply type-specific sizing logic
       if (this.type === 'circle') {
@@ -138,6 +141,10 @@ export class Container {
             }
           }
         })
+      }
+
+      if (this.gl_refs.gl) {
+        this.gl_refs.gl.uniform2f(this.gl_refs.containerPositionLoc, position.x, position.y)
       }
     })
   }
@@ -194,7 +201,11 @@ export class Container {
   }
 
   setupCanvas() {
-    this.gl = this.canvas.getContext('webgl', { preserveDrawingBuffer: true })
+    this.gl = this.canvas.getContext('webgl', {
+      alpha: true,
+      antialias: true,
+      preserveDrawingBuffer: false
+    })
     if (!this.gl) {
       console.error('WebGL not supported')
       return
@@ -205,8 +216,8 @@ export class Container {
     // Get actual screen position using getBoundingClientRect
     const rect = this.canvas.getBoundingClientRect()
     return {
-      x: rect.left + rect.width / 2,
-      y: rect.top + rect.height / 2
+      x: rect.left + window.scrollX + rect.width / 2,
+      y: rect.top + window.scrollY + rect.height / 2
     }
   }
 
@@ -366,7 +377,7 @@ export class Container {
         vec2 textureSize = u_textureSize;
         
         // Container position in viewport coordinates
-        vec2 containerCenter = u_containerPosition + vec2(0.0, scrollY);
+        vec2 containerCenter = u_containerPosition;
         
         // Convert container coordinates to page coordinates
         vec2 containerOffset = (coord - 0.5) * containerSize;
@@ -443,28 +454,7 @@ export class Container {
         vec2 totalRefraction = baseRefraction + cornerRefraction + textureRefraction;
         textureCoord += totalRefraction;
         
-        // Gaussian blur
-        vec4 color = vec4(0.0);
-        vec2 texelSize = 1.0 / u_textureSize;
-        float sigma = u_blurRadius / 2.0;
-        vec2 blurStep = texelSize * sigma;
-        
-        float totalWeight = 0.0;
-        
-        for(float i = -6.0; i <= 6.0; i += 1.0) {
-          for(float j = -6.0; j <= 6.0; j += 1.0) {
-            float distance = length(vec2(i, j));
-            if(distance > 6.0) continue;
-            
-            float weight = exp(-(distance * distance) / (2.0 * sigma * sigma));
-            
-            vec2 offset = vec2(i, j) * blurStep;
-            color += texture2D(u_image, textureCoord + offset) * weight;
-            totalWeight += weight;
-          }
-        }
-        
-        color /= totalWeight;
+        vec4 color = texture2D(u_image, textureCoord);
         
         // Simple vertical gradient
         float gradientPosition = coord.y;
@@ -473,53 +463,6 @@ export class Container {
         vec3 gradientTint = mix(topTint, bottomTint, gradientPosition);
         vec3 tintedColor = mix(color.rgb, gradientTint, u_tintOpacity);
         color = vec4(tintedColor, color.a);
-        
-        // Sampled gradient
-        vec2 viewportCenter = containerCenter;
-        float topY = (viewportCenter.y - containerSize.y * 0.4) / textureSize.y;
-        float midY = viewportCenter.y / textureSize.y;
-        float bottomY = (viewportCenter.y + containerSize.y * 0.4) / textureSize.y;
-        
-        vec3 topColor = vec3(0.0);
-        vec3 midColor = vec3(0.0);
-        vec3 bottomColor = vec3(0.0);
-        
-        float sampleCount = 0.0;
-        for(float x = 0.0; x < 1.0; x += 0.05) {
-          for(float yOffset = -5.0; yOffset <= 5.0; yOffset += 1.0) {
-            vec2 topSample = vec2(x, topY + yOffset * texelSize.y);
-            vec2 midSample = vec2(x, midY + yOffset * texelSize.y);
-            vec2 bottomSample = vec2(x, bottomY + yOffset * texelSize.y);
-            
-            topColor += texture2D(u_image, topSample).rgb;
-            midColor += texture2D(u_image, midSample).rgb;
-            bottomColor += texture2D(u_image, bottomSample).rgb;
-            sampleCount += 1.0;
-          }
-        }
-        
-        topColor /= sampleCount;
-        midColor /= sampleCount;
-        bottomColor /= sampleCount;
-        
-        vec3 sampledGradient;
-        if (gradientPosition < 0.1) {
-          sampledGradient = topColor;
-        } else if (gradientPosition > 0.9) {
-          sampledGradient = bottomColor;
-        } else {
-          float transitionPos = (gradientPosition - 0.1) / 0.8;
-          if (transitionPos < 0.5) {
-            float t = transitionPos * 2.0;
-            sampledGradient = mix(topColor, midColor, t);
-          } else {
-            float t = (transitionPos - 0.5) * 2.0;
-            sampledGradient = mix(midColor, bottomColor, t);
-          }
-        }
-        
-        vec3 finalTinted = mix(color.rgb, sampledGradient, u_tintOpacity * 0.3);
-        color = vec4(finalTinted, color.a);
         
         // Shape mask (rounded rectangle, circle, or pill)
         float maskDistance;
@@ -667,17 +610,10 @@ export class Container {
       const scrollY = window.pageYOffset || document.documentElement.scrollTop
       gl.uniform1f(this.gl_refs.scrollYLoc, scrollY)
 
-      // Update container position (in case it moved)
-      const position = this.getPosition()
-      gl.uniform2f(this.gl_refs.containerPositionLoc, position.x, position.y)
-
       gl.drawArrays(gl.TRIANGLES, 0, 6)
     }
 
     render()
-
-    this.scrollHandler = () => render()
-    window.addEventListener('scroll', this.scrollHandler, { passive: true })
 
     // Store render function for external calls
     this.render = render
@@ -692,10 +628,6 @@ export class Container {
     const waitingIndex = Container.waitingForSnapshot.indexOf(this)
     if (waitingIndex > -1) {
       Container.waitingForSnapshot.splice(waitingIndex, 1)
-    }
-
-    if (this.scrollHandler) {
-      window.removeEventListener('scroll', this.scrollHandler)
     }
 
     if (this.resizeFrame) {

@@ -37,23 +37,7 @@ body {
     radial-gradient(circle at 78% 6%, rgba(157, 240, 182, 0.14), transparent 24%),
     radial-gradient(circle at 10% 18%, rgba(255, 255, 255, 0.08), transparent 20%),
     linear-gradient(180deg, rgba(3, 8, 5, 0.02), rgba(3, 8, 5, 0.42)),
-    url('../../wallpaper.jpg') center / cover fixed no-repeat,
     var(--deep-forest);
-}
-
-body::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  background:
-    linear-gradient(rgba(255, 255, 255, 0.018) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.014) 1px, transparent 1px),
-    radial-gradient(circle at 18% 10%, rgba(255, 255, 255, 0.06), transparent 18%),
-    radial-gradient(circle at 80% 16%, rgba(221, 238, 224, 0.08), transparent 20%);
-  background-size: 42px 42px, 42px 42px, auto, auto;
-  opacity: 0.72;
-  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.84), transparent 82%);
 }
 
 button,

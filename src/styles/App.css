@@ -29,7 +29,7 @@
     linear-gradient(115deg, rgba(1, 6, 4, 0.02), rgba(2, 10, 7, 0.34) 76%),
     radial-gradient(circle at 18% 12%, rgba(242, 255, 246, 0.12), transparent 22%),
     radial-gradient(circle at 86% 4%, rgba(157, 240, 182, 0.12), transparent 26%),
-    url('../../wallpaper.jpg') center / cover no-repeat;
+    url('/images/site/wallpaper.jpg') center / cover no-repeat;
   transform: translateZ(0);
 }
 
@@ -404,6 +404,10 @@ h2 {
     0 1px 1px rgba(0, 0, 0, 0.42);
 }
 
+.content-panel > header h1 + .hero-copy {
+  margin-top: 4px;
+}
+
 .panel-heading {
   display: flex;
   justify-content: space-between;
@@ -480,6 +484,8 @@ h2 {
 .post-card {
   position: relative;
   z-index: 1;
+  content-visibility: auto;
+  contain-intrinsic-size: auto 220px;
   padding: 24px;
   border-radius: 24px;
   border: 1px solid rgba(255, 255, 255, 0.14);
@@ -651,7 +657,7 @@ h2 {
 }
 
 .post-card-desc {
-  margin: 4px 0 0;
+  margin: 0 0 0;
   font-size: 0.94rem;
   color: var(--ink-soft);
   line-height: 1.5;
@@ -752,7 +758,9 @@ h2 {
 }
 
 .pagination-link--wide {
-  min-width: 108px;
+  box-sizing: border-box;
+  inline-size: 108px;
+  justify-self: start;
   padding: 0 16px;
 }
 
@@ -799,6 +807,7 @@ h2 {
 }
 
 .post-media-item {
+  contain: layout paint style;
   margin: 0;
   overflow: hidden;
   border-radius: 22px;
@@ -834,6 +843,24 @@ h2 {
 .post-content h1 { font-size: 2.2rem; letter-spacing: -0.04em; }
 .post-content h2 { font-size: 1.6rem; letter-spacing: -0.03em; }
 .post-content h3 { font-size: 1.25rem; }
+
+.post-content > h1,
+.post-content > h2,
+.post-content > h3,
+.post-content > p,
+.post-content > ul,
+.post-content > ol,
+.post-content > blockquote,
+.post-content > pre,
+.post-content > hr {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 4rem;
+}
+
+.post-content > pre,
+.post-content > blockquote {
+  contain-intrinsic-size: auto 12rem;
+}
 
 .post-content p {
   margin: 0 0 1.2em;
