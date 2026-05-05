@@ -2,8 +2,13 @@ import Topbar from '../components/Topbar'
 import WallpaperStage from '../components/WallpaperStage'
 import SocialIcon from '../components/SocialIcon'
 import useLiquidGlassSurface from '../hooks/useLiquidGlassSurface'
+import { useEffect } from 'react'
 
 export default function About() {
+  useEffect(() => {
+    document.title = 'About | Jorgeasaurus'
+  }, [])
+
   const aboutGlassRef = useLiquidGlassSurface<HTMLElement>({
     borderRadius: 34,
     type: 'rounded',

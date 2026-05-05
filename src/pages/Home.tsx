@@ -1,4 +1,5 @@
 import { Link, useSearchParams } from 'react-router-dom'
+import { useEffect } from 'react'
 import Topbar from '../components/Topbar'
 import PostCard from '../components/PostCard'
 import SocialIcon from '../components/SocialIcon'
@@ -14,6 +15,10 @@ function getPagePath(page: number) {
 }
 
 export default function Home() {
+  useEffect(() => {
+    document.title = 'Jorgeasaurus'
+  }, [])
+
   const [searchParams] = useSearchParams()
   const sorted = sortPostsByDate(posts)
   const totalPages = Math.max(1, Math.ceil(sorted.length / POSTS_PER_PAGE))
@@ -38,7 +43,10 @@ export default function Home() {
       <section className="hero-panel glass-panel" ref={heroGlassRef}>
         <div className="hero-layout">
           <div className="hero-title-block">
-            <h1>&gt; Jorgeasaurus</h1>
+            <h1>
+              <span aria-hidden="true">&gt;</span>
+              Jorgeasaurus
+            </h1>
             <p className="hero-signal">Learn. Build. Automate.</p>
           </div>
           <div className="hero-intro">

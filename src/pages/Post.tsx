@@ -63,6 +63,10 @@ export default function Post() {
   }, [slug, postMeta])
 
   useEffect(() => {
+    document.title = postMeta ? `${postMeta.title} | Jorgeasaurus` : 'Jorgeasaurus'
+  }, [postMeta])
+
+  useEffect(() => {
     function updateReadingProgress() {
       const scrollableHeight =
         document.documentElement.scrollHeight - window.innerHeight

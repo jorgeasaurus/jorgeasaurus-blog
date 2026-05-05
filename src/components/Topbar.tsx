@@ -12,7 +12,8 @@ export default function Topbar() {
   return (
     <nav className="topbar glass-panel" aria-label="Primary navigation" ref={glassRef}>
       <Link to="/" className="brand-link">
-        <span className="brand-name">&gt; Jorgeasaurus</span>
+        <span className="brand-prompt" aria-hidden="true">&gt;</span>
+        <span className="brand-name">Jorgeasaurus</span>
       </Link>
       <div className="topbar-links">
         <Link

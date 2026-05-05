@@ -162,9 +162,31 @@
 .brand-link {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
   text-decoration: none;
   border-radius: 999px;
+}
+
+.brand-prompt,
+.hero-title-block h1 span {
+  display: inline-grid;
+  place-items: center;
+  color: var(--sprout-bright);
+  font-family: 'IBM Plex Mono', monospace;
+  line-height: 1;
+}
+
+.brand-prompt {
+  width: 24px;
+  aspect-ratio: 1;
+  border-radius: 999px;
+  border: 1px solid rgba(215, 255, 227, 0.22);
+  background: rgba(0, 0, 0, 0.2);
+  font-size: 0.92rem;
+  font-weight: 700;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 0 18px rgba(157, 240, 182, 0.14);
 }
 
 .brand-name {
@@ -361,9 +383,17 @@ h1 {
 }
 
 .hero-title-block h1 {
+  display: flex;
+  align-items: baseline;
+  gap: 0.18em;
   max-width: none;
   white-space: nowrap;
   font-size: clamp(3rem, 5.1vw, 4.65rem);
+}
+
+.hero-title-block h1 span {
+  font-size: 0.86em;
+  text-shadow: 0 0 22px rgba(157, 240, 182, 0.22);
 }
 
 h2 {
@@ -1439,7 +1469,12 @@ code {
 
   .brand-link {
     min-width: 0;
-    gap: 0;
+    gap: 8px;
+  }
+
+  .brand-prompt {
+    width: 21px;
+    font-size: 0.78rem;
   }
 
   .brand-name {
