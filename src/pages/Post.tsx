@@ -5,6 +5,7 @@ import WallpaperStage from '../components/WallpaperStage'
 import { formatDate } from '../lib/posts'
 import postImages from '../content/postImages'
 import posts from '../content/posts'
+import useLiquidGlassSurface from '../hooks/useLiquidGlassSurface'
 
 interface MdxModule {
   default: React.ComponentType
@@ -16,6 +17,18 @@ export default function Post() {
   const [PostContent, setPostContent] = useState<React.ComponentType | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const loadingGlassRef = useLiquidGlassSurface<HTMLDivElement>({
+    borderRadius: 30,
+    type: 'rounded',
+  })
+  const errorGlassRef = useLiquidGlassSurface<HTMLDivElement>({
+    borderRadius: 30,
+    type: 'rounded',
+  })
+  const articleGlassRef = useLiquidGlassSurface<HTMLElement>({
+    borderRadius: 30,
+    type: 'rounded',
+  })
 
   useEffect(() => {
     async function loadPost() {
@@ -46,7 +59,7 @@ export default function Post() {
       <main className="blog-shell">
         <WallpaperStage />
         <Topbar />
-        <div className="content-panel glass-panel">
+        <div className="content-panel glass-panel" ref={loadingGlassRef}>
           <div className="loading-inline">
             <div className="spinner" />
             Loading...
@@ -61,7 +74,7 @@ export default function Post() {
       <main className="blog-shell">
         <WallpaperStage />
         <Topbar />
-        <div className="content-panel glass-panel">
+        <div className="content-panel glass-panel" ref={errorGlassRef}>
           <h1>Post Not Found</h1>
           <p className="hero-copy">
             The post you're looking for doesn't exist.
@@ -77,7 +90,7 @@ export default function Post() {
     <main className="blog-shell">
       <WallpaperStage />
       <Topbar />
-      <article className="content-panel glass-panel">
+      <article className="content-panel glass-panel" ref={articleGlassRef}>
         <header>
           <p className="post-card-date">{formatDate(postMeta.date)}</p>
           <h1>{postMeta.title}</h1>

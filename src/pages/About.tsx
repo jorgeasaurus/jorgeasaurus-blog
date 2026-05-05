@@ -1,13 +1,19 @@
 import Topbar from '../components/Topbar'
 import WallpaperStage from '../components/WallpaperStage'
 import SocialIcon from '../components/SocialIcon'
+import useLiquidGlassSurface from '../hooks/useLiquidGlassSurface'
 
 export default function About() {
+  const aboutGlassRef = useLiquidGlassSurface<HTMLElement>({
+    borderRadius: 34,
+    type: 'rounded',
+  })
+
   return (
     <main className="blog-shell blog-shell--about">
       <WallpaperStage />
       <Topbar />
-      <article className="about-panel glass-panel">
+      <article className="about-panel glass-panel" ref={aboutGlassRef}>
         <div className="about-header">
           <div className="about-heading">
             <p className="eyebrow">About</p>

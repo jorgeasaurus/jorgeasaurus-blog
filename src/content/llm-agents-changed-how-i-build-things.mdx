@@ -1,0 +1,204 @@
+---
+title: "LLM Coding Agents Changed How I Build Things"
+date: "2026-05-05"
+description: "I used to think LLMs were just fancy autocomplete. Then I started letting them live inside my repos. Here's what changed."
+tags: ["LLM", "PowerShell", "Automation", "Intune", "AI", "GitHub Copilot"]
+---
+
+I'll be honest: when ChatGPT first dropped, I thought it was neat but limited.
+
+Yeah, it could write a function if you asked nicely. It could fix a block of code if you pasted the error. But the workflow? It sucked.
+
+Copy code from chat → paste into IDE → run → copy error → paste back into chat → repeat.
+
+It worked for small stuff. Anything bigger? Not worth the friction.
+
+## The Problem Was Never Intelligence
+
+The models were smart enough.
+
+The problem was **context**.
+
+I work with PowerShell modules that have dozens of files. If you can't give the LLM the full picture—every file, every dependency, every edge case—it's going to confidently lead you off a cliff.
+
+And I couldn't give it the full picture. There was no realistic way to paste an entire module into a chat window and maintain that context across a real project.
+
+So I stayed small:
+- "Write me a function"
+- "Fix this block"
+
+That was the ceiling.
+
+## Then CLI Agents Happened
+
+Things changed when I started using [CLI-based coding agents](https://docs.github.com/en/copilot/using-github-copilot/using-github-copilot-in-the-command-line).
+
+Now the LLM isn't just a chat window. It's inside the repo. It can:
+- See every file
+- Understand the project structure
+- Maintain context across the whole session
+- Actually run commands and see output
+
+Instead of asking it to "write a function," I'm saying:
+
+> "Here's a repo. Let's add feature X and make it work end-to-end."
+
+That's a completely different level of leverage.
+
+## What I Actually Do Now
+
+This isn't theoretical. Here's the workflow I actually use:
+
+### 1. Start With a Problem, Not a Prompt
+
+I don't open the terminal and start typing prompts.
+
+I start with something annoying:
+- "Setting up a new Intune tenant takes hours of clicking"
+- "I have to manually track which devices have which apps"
+- "This report takes forever to generate"
+
+Then I ask the LLM to help me define the problem, not solve it yet.
+
+> "Interview me until you understand what I'm trying to do."
+
+The model is surprisingly good at pulling requirements out of a vague idea. I usually respond with voice using [Superwhisper](https://superwhisper.com/) because I can talk faster than I type, and the model doesn't care about my "ums" and "uhs."
+
+The goal is to turn a fuzzy thought into a clear spec before writing a single line of code.
+
+### 2. Start Ridiculously Small
+
+I learned this the hard way: **don't boil the ocean**.
+
+If I'm working on the [Intune Hydration Kit](https://intunehydrationkit.com/), I don't ask it to "automate everything."
+
+I ask:
+
+> "Can we import dynamic device groups from a JSON file?"
+
+Get that working. Clean it up. Then expand.
+
+Small wins compound. Big bang attempts usually implode.
+
+### 3. Tight Loop or Bust
+
+My actual workflow looks like this:
+
+```
+idea → branch → change → test → debug → fix → merge → repeat
+```
+
+The LLM is part of the loop, but it's not driving. I am.
+
+If something breaks, I don't just ask the LLM to "fix it." I look at the error, form a hypothesis, then use the LLM to help test that hypothesis quickly.
+
+### 4. Constrain the Thing
+
+This **may** be news to you, maybe not: **LLMs overengineer like crazy**.
+
+Left to its own devices, the model will:
+- Add abstractions you don't need
+- Create interfaces for everything
+- Write code that's "flexible" but impossible to follow
+
+So I push back:
+- "Keep it simple"
+- "Do not repeat yourself"
+- "Remove that abstraction"
+- "Don't make me chase through five files to understand what this does"
+
+If you don't do this, your codebase becomes a fractal of unnecessary complexity in about three days.
+
+### 5. Build in Tests and Logging Early
+
+This is the big one.
+
+If you don't have:
+- **Unit tests** → you can't tell if the LLM broke something
+- **Debug logging** → you can't feed runtime behavior back into the LLM
+
+Without these, you're just guessing. With them, the LLM has actual signals to work with.
+
+I usually ask the LLM to scaffold tests first, then build the feature to pass them. It's not pure Test Driven Development, but it's close enough. I can iterate quickly with a tight feedback loop.
+
+## A Real Example: Intune Hydration Kit
+
+This workflow is how I built a [PowerShell module](https://github.com/jorgeasaurus/Intune-Hydration-Kit) that:
+- Bootstraps new Intune tenants
+- Applies best-practice configurations
+- Imports 800+ objects
+- Creates repeatable environments
+
+Over 700 downloads on [PowerShell Gallery](https://www.powershellgallery.com/packages/IntuneHydrationKit).
+
+The LLM didn't build this for me. I still had to:
+- Understand the [Microsoft Graph API](https://learn.microsoft.com/en-us/graph/overview)
+- Know PowerShell module structure
+- Make the architectural decisions
+- Say "no" to bad ideas
+
+But the LLM helped me:
+- Move faster
+- Explore ideas I wouldn't have tried alone
+- Iterate without getting stuck
+
+The vision was mine. The execution was accelerated.
+
+## Where This Still Falls Short
+
+### 1. UI/UX Is Still Meh
+
+LLMs default to generic designs. You know the ones—same fonts, same layouts, same "AI aesthetic."
+
+If you want good UI, you need to:
+- Provide reference designs
+- Give explicit instructions
+- Iterate way more than you think
+
+Humans are still better at design intuition. Use the LLM for implementation, not taste.
+
+### 2. It Costs Money
+
+Long sessions burn tokens. If you're using a paid model, this adds up.
+
+I've had sessions where I burned through tokens debugging a weird edge case. Was it worth it? Sometimes. But you have to be intentional.
+
+### 3. You Still Have to Understand Things
+
+This is the rule everyone ignores:
+
+> You can outsource your thinking.  
+> You cannot outsource your understanding.
+
+If you don't understand:
+- The language you're working in
+- The APIs you're calling
+- The architecture you're building
+
+You will ship broken things. Confidently.
+
+The LLM is a force multiplier, not a replacement for knowing your stuff.
+
+## The Real Change
+
+Here's what actually shifted for me.
+
+**Before:** I stayed in my lane. Small scripts. Isolated problems. Things I knew I could finish.
+
+**Now:** I attempt bigger things. Full modules. Tools with actual users. Projects that used to feel "out of scope" for someone with my background.
+
+It's not just that I'm faster. It's that I'm willing to try harder things.
+
+That's the real leverage.
+
+## Final Thought
+
+LLMs didn't just change how I code.
+
+They changed what I'm willing to attempt.
+
+If you're still treating them like fancy autocomplete, you're leaving most of the value on the table. Let them live in your repo. Let them see the full picture.
+
+Just don't let them drive.
+
+---

@@ -2,6 +2,14 @@ import { type PostMeta } from '../lib/posts'
 
 const posts: PostMeta[] = [
   {
+    slug: 'llm-agents-changed-how-i-build-things',
+    title: 'LLM Coding Agents Changed How I Build Things',
+    date: '2026-05-05',
+    description:
+      "I used to think LLMs were just fancy autocomplete. Then I started letting them live inside my repos. Here's what changed.",
+    tags: ['llm', 'ai', 'powershell', 'automation', 'github-copilot'],
+  },
+  {
     slug: 'how-i-use-llms-to-build-real-projects-not-just-scripts',
     title: 'How I Use LLMs to Build Real Projects (Not Just Scripts)',
     date: '2026-05-02',

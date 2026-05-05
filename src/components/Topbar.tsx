@@ -1,13 +1,18 @@
 import { Link, useLocation } from 'react-router-dom'
 import SocialIcon from './SocialIcon'
+import useLiquidGlassSurface from '../hooks/useLiquidGlassSurface'
 
 export default function Topbar() {
   const { pathname } = useLocation()
+  const glassRef = useLiquidGlassSurface<HTMLElement>({
+    borderRadius: 999,
+    type: 'pill',
+  })
 
   return (
-    <nav className="topbar glass-panel">
+    <nav className="topbar glass-panel" aria-label="Primary navigation" ref={glassRef}>
       <Link to="/" className="brand-link">
-        <div className="brand-mark" />
+        <div className="brand-mark" aria-hidden="true" />
         <span className="brand-name">&gt; Jorgeasaurus</span>
       </Link>
       <div className="topbar-links">

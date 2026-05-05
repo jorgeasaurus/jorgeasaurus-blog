@@ -1,6 +1,13 @@
 import { type PostImageSet } from '../lib/posts'
 
 const postImages: Record<string, PostImageSet> = {
+  'how-i-use-llms-to-build-real-projects-not-just-scripts': [
+    {
+      src: '/images/posts/how-i-use-llms-to-build-real-projects-not-just-scripts/llmprojects.png',
+      alt: 'A Copilot Agent workflow displayed on a laptop with project files, tests, and an automation success checklist.',
+      caption: 'The agent workflow I use for real projects: context, tests, implementation, verification, and a tight feedback loop.',
+    },
+  ],
   'using-net-methods-in-powershell-with-practical-examples-youll-actually-reuse': [
     {
       src: '/images/posts/using-net-methods-in-powershell-with-practical-examples-youll-actually-reuse/dotnetPS.png',
