@@ -2,7 +2,7 @@ import { type PostMeta } from '../lib/posts'
 
 const posts: PostMeta[] = [
   {
-    slug: 'llm-agents-changed-how-i-build-things',
+    slug: 'ai-agents-changed-how-i-build-things',
     title: 'AI Coding Agents Changed How I Build Things',
     date: '2026-05-05',
     description:

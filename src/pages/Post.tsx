@@ -1,8 +1,8 @@
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import Topbar from '../components/Topbar'
 import WallpaperStage from '../components/WallpaperStage'
-import { formatDate } from '../lib/posts'
+import { formatDate, sortPostsByDate } from '../lib/posts'
 import postImages from '../content/postImages'
 import posts from '../content/posts'
 import useLiquidGlassSurface from '../hooks/useLiquidGlassSurface'
@@ -14,7 +14,15 @@ interface MdxModule {
 export default function Post() {
   const { slug } = useParams<{ slug: string }>()
   const postMeta = posts.find((post) => post.slug === slug)
+  const sortedPosts = sortPostsByDate(posts)
+  const postIndex = sortedPosts.findIndex((post) => post.slug === slug)
+  const newerPost = postIndex > 0 ? sortedPosts[postIndex - 1] : null
+  const olderPost =
+    postIndex >= 0 && postIndex < sortedPosts.length - 1
+      ? sortedPosts[postIndex + 1]
+      : null
   const [PostContent, setPostContent] = useState<React.ComponentType | null>(null)
+  const [readingProgress, setReadingProgress] = useState(0)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const loadingGlassRef = useLiquidGlassSurface<HTMLDivElement>({
@@ -54,6 +62,34 @@ export default function Post() {
     loadPost()
   }, [slug, postMeta])
 
+  useEffect(() => {
+    function updateReadingProgress() {
+      const scrollableHeight =
+        document.documentElement.scrollHeight - window.innerHeight
+
+      if (scrollableHeight <= 0) {
+        setReadingProgress(0)
+        return
+      }
+
+      const progress = Math.min(
+        1,
+        Math.max(0, window.scrollY / scrollableHeight)
+      )
+
+      setReadingProgress(progress)
+    }
+
+    updateReadingProgress()
+    window.addEventListener('scroll', updateReadingProgress, { passive: true })
+    window.addEventListener('resize', updateReadingProgress)
+
+    return () => {
+      window.removeEventListener('scroll', updateReadingProgress)
+      window.removeEventListener('resize', updateReadingProgress)
+    }
+  }, [PostContent])
+
   if (loading) {
     return (
       <main className="blog-shell">
@@ -85,11 +121,19 @@ export default function Post() {
   }
 
   const images = postImages[slug ?? ''] ?? []
+  const [heroImage] = images
+  const hasArticleHero = images.length === 1 && heroImage
+  const mediaImages = hasArticleHero ? [] : images
 
   return (
     <main className="blog-shell">
       <WallpaperStage />
       <Topbar />
+      <div
+        className="reading-progress"
+        style={{ transform: `scaleX(${readingProgress})` }}
+        aria-hidden="true"
+      />
       <article className="content-panel glass-panel" ref={articleGlassRef}>
         <header>
           <p className="post-card-date">{formatDate(postMeta.date)}</p>
@@ -98,18 +142,26 @@ export default function Post() {
             <p className="hero-copy">{postMeta.description}</p>
           )}
         </header>
-        {images.length > 0 && (
+        {hasArticleHero && (
+          <figure className="post-hero-figure">
+            <img
+              src={heroImage.src}
+              alt={heroImage.alt || postMeta.title}
+              loading="eager"
+            />
+            {heroImage.caption && <figcaption>{heroImage.caption}</figcaption>}
+          </figure>
+        )}
+        {mediaImages.length > 0 && (
           <section
             className={`post-media ${
-              images.length === 1 ? 'post-media--single' : ''
+              mediaImages.length === 1 ? 'post-media--single' : ''
             }`}
             aria-label="Images from the original post"
           >
-            {images.length > 1 && (
-              <p className="eyebrow">Original media</p>
-            )}
+            <p className="eyebrow">Original media</p>
             <div className="post-media-grid">
-              {images.map((image) => (
+              {mediaImages.map((image) => (
                 <figure className="post-media-item" key={image.src}>
                   <img
                     src={image.src}
@@ -125,6 +177,26 @@ export default function Post() {
         <div className="post-content">
           <PostContent />
         </div>
+        {(newerPost || olderPost) && (
+          <nav className="article-nav" aria-label="Adjacent field notes">
+            {newerPost ? (
+              <Link className="article-nav-link" to={`/${newerPost.slug}`}>
+                <span>Newer field note</span>
+                <strong>{newerPost.title}</strong>
+              </Link>
+            ) : (
+              <span className="article-nav-link article-nav-link--empty" />
+            )}
+            {olderPost ? (
+              <Link className="article-nav-link article-nav-link--next" to={`/${olderPost.slug}`}>
+                <span>Older field note</span>
+                <strong>{olderPost.title}</strong>
+              </Link>
+            ) : (
+              <span className="article-nav-link article-nav-link--empty" />
+            )}
+          </nav>
+        )}
       </article>
     </main>
   )

@@ -1,11 +1,11 @@
 import { type PostImageSet } from '../lib/posts'
 
 const postImages: Record<string, PostImageSet> = {
-  'llm-agents-changed-how-i-build-things': [
+  'ai-agents-changed-how-i-build-things': [
     {
-      src: '/images/posts/llm-agents-changed-how-i-build-things/llmprojects.png',
-      alt: 'A Copilot Agent workflow displayed on a laptop with project files, tests, and an automation success checklist.',
-      caption: 'The agent workflow I use for real projects: context, tests, implementation, verification, and a tight feedback loop.',
+      src: '/images/posts/ai-agents-changed-how-i-build-things/ai-in-the-loop.png',
+      alt: 'AI agent workflow concept showing code, automation, and human review in a feedback loop.',
+      caption: 'AI in the loop: context, implementation, review, and iteration staying close to the work.',
     },
   ],
   'using-net-methods-in-powershell-with-practical-examples-youll-actually-reuse': [

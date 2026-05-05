@@ -24,19 +24,24 @@ export default function About() {
               endpoint systems.
             </p>
           </div>
-          <a
-            className="mvp-badge-link"
-            href="https://mvp.microsoft.com/en-US/MVP/profile/79a79af0-1218-4504-b4ee-082ae4ff75f6"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="Microsoft MVP profile"
-          >
-            <img
-              src="/images/mvp-badge.png"
-              alt="Microsoft Most Valuable Professional"
-              className="mvp-badge"
-            />
-          </a>
+          <div className="about-portrait-stack">
+            <figure className="about-portrait">
+              <img src="/images/me.jpeg" alt="Jorge Suarez" />
+            </figure>
+            <a
+              className="mvp-badge-link"
+              href="https://mvp.microsoft.com/en-US/MVP/profile/79a79af0-1218-4504-b4ee-082ae4ff75f6"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Microsoft MVP profile"
+            >
+              <img
+                src="/images/mvp-badge.png"
+                alt="Microsoft Most Valuable Professional"
+                className="mvp-badge"
+              />
+            </a>
+          </div>
         </div>
         <div className="about-content">
           <p>
