@@ -62,7 +62,7 @@ Then I ask the LLM to help me define the problem, not solve it yet.
 
 > "Interview me until you understand what I'm trying to do."
 
-The model is surprisingly good at pulling requirements out of a vague idea. I usually respond with voice using [Superwhisper](https://superwhisper.com/) because I can talk faster than I type, and the model doesn't care about my "ums" and "uhs."
+The model is surprisingly good at pulling requirements out of a vague idea. I use that enough that I keep a [grill-me skill](https://github.com/mattpocock/skills/blob/main/skills/productivity/grill-me/SKILL.md) around for forcing the agent to interview me one decision at a time instead of jumping straight into code. I usually respond with voice using [Superwhisper](https://superwhisper.com/) because I can talk faster than I type, and the model doesn't care about my "ums" and "uhs."
 
 The goal is to turn a fuzzy thought into a clear spec before writing a single line of code.
 
@@ -90,7 +90,7 @@ idea → branch → change → test → debug → fix → merge → repeat
 
 The LLM is part of the loop, but it's not driving. I am.
 
-If something breaks, I don't just ask the LLM to "fix it." I look at the error, form a hypothesis, then use the LLM to help test that hypothesis quickly.
+If something breaks, I don't just ask the LLM to "fix it." I look at the error, form a hypothesis, then use the LLM to help test that hypothesis quickly. For the gnarly stuff, I lean on a [diagnose skill](https://github.com/mattpocock/skills/blob/main/skills/engineering/diagnose/SKILL.md) to keep the loop disciplined: reproduce, minimize, hypothesize, instrument, fix, regression-test.
 
 ### 4. Constrain the Thing
 
@@ -107,6 +107,8 @@ So I push back:
 - "Remove that abstraction"
 - "Don't make me chase through five files to understand what this does"
 
+I also use a [code-simplifier skill](https://github.com/getsentry/skills/blob/main/skills/code-simplifier/SKILL.md) and [Karpathy-style coding guidelines](https://github.com/forrestchang/andrej-karpathy-skills/blob/main/skills/karpathy-guidelines/SKILL.md) as guardrails. Not because the agent needs more words, but because it needs repeated pressure toward boring, readable, surgical changes.
+
 If you don't do this, your codebase becomes a fractal of unnecessary complexity in about three days.
 
 ### 5. Build in Tests and Logging Early
@@ -119,7 +121,7 @@ If you don't have:
 
 Without these, you're just guessing. With them, the LLM has actual signals to work with.
 
-I usually ask the LLM to scaffold tests first, then build the feature to pass them. It's not pure Test Driven Development, but it's close enough. I can iterate quickly with a tight feedback loop.
+I usually ask the LLM to scaffold tests first, then build the feature to pass them. It's not pure Test Driven Development, but it's close enough. When I want to be stricter about it, I use a [red-green-refactor skill](https://github.com/google-labs-code/design.md/blob/main/.agents/skills/tdd/SKILL.md) so the agent has to prove the failure before it starts "helping."
 
 ## A Real Example: Intune Hydration Kit
 
@@ -136,6 +138,8 @@ The LLM didn't build this for me. I still had to:
 - Know PowerShell module structure
 - Make the architectural decisions
 - Say "no" to bad ideas
+
+That said, domain-specific skills make a real difference here. A [Microsoft Graph skill](https://github.com/merill/msgraph/blob/main/skills/msgraph/SKILL.md) helps keep endpoint and permission lookups grounded in current docs, and my [PowerShell expert skill](https://github.com/jorgeasaurus/agent-skills/blob/main/powershell-expert/SKILL.md) keeps the agent closer to the module patterns I actually want.
 
 But the LLM helped me:
 - Move faster
@@ -154,6 +158,8 @@ If you want good UI, you need to:
 - Provide reference designs
 - Give explicit instructions
 - Iterate way more than you think
+
+I do use a [frontend-design skill](https://github.com/anthropics/skills/blob/main/skills/frontend-design/SKILL.md) when I want the agent to break out of default component-library autopilot, but even then I treat it like a sharper brief, not a substitute for taste.
 
 Humans are still better at design intuition. Use the LLM for implementation, not taste.
 
