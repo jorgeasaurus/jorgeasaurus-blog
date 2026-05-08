@@ -927,43 +927,7 @@ h2 {
   height: auto;
 }
 
-.post-media {
-  display: grid;
-  gap: 14px;
-  counter-reset: post-figure;
-}
-
-.post-media-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 280px), 1fr));
-  gap: 14px;
-}
-
-.post-media--single .post-media-grid {
-  grid-template-columns: 1fr;
-}
-
-.post-media-item {
-  counter-increment: post-figure;
-  contain: layout paint style;
-  margin: 0;
-  overflow: hidden;
-  border-radius: 22px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(0, 0, 0, 0.24);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 16px 40px rgba(0, 0, 0, 0.18);
-}
-
-.post-media-item img {
-  display: block;
-  width: 100%;
-  height: auto;
-}
-
-.post-hero-figure figcaption,
-.post-media-item figcaption {
+.post-hero-figure figcaption {
   padding: 12px 14px 13px;
   color: rgba(238, 255, 244, 0.76);
   font-size: 0.78rem;
@@ -974,8 +938,7 @@ h2 {
     rgba(0, 0, 0, 0.18);
 }
 
-.post-hero-figure figcaption::before,
-.post-media-item figcaption::before {
+.post-hero-figure figcaption::before {
   content: 'FIG. ' counter(post-figure, decimal-leading-zero);
   display: inline-block;
   margin-right: 10px;

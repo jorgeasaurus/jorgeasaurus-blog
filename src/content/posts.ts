@@ -2,6 +2,14 @@ import { type PostMeta } from '../lib/posts'
 
 const posts: PostMeta[] = [
   {
+    slug: 'set-up-and-view-app-inventory-data-in-intune',
+    title: 'Set Up and View App Inventory Data in Intune',
+    date: '2026-05-07',
+    description:
+      'App inventory gives you richer Windows app data in Intune, but only after you turn it on with a Properties catalog policy.',
+    tags: ['intune', 'windows', 'device-management', 'application-inventory', 'tutorial'],
+  },
+  {
     slug: 'ai-agents-changed-how-i-build-things',
     title: 'AI Coding Agents Changed How I Build Things',
     date: '2026-05-05',

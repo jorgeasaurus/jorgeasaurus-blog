@@ -1,6 +1,23 @@
 import { type PostImageSet } from '../lib/posts'
 
 const postImages: Record<string, PostImageSet> = {
+  'set-up-and-view-app-inventory-data-in-intune': [
+    {
+      src: '/images/posts/set-up-and-view-app-inventory-data-in-intune/create-profile-properties-catalog.png',
+      alt: 'The Intune create profile pane with Windows 10 and later selected as the platform and Properties catalog selected as the profile type.',
+      caption: 'Create a Windows Properties catalog profile before App inventory can report anything useful.',
+    },
+    {
+      src: '/images/posts/set-up-and-view-app-inventory-data-in-intune/applicationproperties-selected.png',
+      alt: 'The Intune Properties picker with ApplicationProperties selected and application inventory fields shown.',
+      caption: 'ApplicationProperties is where the App inventory columns are selected.',
+    },
+    {
+      src: '/images/posts/set-up-and-view-app-inventory-data-in-intune/app-inventory-tab-sanitized.png',
+      alt: 'The App inventory tab on a Windows device in Intune with sensitive device details cropped out.',
+      caption: 'After check-in, App inventory appears under the device All apps view.',
+    },
+  ],
   'ai-agents-changed-how-i-build-things': [
     {
       src: '/images/posts/ai-agents-changed-how-i-build-things/ai-in-the-loop.png',

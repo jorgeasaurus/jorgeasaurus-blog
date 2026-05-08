@@ -1,0 +1,202 @@
+---
+title: "Set Up and View App Inventory Data in Intune"
+date: "2026-05-07"
+description: "App inventory gives you richer Windows app data in Intune, but only after you turn it on with a Properties catalog policy."
+tags: ["intune", "windows", "device-management", "application-inventory", "tutorial"]
+---
+
+Discovered apps has been the place most Intune admins go when they want to answer the classic question: "what is installed out there?"
+
+The problem is that Discovered apps is kind of the Temu version of the answer. You get app name, publisher, version, platform, and device count. Useful? Sure. Enough when someone asks you where an app lives, how big it is, what uninstall command it registered, or whether it was installed for the device or a specific user? Not really.
+
+That's where **App inventory** comes in. Microsoft is positioning it as the long-term replacement for Discovered apps, and it gives you much better Windows application inventory data directly on the device record.
+
+## What App Inventory Actually Collects
+
+App inventory extends the Windows device inventory agent so it can collect installed application data and upload it to Intune. For Win32 apps, it reads the familiar uninstall registry locations:
+
+```text
+HKLM\Software\Microsoft\Windows\CurrentVersion\Uninstall
+HKU\{SID}\Software\Microsoft\Windows\CurrentVersion\Uninstall
+```
+
+It also handles 32-bit apps on 64-bit systems and collects Store apps through the Windows package manager APIs.
+
+The first upload is a full inventory. After that, it sends deltas, because nobody needs every endpoint shouting the same 180 app records back at the service all day like a panicked intern.
+
+## The Important Catch
+
+Unlike Discovered apps, App inventory does **not** just magically turn itself on.
+
+You have to create and assign a device configuration policy first. No policy, no data. The device can be enrolled, alive, compliant, and generally minding its business, but App inventory will not show up until you explicitly tell Intune which application properties to collect.
+
+## Prerequisites
+
+You need:
+
+- Intune-enrolled Windows 10/11 devices
+- Microsoft Entra joined devices
+- A device or user group to assign the policy to
+- A little patience while devices check in
+
+Microsoft lists App inventory as Windows-only right now. Support for other platforms is planned, but if you are looking for macOS, iOS, iPadOS, Android, or AOSP inventory today, you are still living in Discovered apps land.
+
+## Create the App Inventory Policy
+
+In the Intune admin center, go to:
+
+**Devices** > **Manage devices** > **Configuration** > **Create** > **New policy**
+
+Use:
+
+- **Platform**: Windows 10 and later
+- **Profile type**: Properties catalog
+
+![Create a Windows Properties catalog profile for App inventory.](/images/posts/set-up-and-view-app-inventory-data-in-intune/create-profile-properties-catalog.png)
+
+Give the policy a name that future-you will understand. I usually keep these boring and obvious:
+
+```text
+Win - App Inventory
+```
+
+or, if you are also collecting device inventory properties in the same profile:
+
+```text
+Win - Device Inventory
+```
+
+Boring names scale better than clever names. Ask me how I know.
+
+## Add ApplicationProperties
+
+On **Configuration settings**, select **Add properties**, then select **ApplicationProperties**.
+
+![Selecting ApplicationProperties in the Properties catalog.](/images/posts/set-up-and-view-app-inventory-data-in-intune/applicationproperties-selected.png)
+
+Some properties are required and selected by default:
+
+| Property | Why it matters |
+| --- | --- |
+| App Name | The installed application display name |
+| App Version | The installed version reported by the device |
+| Publisher | The publisher from the app source |
+| Architectures | x86, x64, Arm, or whatever the source reports |
+| Install Scope | Whether the app is device-scoped or user-scoped |
+| Install Scope Platform User ID | The SID for user-scoped installs |
+| Install Scope User ID | The Entra user ID when available |
+
+Then you can add the fun stuff:
+
+| Optional property | Why I usually collect it |
+| --- | --- |
+| Install location | Useful when app cleanup becomes archaeology |
+| Install date | Helps answer "when did this get here?" |
+| Estimated size | Good enough for rough storage impact |
+| Platform-specific app ID | MSI product code, Store package name, or uninstall registry key name |
+| Platform specific app ID type | Tells you what kind of identifier you are looking at |
+| Uninstall command | The thing everyone wants when cleanup work begins |
+| Modify command | Less common, but useful for some MSI-based apps |
+| Languages | Helpful in multi-language environments |
+| Install Scope User Name | Best-effort username resolution for user-scoped apps |
+
+My bias: collect all of them unless you have a specific reason not to. The whole point of inventory is to avoid saying, "I wish we had collected that column."
+
+## Assign the Policy
+
+After choosing properties, continue through the wizard and assign the policy to your target group.
+
+You can assign it to devices or users. I prefer device groups for this kind of inventory policy because the thing doing the reporting is the device, and I usually want app inventory aligned with device management rings.
+
+If you already have a device inventory Properties catalog policy, you do not necessarily need a second policy. The Properties catalog can contain both device inventory and application inventory properties. Microsoft also notes that if multiple inventory policies target the same device, the settings merge. If there is a conflict for a property, **collect wins**.
+
+Translation: do not overthink it, but also do not create five overlapping inventory policies and then act surprised when troubleshooting feels haunted.
+
+## Wait for Check-In
+
+After assignment, devices start reporting on the next inventory/check-in cycle. Microsoft says active devices collect multiple times per day and App inventory is triggered with the MMPC sync/check-in cycle.
+
+The first sync uploads everything. Later syncs only upload changes.
+
+If you just assigned the policy and immediately clicked into a device expecting a perfect app list, congratulations, you have discovered patience-based administration.
+
+## View App Inventory Data
+
+Once a device has checked in, go to:
+
+**Devices** > **All devices** > select a device > **All apps** > **App inventory**
+
+![The App inventory tab on a Windows device in Intune.](/images/posts/set-up-and-view-app-inventory-data-in-intune/app-inventory-tab-sanitized.png)
+
+This page shows installed applications detected directly from the device. That matters because the names and versions may not match the tidy names you used in managed app assignments. Inventory reflects what is actually installed, not what your deployment naming convention wishes was installed.
+
+You can also use:
+
+- **Refresh** to reload the view
+- **Export** to pull the data out
+- **Columns** to show or hide collected properties
+- **Search** to find a specific app on the device
+
+The tab also shows the last checked date and the application count, which is the first thing I look at when someone says, "this device is missing inventory." If the timestamp is old, do not start blaming the report yet. Go look at device check-in health.
+
+## Can You Query App Inventory with Graph API?
+
+Technically, yes. This data is being pulled through Graph-backed Intune calls, and you can prove it by watching what the portal does.
+
+I used [Graph X-Ray](https://graphxray.merill.net/) while refreshing the App inventory page, then looked at the request in Chrome Developer Tools under the **Network** tab. Taking the token from that request and passing it into `Connect-MgGraph`, then checking the resulting `Get-MgContext` scopes, showed the permission involved:
+
+```text
+DeviceManagementServiceConfiguration.ReadWrite.All
+```
+
+The annoying part: I have not been able to request that scope directly with `Connect-MgGraph -Scopes`, even as a Global Administrator. The authentication flow fails with:
+
+```text
+AADSTS650053: The application 'Microsoft Graph Command Line Tools' asked for scope
+'DeviceManagementServiceConfiguration.ReadWrite.All' that doesn't exist on the
+resource '00000003-0000-0000-c000-000000000000'.
+```
+
+So yes, the data appears to be reachable through the same Graph-backed plumbing the Intune portal uses. But at the time of writing, I would not treat this as a normal, documented Microsoft Graph PowerShell workflow yet. The portal can get there with its token; asking the public Microsoft Graph PowerShell client for that scope is a different story.
+
+## App Inventory vs. Discovered Apps
+
+The short version:
+
+| Capability | Discovered apps | App inventory |
+| --- | --- | --- |
+| Configuration | Automatic | Requires a device configuration policy |
+| Refresh cycle | Slower, historically up to days depending on app type | Multiple times per day for active devices |
+| Data depth | Basic app metadata | Rich app metadata, including install scope, install location, size, IDs, and uninstall data |
+| Platform support | Windows, Apple, Android, AOSP | Windows today |
+| Where you view it | Apps monitoring and older per-device views | Device > All apps > App inventory |
+| User-scoped installs | Last logged-in user style reporting | Multi-user support |
+
+Both can run at the same time. Turning on App inventory does not disable Discovered apps.
+
+## Things to Know Before You Bet Your Reporting on It
+
+App inventory is better, but it is still inventory. That means the data depends on what exists on the endpoint.
+
+If an installer wrote garbage metadata to the uninstall registry key, Intune is not going to magically turn that into clean CMDB gold. If an uninstall string is missing locally, it will be missing in the report. If a user-scoped app belongs to a weird local/non-Entra context, username resolution is best effort.
+
+Use it as high-quality endpoint-reported data, not divine truth.
+
+## Why This Is Worth Turning On
+
+This is one of those Intune features that feels small until you need it.
+
+Need to find every device with a vulnerable app version? App inventory helps.
+
+Need uninstall commands without remoting into machines? App inventory helps.
+
+Need to know whether an app is installed per-user or per-device? App inventory helps.
+
+Need to explain why your managed app name does not match what is installed on the box? Annoying, but also App inventory helps.
+
+If you manage Windows devices in Intune, turn this on in a pilot group, confirm the columns you care about, then roll it wider. The future replacement for Discovered apps is already here; it just needs a policy before it starts doing anything useful.
+
+## Reference
+
+- [Microsoft Learn: App inventory for Microsoft Intune](https://learn.microsoft.com/en-us/intune/app-management/deployment/enhanced-app-inventory)
+- [Graph X-Ray](https://graphxray.merill.net/)

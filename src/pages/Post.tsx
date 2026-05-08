@@ -127,7 +127,6 @@ export default function Post() {
   const images = postImages[slug ?? ''] ?? []
   const [heroImage] = images
   const hasArticleHero = images.length === 1 && heroImage
-  const mediaImages = hasArticleHero ? [] : images
 
   return (
     <main className="blog-shell">
@@ -155,28 +154,6 @@ export default function Post() {
             />
             {heroImage.caption && <figcaption>{heroImage.caption}</figcaption>}
           </figure>
-        )}
-        {mediaImages.length > 0 && (
-          <section
-            className={`post-media ${
-              mediaImages.length === 1 ? 'post-media--single' : ''
-            }`}
-            aria-label="Images from the original post"
-          >
-            <p className="eyebrow">Original media</p>
-            <div className="post-media-grid">
-              {mediaImages.map((image) => (
-                <figure className="post-media-item" key={image.src}>
-                  <img
-                    src={image.src}
-                    alt={image.alt || postMeta.title}
-                    loading="lazy"
-                  />
-                  {image.caption && <figcaption>{image.caption}</figcaption>}
-                </figure>
-              ))}
-            </div>
-          </section>
         )}
         <div className="post-content">
           <PostContent />
