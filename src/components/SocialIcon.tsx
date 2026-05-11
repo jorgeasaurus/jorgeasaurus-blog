@@ -1,4 +1,4 @@
-type SocialIconName = 'github' | 'linkedin' | 'microsoft'
+type SocialIconName = 'github' | 'linkedin' | 'microsoft' | 'rss'
 
 interface SocialIconProps {
   name: SocialIconName
@@ -34,6 +34,17 @@ export default function SocialIcon({ name }: SocialIconProps) {
         <rect fill="currentColor" x="13" y="3" width="8" height="8" />
         <rect fill="currentColor" x="3" y="13" width="8" height="8" />
         <rect fill="currentColor" x="13" y="13" width="8" height="8" />
+      </svg>
+    )
+  }
+
+  if (name === 'rss') {
+    return (
+      <svg className="social-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          fill="currentColor"
+          d="M5.36 17.12a1.76 1.76 0 1 0 0 3.52 1.76 1.76 0 0 0 0-3.52Zm-1.58-6.7v2.78a7.02 7.02 0 0 1 7.02 7.02h2.78c0-5.41-4.39-9.8-9.8-9.8Zm0-5.42v2.78c6.86 0 12.44 5.58 12.44 12.44H19C19 11.83 12.17 5 3.78 5Z"
+        />
       </svg>
     )
   }

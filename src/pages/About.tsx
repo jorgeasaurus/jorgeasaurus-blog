@@ -87,6 +87,10 @@ export default function About() {
               <SocialIcon name="linkedin" />
               LinkedIn
             </a>
+            <a href="/rss.xml" type="application/rss+xml">
+              <SocialIcon name="rss" />
+              RSS Feed
+            </a>
           </div>
         </div>
       </article>
