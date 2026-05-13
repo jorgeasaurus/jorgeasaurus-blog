@@ -18,6 +18,24 @@ const postImages: Record<string, PostImageSet> = {
       caption: 'After check-in, App inventory appears under the device All apps view.',
     },
   ],
+  'creating-dynamic-device-model-groups-in-entra-with-powershell': [
+    {
+      src: '/images/posts/creating-dynamic-device-model-groups-in-entra-with-powershell/Screenshot1_Whatif.png',
+      alt: 'PowerShell running New-DynamicDeviceModelGroups with WhatIf to preview dynamic Entra device group creation.',
+    },
+    {
+      src: '/images/posts/creating-dynamic-device-model-groups-in-entra-with-powershell/GroupPage.jpeg',
+      alt: 'An Entra dynamic device group created for a Windows device model.',
+    },
+    {
+      src: '/images/posts/creating-dynamic-device-model-groups-in-entra-with-powershell/Dynamic%20Rules.png',
+      alt: 'The dynamic membership rule for an OS-scoped device model group in Entra.',
+    },
+    {
+      src: '/images/posts/creating-dynamic-device-model-groups-in-entra-with-powershell/WhatIfTable.png',
+      alt: 'The function output returned as table-formatted objects after a WhatIf run.',
+    },
+  ],
   'ai-agents-changed-how-i-build-things': [
     {
       src: '/images/posts/ai-agents-changed-how-i-build-things/ai-in-the-loop.png',
@@ -111,13 +129,13 @@ const postImages: Record<string, PostImageSet> = {
       alt: '',
     },
   ],
-  untitled: [
+  'intune-device-queries-to-level-up-your-device-management': [
     {
-      src: '/images/posts/untitled/IntuneCloud.png',
+      src: '/images/posts/intune-device-queries-to-level-up-your-device-management/IntuneCloud.png',
       alt: '',
     },
     {
-      src: '/images/posts/untitled/image.png',
+      src: '/images/posts/intune-device-queries-to-level-up-your-device-management/image.png',
       alt: '',
     },
   ],

@@ -6,7 +6,19 @@
     <atom:link href="https://jorgeasaur.us/rss.xml" rel="self" type="application/rss+xml" />
     <description>Field notes on PowerShell, endpoint management, Microsoft Graph, and automation.</description>
     <language>en-us</language>
-    <lastBuildDate>Thu, 07 May 2026 00:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 12 May 2026 00:00:00 GMT</lastBuildDate>
+    <item>
+      <title>Creating Dynamic Device Model Groups in Entra with PowerShell</title>
+      <link>https://jorgeasaur.us/creating-dynamic-device-model-groups-in-entra-with-powershell</link>
+      <guid isPermaLink="true">https://jorgeasaur.us/creating-dynamic-device-model-groups-in-entra-with-powershell</guid>
+      <pubDate>Tue, 12 May 2026 00:00:00 GMT</pubDate>
+      <description>A PowerShell walkthrough for creating OS-scoped dynamic Entra device groups based on Intune device models.</description>
+      <category>powershell</category>
+      <category>intune</category>
+      <category>entra-id</category>
+      <category>microsoft-graph</category>
+      <category>automation</category>
+    </item>
     <item>
       <title>Set Up and View App Inventory Data in Intune</title>
       <link>https://jorgeasaur.us/set-up-and-view-app-inventory-data-in-intune</link>
@@ -163,8 +175,8 @@
     </item>
     <item>
       <title>20+ Intune Device Queries to Level Up Your Device Management</title>
-      <link>https://jorgeasaur.us/untitled</link>
-      <guid isPermaLink="true">https://jorgeasaur.us/untitled</guid>
+      <link>https://jorgeasaur.us/intune-device-queries-to-level-up-your-device-management</link>
+      <guid isPermaLink="true">https://jorgeasaur.us/intune-device-queries-to-level-up-your-device-management</guid>
       <pubDate>Mon, 19 Feb 2024 00:00:00 GMT</pubDate>
       <description>Leverage Kusto Query Language with Intune Device Query to gain deep insights into your device fleet, from BIOS info to installed applications.</description>
       <category>intune</category>

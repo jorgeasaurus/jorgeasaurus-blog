@@ -25,3 +25,5 @@ Thumbs.db
 .playwright*/
 playwright-report/
 test-results/
+
+conference-talks/

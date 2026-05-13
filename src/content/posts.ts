@@ -2,6 +2,20 @@ import { type PostMeta } from '../lib/posts'
 
 const posts: PostMeta[] = [
   {
+    slug: 'creating-dynamic-device-model-groups-in-entra-with-powershell',
+    title: 'Creating Dynamic Device Model Groups in Entra with PowerShell',
+    date: '2026-05-12',
+    description:
+      'A PowerShell walkthrough for creating OS-scoped dynamic Entra device groups based on Intune device models.',
+    tags: ['powershell', 'intune', 'entra-id', 'microsoft-graph', 'automation'],
+    socialImage: {
+      src: '/images/posts/creating-dynamic-device-model-groups-in-entra-with-powershell/socialcard.png',
+      width: 1536,
+      height: 1024,
+      type: 'image/png',
+    },
+  },
+  {
     slug: 'set-up-and-view-app-inventory-data-in-intune',
     title: 'Set Up and View App Inventory Data in Intune',
     date: '2026-05-07',
@@ -112,7 +126,7 @@ const posts: PostMeta[] = [
     tags: ['powershell', 'intune', 'automation', 'microsoft-graph', 'scripting'],
   },
   {
-    slug: 'untitled',
+    slug: 'intune-device-queries-to-level-up-your-device-management',
     title: '20+ Intune Device Queries to Level Up Your Device Management',
     date: '2024-02-19',
     description:

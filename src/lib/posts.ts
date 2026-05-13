@@ -7,6 +7,12 @@ export interface PostMeta {
   date: string
   description: string
   tags?: string[]
+  socialImage?: {
+    src: string
+    width: number
+    height: number
+    type?: string
+  }
 }
 
 export interface PostImage {

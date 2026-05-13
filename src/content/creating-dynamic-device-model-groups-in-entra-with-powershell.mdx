@@ -1,0 +1,496 @@
+---
+title: "Creating Dynamic Device Model Groups in Entra with PowerShell"
+date: "2026-05-12"
+description: "A PowerShell walkthrough for creating OS-scoped dynamic Entra device groups based on Intune device models."
+tags: ["powershell", "intune", "entra-id", "microsoft-graph", "automation"]
+---
+
+So here's the thing: I needed dynamic groups for different device models.
+
+Not a revolutionary sentence, I know. But if you have ever had to target driver packages, policies, remediation scripts, or anything else based on hardware model, you know this gets annoying pretty quickly.
+
+I was inspired by [Maurice Daly's Driver Automation v10](https://www.driverautomationtool.com/). It already has solid logic that assigns drivers to all devices and checks requirements before attempting to install them. That works, and honestly it is pretty slick. But for my use case, I wanted to avoid assignments to all devices.
+
+I wanted the groups to do the targeting work for me.
+
+So I wrote `New-DynamicDeviceModelGroups.ps1`.
+
+The goal is simple:
+
+1. Check that I am connected to Microsoft Graph.
+2. Query Intune for the operating systems I care about.
+3. Handle Graph pagination because production tenants are not tiny lab tenants.
+4. Find the unique device models per OS.
+5. Create one OS-scoped dynamic Entra group per model.
+6. Return objects I can actually use later.
+
+Because why manually maintain device model groups when Microsoft Graph can suffer through that for us?
+
+## The Problem
+
+When you assign something to "all devices", you are trusting the requirement logic to save you from yourself.
+
+That is not always bad. Driver Automation v10 does this well by checking requirements before trying to install the wrong driver package on the wrong machine. But I wanted a cleaner targeting layer before the assignment ever reached the device.
+
+For example, if I have a group named:
+
+```text
+All - Windows - Model - Latitude 5450
+```
+
+Then I can assign Dell Latitude 5450-specific drivers, policies, or scripts to that group and not worry about the assignment being evaluated by every other Windows device in the tenant.
+
+The `Windows` part matters. Models are not always unique across platforms, and a group called `All - Model - Virtual Machine` is basically asking future me to debug something dumb.
+
+## Requirements
+
+The script uses Microsoft Graph PowerShell and needs permissions to read Intune managed devices and create Entra groups:
+
+```powershell
+Connect-MgGraph -Scopes "DeviceManagementManagedDevices.Read.All", "Group.ReadWrite.All"
+```
+
+The function supports these operating systems:
+
+```powershell
+Windows
+iOS
+Android
+macOS
+```
+
+Usage looks like this:
+
+```powershell
+New-DynamicDeviceModelGroups -OperatingSystems "Windows"
+```
+
+Or if you want to preview what would happen:
+
+```powershell
+New-DynamicDeviceModelGroups -OperatingSystems "Windows", "macOS" -WhatIf
+```
+
+You can also change the naming prefix:
+
+```powershell
+New-DynamicDeviceModelGroups -OperatingSystems "Windows" -GroupNamePrefix "Prod"
+```
+
+Which creates group names like:
+
+```text
+Prod - Windows - Model - Latitude 5450
+```
+
+Please use `-WhatIf`. Future you deserves the courtesy.
+
+![PowerShell running New-DynamicDeviceModelGroups with -WhatIf to preview dynamic Entra device group creation.](/images/posts/creating-dynamic-device-model-groups-in-entra-with-powershell/Screenshot1_Whatif.png)
+
+## Step 1: Start With a Real Function
+
+The script is wrapped in an advanced function so it behaves like a proper PowerShell command:
+
+```powershell
+[CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'High')]
+[OutputType([pscustomobject])]
+param(
+    [Parameter(Mandatory = $true, Position = 0)]
+    [ValidateNotNullOrEmpty()]
+    [ValidateSet("Windows", "iOS", "Android", "macOS")]
+    [string[]]$OperatingSystems,
+
+    [Parameter()]
+    [ValidateNotNullOrEmpty()]
+    [string]$GroupNamePrefix = "All"
+)
+```
+
+There are a few intentional choices here:
+
+- `SupportsShouldProcess` gives us `-WhatIf` and `-Confirm`.
+- `ConfirmImpact = 'High'` makes sense because the script creates groups.
+- `ValidateSet` prevents me from fat-fingering the OS value and wondering why nothing works.
+- `GroupNamePrefix` lets me change the naming convention without editing the script.
+- `OutputType` documents that this thing returns objects, not just pretty console noise.
+
+This is one of those small things that makes a script feel less like a random pile of PowerShell and more like something you can safely re-run.
+
+## Step 2: Check the Graph Connection First
+
+Before querying anything, the script checks whether Microsoft Graph is connected:
+
+```powershell
+$graphContext = Get-MgContext -ErrorAction SilentlyContinue
+if (-not $graphContext) {
+    $exception = [System.InvalidOperationException]::new(
+        'Microsoft Graph is not connected. Run Connect-MgGraph -Scopes "DeviceManagementManagedDevices.Read.All", "Group.ReadWrite.All" before calling this function.'
+    )
+    $errorRecord = [System.Management.Automation.ErrorRecord]::new(
+        $exception,
+        'MicrosoftGraphNotConnected',
+        [System.Management.Automation.ErrorCategory]::ConnectionError,
+        $null
+    )
+    $PSCmdlet.ThrowTerminatingError($errorRecord)
+}
+```
+
+Could I just let the first Graph request fail? Sure.
+
+Would that be annoying? Also yes.
+
+Failing early gives you a clear error message before the script starts doing any actual work. That is especially helpful if this ends up running in automation later.
+
+## Step 3: Query Only the Devices We Care About
+
+At first, this was just "get all managed devices."
+
+Then I remembered that production tenants exist.
+
+So the script builds an OData filter from the operating systems passed in:
+
+```powershell
+$uniqueOperatingSystems = $OperatingSystems | Select-Object -Unique
+$operatingSystemFilter = ($uniqueOperatingSystems | ForEach-Object {
+    "operatingSystem eq '$($_)'"
+}) -join " or "
+$encodedOperatingSystemFilter = [System.Uri]::EscapeDataString($operatingSystemFilter)
+```
+
+Then it queries only the fields it needs:
+
+```powershell
+$uri = "beta/deviceManagement/managedDevices?`$select=id,model,operatingSystem&`$filter=$encodedOperatingSystemFilter"
+```
+
+The script only needs `id`, `model`, and `operatingSystem` for this job. Pulling down the default payload because "whatever, Graph will figure it out" is how you end up waiting longer than necessary.
+
+## Step 4: Add Pagination
+
+Microsoft Graph paginates responses, so the script follows `@odata.nextLink` until there are no more pages:
+
+```powershell
+do {
+    $response = Invoke-MgGraphRequest -Method GET -Uri $uri -ErrorAction Stop
+    if ($response.Value) {
+        $allDevices.AddRange($response.Value)
+    }
+    $uri = $response.'@odata.nextLink'
+} while ($uri)
+```
+
+If you only handle the first page, your script works great in a tiny lab and then quietly lies to you in production. Always fun.
+
+So yes, pagination matters.
+
+## Step 5: Query Existing Dynamic Groups
+
+Before creating anything, the script checks what already exists:
+
+```powershell
+$groupUri = "beta/groups?`$select=id,displayName,mailNickname&`$filter=groupTypes/any(g:g eq 'DynamicMembership')"
+
+do {
+    $groupResponse = Invoke-MgGraphRequest -Method GET -Uri $groupUri -ErrorAction Stop
+    if ($groupResponse.Value) {
+        $existingGroups.AddRange($groupResponse.Value)
+    }
+    $groupUri = $groupResponse.'@odata.nextLink'
+} while ($groupUri)
+```
+
+Same pagination pattern, different endpoint.
+
+This query only asks for the fields the script cares about:
+
+- `id`
+- `displayName`
+- `mailNickname`
+
+And it filters to dynamic membership groups because those are the only groups relevant to this script.
+
+The goal here is idempotence. Fancy word, simple concept: if I run the script again, it should not create duplicate groups and make my tenant look like I lost a fight with a loop.
+
+## Step 6: Make Duplicate Checks Fast
+
+The first version checked for duplicates by scanning the entire group list for every model.
+
+That works, but it is not great if you have a lot of dynamic groups.
+
+So the script builds lookup tables:
+
+```powershell
+$existingByDisplayName = @{}
+$existingByMailNickname = @{}
+
+foreach ($group in $existingGroups) {
+    if (-not [string]::IsNullOrWhiteSpace($group.displayName)) {
+        $existingByDisplayName[$group.displayName] = $group
+    }
+
+    if (-not [string]::IsNullOrWhiteSpace($group.mailNickname)) {
+        $existingByMailNickname[$group.mailNickname] = $group
+    }
+}
+```
+
+Then duplicate checking becomes simple:
+
+```powershell
+$existingGroup = $existingByDisplayName[$groupDisplayName]
+if (-not $existingGroup) {
+    $existingGroup = $existingByMailNickname[$mailNickname]
+}
+```
+
+No drama. No duplicate groups. No portal cleanup afterward.
+
+## Step 7: Process One Operating System at a Time
+
+The function accepts multiple operating systems, so the script loops through each unique OS:
+
+```powershell
+foreach ($os in $uniqueOperatingSystems) {
+    $osDevices = $allDevices | Where-Object { $_.operatingSystem -eq $os }
+
+    if ($osDevices.Count -eq 0) {
+        Write-Warning "No $os devices found to process."
+        continue
+    }
+}
+```
+
+This lets me run it for only Windows devices, or Windows and macOS, or whatever makes sense for the tenant.
+
+I like this better than assuming the script should process everything. Sometimes you only want to solve the problem in front of you. Sometimes you want to make tomorrow's problem wait its turn.
+
+## Step 8: Find the Unique Models
+
+Once the devices are filtered by operating system, the script pulls out the unique models:
+
+```powershell
+$models = $osDevices |
+    ForEach-Object { $_.model } |
+    Where-Object { -not [string]::IsNullOrWhiteSpace($_) } |
+    Sort-Object -Unique
+```
+
+This is the part where the script goes from "all Windows devices" to "all the Windows device models I actually care about."
+
+It also filters out blank model values, because creating a group named `All - Windows - Model -` would be very on-brand for a rushed script and very annoying for everyone else.
+
+If Intune has these models:
+
+```text
+Latitude 5450
+Latitude 7450
+Virtual Machine
+Surface Laptop 6
+```
+
+Then the script will attempt to create one dynamic group for each model.
+
+## Step 9: Map Intune OS Names to Entra Dynamic Rule Values
+
+This is where the script needed to be a little more careful.
+
+Intune's `operatingSystem` value and Entra's dynamic group `device.deviceOSType` value are related, but they are not always the same exact string. Windows is straightforward. iOS is not, because Entra examples commonly use `iPad` and `iPhone`.
+
+So the script maps the requested OS to an Entra dynamic rule fragment:
+
+```powershell
+$osRule = switch ($os) {
+    "Windows" { 'device.deviceOSType -eq "Windows"' }
+    "iOS" { '(device.deviceOSType -eq "iPad") -or (device.deviceOSType -eq "iPhone")' }
+    "Android" { '(device.deviceOSType -startsWith "Android") -or (device.deviceOSType -eq "AndroidForWork")' }
+    "macOS" { 'device.deviceOSType -contains "Mac"' }
+}
+```
+
+This is the difference between "I found models by OS" and "the group membership rule actually enforces the OS."
+
+That distinction matters.
+
+## Step 10: Build Safe Group Names
+
+Group names and mail nicknames have rules. Device models, on the other hand, are sometimes generated by vendors who apparently enjoy chaos.
+
+The display name includes the prefix, OS, and model:
+
+```powershell
+$groupDisplayName = "$GroupNamePrefix - $os - Model - $modelName"
+$groupDisplayName = $groupDisplayName `
+    -replace '[<>:"/\\|?*]', '' `
+    -replace '[\[\]]', '' `
+    -replace '\s+', ' ' `
+    -replace '^\s+|\s+$', ''
+```
+
+And then the script creates a mail nickname:
+
+```powershell
+$mailNickname = $groupDisplayName `
+    -replace '[^a-zA-Z0-9.-]', '' `
+    -replace '\.+', '.' `
+    -replace '^-+|-+$', '' `
+    -replace '^\.+|\.+$', ''
+
+$mailNickname = $mailNickname.ToLower()
+```
+
+There is also a fallback in case the nickname ends up empty or too short:
+
+```powershell
+if ([string]::IsNullOrEmpty($mailNickname) -or $mailNickname.Length -lt 3) {
+    $mailNickname = "model-$($os)-$($modelName -replace '[^a-zA-Z0-9]', '')".ToLower()
+}
+```
+
+Is this glamorous? No.
+
+Does it prevent a weird model string from breaking the run halfway through? Yes.
+
+That is the kind of boring I am looking for.
+
+## Step 11: Escape the Model Before Building the Rule
+
+This is one of those details that is easy to miss until a vendor ships a model string with a quote in it and ruins your day.
+
+The script escapes backticks and double quotes before embedding the model in the dynamic membership rule:
+
+```powershell
+$escapedModel = $modelName -replace '`', '``' -replace '"', '`"'
+$membershipRule = "($osRule) -and (device.deviceModel -eq `"$escapedModel`")"
+```
+
+For a Windows device model, the final rule looks like:
+
+```powershell
+(device.deviceOSType -eq "Windows") -and (device.deviceModel -eq "Latitude 5450")
+```
+
+That tells Entra to automatically include Windows devices where the device model matches the model discovered from Intune.
+
+Not just any device with that model string.
+
+Windows devices with that model string.
+
+That is the point.
+
+![An Entra dynamic device group created for a Windows device model.](/images/posts/creating-dynamic-device-model-groups-in-entra-with-powershell/GroupPage.jpeg)
+
+![The dynamic membership rule for an OS-scoped device model group in Entra.](/images/posts/creating-dynamic-device-model-groups-in-entra-with-powershell/Dynamic%20Rules.png)
+
+## Step 12: Create the Group
+
+Once the name, nickname, and rule are ready, the script posts the group to Graph:
+
+```powershell
+$params = @{
+    displayName                   = $groupDisplayName
+    mailEnabled                   = $false
+    mailNickname                  = $mailNickname
+    securityEnabled               = $true
+    groupTypes                    = @("DynamicMembership")
+    membershipRule                = $membershipRule
+    membershipRuleProcessingState = "On"
+}
+
+$result = Invoke-MgGraphRequest `
+    -Method POST `
+    -Uri "beta/groups" `
+    -Body ($params | ConvertTo-Json -Depth 10) `
+    -ContentType "application/json" `
+    -ErrorAction Stop
+```
+
+Now we have a dynamic group per OS and model.
+
+## Step 13: Respect `-WhatIf` and `-Confirm`
+
+Because the function uses `SupportsShouldProcess`, group creation is wrapped in:
+
+```powershell
+if (-not $PSCmdlet.ShouldProcess($groupDisplayName, "Create dynamic Entra group")) {
+    $status = if ($WhatIfPreference) { "Previewed" } else { "Declined" }
+    # Return result object
+    continue
+}
+```
+
+This means I can test the logic without creating anything:
+
+```powershell
+New-DynamicDeviceModelGroups -OperatingSystems "Windows" -WhatIf
+```
+
+For scripts that create tenant objects, this is not optional in my opinion. I want to know what the script plans to do before it starts doing things.
+
+PowerShell gives us that pattern for free. Might as well use it.
+
+## Step 14: Return Useful Results
+
+Instead of dumping a bunch of colored `Write-Host` output, the script returns objects:
+
+```powershell
+[PSCustomObject]@{
+    OperatingSystem = $os
+    DeviceModel     = $modelName
+    GroupName       = $groupDisplayName
+    Status          = "Created"
+    GroupId         = $result.id
+    Reason          = $null
+    Error           = $null
+}
+```
+
+The `Status` value can tell you what happened:
+
+- `Created`
+- `AlreadyExists`
+- `Previewed`
+- `Declined`
+- `Failed`
+
+That means you can export the results, filter them, summarize them, or pipe them into something else:
+
+```powershell
+New-DynamicDeviceModelGroups -OperatingSystems "Windows" -WhatIf |
+    Format-Table OperatingSystem, DeviceModel, GroupName, Status
+```
+
+Automation likes objects. Humans like colors. This version chooses objects.
+
+![The function output returned as table-formatted objects after a WhatIf run.](/images/posts/creating-dynamic-device-model-groups-in-entra-with-powershell/WhatIfTable.png)
+
+## Why This Approach Works
+
+What I like about this approach is that it moves targeting up a layer.
+
+Instead of assigning a driver package to every device and relying entirely on install-time checks, I can assign model-specific content to model-specific groups. The requirements still matter, but now they are not the only thing standing between me and a bad assignment.
+
+The script is not doing anything magical. It is just putting together a few reliable pieces:
+
+- Check the Graph connection.
+- Query only the requested Intune devices.
+- Handle pagination.
+- Get existing dynamic groups.
+- Use fast duplicate lookups.
+- Filter devices by operating system.
+- Find unique, non-blank models.
+- Map Intune OS values to Entra dynamic rule fragments.
+- Sanitize group names and mail nicknames.
+- Escape model strings before building rules.
+- Create OS-scoped dynamic membership groups.
+- Return useful objects.
+
+That is usually how these scripts come together. Not one giant flash of inspiration. Just one small problem after another until the annoying manual process is gone.
+
+## Full Script
+
+The full script is available here:
+
+[New-DynamicDeviceModelGroups.ps1](https://github.com/jorgeasaurus/IntuneScripts/blob/main/New-DynamicDeviceModelGroups.ps1)
+
+As always, test in a lab, run with `-WhatIf`, and please do not YOLO this straight into production on a Friday afternoon.
