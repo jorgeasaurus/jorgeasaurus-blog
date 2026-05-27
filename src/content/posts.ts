@@ -2,6 +2,20 @@ import { type PostMeta } from '../lib/posts'
 
 const posts: PostMeta[] = [
   {
+    slug: 'reusable-intune-remediation-template',
+    title: 'Build a Reusable Intune Remediation Template',
+    date: '2026-05-25',
+    description:
+      'A reusable PowerShell pattern for Intune Remediations with predictable exit codes, logging, 64-bit handling, and portal-friendly output.',
+    tags: ['powershell', 'intune', 'remediations', 'windows', 'scripting'],
+    socialImage: {
+      src: '/images/posts/reusable-intune-remediation-template/socialcard.png',
+      width: 1200,
+      height: 630,
+      type: 'image/png',
+    },
+  },
+  {
     slug: 'creating-dynamic-device-model-groups-in-entra-with-powershell',
     title: 'Creating Dynamic Device Model Groups in Entra with PowerShell',
     date: '2026-05-12',

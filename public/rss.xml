@@ -6,7 +6,19 @@
     <atom:link href="https://jorgeasaur.us/rss.xml" rel="self" type="application/rss+xml" />
     <description>Field notes on PowerShell, endpoint management, Microsoft Graph, and automation.</description>
     <language>en-us</language>
-    <lastBuildDate>Tue, 12 May 2026 00:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 25 May 2026 00:00:00 GMT</lastBuildDate>
+    <item>
+      <title>Build a Reusable Intune Remediation Template</title>
+      <link>https://jorgeasaur.us/reusable-intune-remediation-template</link>
+      <guid isPermaLink="true">https://jorgeasaur.us/reusable-intune-remediation-template</guid>
+      <pubDate>Mon, 25 May 2026 00:00:00 GMT</pubDate>
+      <description>A reusable PowerShell pattern for Intune Remediations with predictable exit codes, logging, 64-bit handling, and portal-friendly output.</description>
+      <category>powershell</category>
+      <category>intune</category>
+      <category>remediations</category>
+      <category>windows</category>
+      <category>scripting</category>
+    </item>
     <item>
       <title>Creating Dynamic Device Model Groups in Entra with PowerShell</title>
       <link>https://jorgeasaur.us/creating-dynamic-device-model-groups-in-entra-with-powershell</link>

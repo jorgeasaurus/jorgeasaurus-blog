@@ -1,0 +1,293 @@
+---
+title: "Build a Reusable Intune Remediation Template"
+date: "2026-05-25"
+description: "A reusable PowerShell pattern for Intune Remediations with predictable exit codes, logging, 64-bit handling, and portal-friendly output."
+tags: ["powershell", "intune", "remediations", "windows", "scripting"]
+---
+
+Intune Remediations are simple until they are not. The script works locally, Intune says "failed", the output is empty, and now you are reading `AgentExecutor.log` like it owes you money.
+
+The fix is boring: use the same structure every time.
+
+## What Intune Expects
+
+Detection controls whether remediation runs:
+
+- `exit 0`: compliant, do not remediate.
+- `exit 1`: not compliant, run remediation.
+- Write short, useful output. That output is what future-you reads in the portal.
+- Test under the same context Intune uses. System context and user context are not interchangeable.
+
+For client logs, start here:
+
+```text
+C:\ProgramData\Microsoft\IntuneManagementExtension\Logs\AgentExecutor.log
+C:\ProgramData\Microsoft\IntuneManagementExtension\Logs\HealthScripts.log
+C:\ProgramData\Microsoft\IntuneManagementExtension\Logs\IntuneManagementExtension.log
+```
+
+Write your own remediation logs to that same directory when the script runs as System. Those files are easier to collect with Intune diagnostics, and your team does not need to remember another path.
+
+## Detection Template
+
+This example detects whether a registry value exists and matches the expected value. Replace the test block with your real condition.
+
+```powershell
+#Requires -Version 5.1
+
+[CmdletBinding()]
+param()
+
+# Stop on command errors so Intune receives a clear failure instead of a partial success.
+$ErrorActionPreference = 'Stop'
+
+# Write detailed troubleshooting logs beside the native Intune Management Extension logs.
+# This makes the custom logs available when collecting diagnostics from Intune.
+$LogRoot = Join-Path $env:ProgramData 'Microsoft\IntuneManagementExtension\Logs'
+$LogPath = Join-Path $LogRoot 'Company-ExampleRemediation-Detect.log'
+
+function Write-Log {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [string]$Message,
+
+        [ValidateSet('INFO', 'WARN', 'ERROR')]
+        [string]$Level = 'INFO'
+    )
+
+    try {
+        # Create the log directory on first run.
+        if (-not (Test-Path -Path $LogRoot)) {
+            New-Item -Path $LogRoot -ItemType Directory -Force | Out-Null
+        }
+
+        # Use a simple timestamped log format that is easy to read from the endpoint.
+        $timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
+        Add-Content -Path $LogPath -Value "[$timestamp][$Level] $Message"
+    }
+    catch {
+        Write-Verbose "Unable to write remediation log: $($_.Exception.Message)"
+    }
+}
+
+try {
+    # Replace these three values with the setting your remediation owns.
+    $registryPath = 'HKLM:\SOFTWARE\Company\Example'
+    $valueName = 'Configured'
+    $expectedValue = '1'
+
+    # Missing path means the device is not compliant, so Intune should run remediation.
+    if (-not (Test-Path -Path $registryPath)) {
+        Write-Log "Missing registry path: $registryPath" 'WARN'
+        Write-Output "Not compliant: registry path missing"
+        exit 1
+    }
+
+    # Read the current value. -ErrorAction Stop sends missing values to catch.
+    $actualValue = (Get-ItemProperty -Path $registryPath -Name $valueName -ErrorAction Stop).$valueName
+
+    # Wrong value means the device is not compliant, so Intune should run remediation.
+    if ($actualValue -ne $expectedValue) {
+        Write-Log "Unexpected value. Expected '$expectedValue', found '$actualValue'." 'WARN'
+        Write-Output "Not compliant: incorrect registry value"
+        exit 1
+    }
+
+    # Exit 0 tells Intune the device is compliant and no remediation is needed.
+    Write-Log 'Detection passed.'
+    Write-Output 'Compliant'
+    exit 0
+}
+catch {
+    # Detection errors should be visible and should trigger remediation.
+    Write-Log $_.Exception.Message 'ERROR'
+    Write-Output "Detection error: $($_.Exception.Message)"
+    exit 1
+}
+```
+
+## Remediation Template
+
+The remediation makes the smallest possible change, verifies it, and exits based on the result.
+
+```powershell
+#Requires -Version 5.1
+
+[CmdletBinding()]
+param()
+
+# Stop on command errors so the catch block can log and return a failed exit code.
+$ErrorActionPreference = 'Stop'
+
+# Write detailed troubleshooting logs beside the native Intune Management Extension logs.
+# This makes the custom logs available when collecting diagnostics from Intune.
+$LogRoot = Join-Path $env:ProgramData 'Microsoft\IntuneManagementExtension\Logs'
+$LogPath = Join-Path $LogRoot 'Company-ExampleRemediation-Remediate.log'
+
+function Write-Log {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [string]$Message,
+
+        [ValidateSet('INFO', 'WARN', 'ERROR')]
+        [string]$Level = 'INFO'
+    )
+
+    try {
+        # Create the log directory on first run.
+        if (-not (Test-Path -Path $LogRoot)) {
+            New-Item -Path $LogRoot -ItemType Directory -Force | Out-Null
+        }
+
+        # Use a simple timestamped log format that is easy to read from the endpoint.
+        $timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
+        Add-Content -Path $LogPath -Value "[$timestamp][$Level] $Message"
+    }
+    catch {
+        Write-Verbose "Unable to write remediation log: $($_.Exception.Message)"
+    }
+}
+
+function Assert-Running64BitPowerShell {
+    [CmdletBinding()]
+    param()
+
+    # Relaunch from SysNative when Intune starts the script in 32-bit PowerShell.
+    if ([Environment]::Is64BitOperatingSystem -and -not [Environment]::Is64BitProcess) {
+        $powerShell64 = Join-Path $env:WINDIR 'SysNative\WindowsPowerShell\v1.0\powershell.exe'
+
+        if (Test-Path -Path $powerShell64) {
+            Write-Log 'Relaunching remediation in 64-bit PowerShell.'
+
+            # Run this same script in 64-bit PowerShell and return that process exit code.
+            $process = Start-Process -FilePath $powerShell64 -ArgumentList @(
+                '-NoProfile'
+                '-ExecutionPolicy'
+                'Bypass'
+                '-File'
+                "`"$PSCommandPath`""
+            ) -Wait -PassThru
+
+            exit $process.ExitCode
+        }
+    }
+}
+
+try {
+    Assert-Running64BitPowerShell
+
+    # Replace these three values with the setting your remediation owns.
+    $registryPath = 'HKLM:\SOFTWARE\Company\Example'
+    $valueName = 'Configured'
+    $expectedValue = '1'
+
+    # Create the parent registry path before writing the desired value.
+    if (-not (Test-Path -Path $registryPath)) {
+        New-Item -Path $registryPath -Force | Out-Null
+        Write-Log "Created registry path: $registryPath"
+    }
+
+    # Apply the desired state. This is the actual remediation action.
+    New-ItemProperty -Path $registryPath -Name $valueName -Value $expectedValue -PropertyType String -Force | Out-Null
+    Write-Log "Set $registryPath\$valueName to '$expectedValue'."
+
+    # Verify the remediation before reporting success to Intune.
+    $actualValue = (Get-ItemProperty -Path $registryPath -Name $valueName -ErrorAction Stop).$valueName
+
+    if ($actualValue -ne $expectedValue) {
+        throw "Verification failed. Expected '$expectedValue', found '$actualValue'."
+    }
+
+    # Exit 0 tells Intune the remediation completed successfully.
+    Write-Output 'Remediation completed'
+    exit 0
+}
+catch {
+    # Exit 1 tells Intune remediation failed and preserves the useful error locally.
+    Write-Log $_.Exception.Message 'ERROR'
+    Write-Output "Remediation error: $($_.Exception.Message)"
+    exit 1
+}
+```
+
+## Deployment Settings
+
+Use these defaults unless you have a reason not to:
+
+- Run this script using the logged-on credentials: `No`
+- Enforce script signature check: `No`, unless you already sign scripts
+- Run script in 64-bit PowerShell: `Yes`
+- Schedule: start hourly while testing, then relax it after validation
+
+If the remediation needs `HKCU`, user profile files, toast notifications, or per-user app data, revisit the credential setting. Running as System will not magically mean "the currently signed-in user's profile."
+
+If you run in user context, do not assume the user can write to the Intune Management Extension log directory. Either keep the remediation in System context or change `$LogRoot` to a user-writable path.
+
+## Best-Practice Notes
+
+The guidance I keep coming back to:
+
+- Save scripts as UTF-8.
+- Keep detection read-only.
+- Use `exit 1` only when you want remediation to run.
+- Use `exit 0` only when the device is compliant or remediation succeeded.
+- Put short status text in `Write-Output` for the Intune portal.
+- Put detailed troubleshooting data in a local log file.
+- Review `AgentExecutor.log`, `HealthScripts.log`, and your custom log together.
+- Export remediation device status when you need to compare results across many devices.
+
+## Testing Checklist
+
+The maintained copies of the sample detection and remediation scripts live in the [IntuneScripts reusable-template folder](https://github.com/jorgeasaurus/IntuneScripts/tree/main/remediations/reusable-template).
+
+Run the detection locally first:
+
+```powershell
+.\Detect-Example.ps1
+$LASTEXITCODE
+```
+
+Then test as System with PsExec. If you do not already have it, download it from Microsoft's official [PsExec Sysinternals page](https://learn.microsoft.com/sysinternals/downloads/psexec):
+
+```powershell
+psexec.exe -i -s powershell.exe
+```
+
+From the System PowerShell window:
+
+```powershell
+Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
+.\Detect-Example.ps1
+.\Remediate-Example.ps1
+.\Detect-Example.ps1
+```
+
+Expected flow:
+
+1. Detection returns `1` before the fix.
+2. Remediation returns `0`.
+3. Detection returns `0` after the fix.
+4. Logs exist under `C:\ProgramData\Microsoft\IntuneManagementExtension\Logs`.
+5. Intune eventually shows useful pre-remediation and post-remediation output.
+
+## Reuse Rules
+
+Keep the template boring:
+
+- One detection condition per remediation package.
+- Detection should not fix anything.
+- Remediation should verify its own work.
+- Portal output should be short.
+- File logs should be detailed enough to debug without rerunning the script.
+- Treat 32-bit vs 64-bit behavior as a deployment setting and a script concern.
+
+Most Intune remediation pain comes from ambiguity. Make context, exit codes, output, and verification obvious, and the scripts become much easier to trust.
+
+## References
+
+- [Use Remediations to detect and fix support issues](https://learn.microsoft.com/en-us/intune/intune-service/fundamentals/remediations)
+- [PowerShell scripts for Remediations](https://learn.microsoft.com/en-us/intune/device-management/tools/ref-remediation-scripts)
+- [Understand the Intune management extension](https://learn.microsoft.com/en-us/mem/intune/apps/intune-management-extension)
+- [Add PowerShell scripts to Windows devices in Intune](https://learn.microsoft.com/en-us/intune/device-management/tools/run-powershell-scripts-windows)

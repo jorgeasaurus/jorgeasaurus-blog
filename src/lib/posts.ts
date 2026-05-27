@@ -23,8 +23,19 @@ export interface PostImage {
 
 export type PostImageSet = PostImage[]
 
+function parsePostDate(dateStr: string): Date {
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr)
+
+  if (dateOnly) {
+    const [, year, month, day] = dateOnly
+    return new Date(Number(year), Number(month) - 1, Number(day))
+  }
+
+  return new Date(dateStr)
+}
+
 export function formatDate(dateStr: string): string {
-  const date = new Date(dateStr)
+  const date = parsePostDate(dateStr)
 
   if (Number.isNaN(date.getTime())) {
     return dateStr
@@ -39,6 +50,6 @@ export function formatDate(dateStr: string): string {
 
 export function sortPostsByDate(posts: PostMeta[]): PostMeta[] {
   return [...posts].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+    (a, b) => parsePostDate(b.date).getTime() - parsePostDate(a.date).getTime()
   )
 }
