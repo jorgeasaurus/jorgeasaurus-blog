@@ -949,6 +949,21 @@ h2 {
   transform: scale(1.01);
 }
 
+.image-expand-trigger--content {
+  width: auto;
+  max-width: 100%;
+  margin: 1.2em 0;
+  border-radius: 14px;
+}
+
+.image-expand-trigger--content:focus-visible {
+  outline-offset: 4px;
+}
+
+.post-content .image-expand-trigger--content img {
+  margin: 0;
+}
+
 .post-hero-figure figcaption {
   padding: 12px 14px 13px;
   color: rgba(238, 255, 244, 0.76);
@@ -1182,16 +1197,34 @@ h2 {
   z-index: 100;
   display: grid;
   place-items: center;
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
   padding: clamp(18px, 4vw, 52px);
+  border: 0;
   background:
     radial-gradient(circle at 28% 18%, rgba(157, 240, 182, 0.18), transparent 34%),
     radial-gradient(circle at 74% 78%, rgba(215, 255, 227, 0.1), transparent 32%),
     rgba(1, 6, 4, 0.88);
+  color: inherit;
   backdrop-filter: blur(18px) saturate(1.18);
+  box-sizing: border-box;
   animation: lightbox-fade-in 160ms ease-out;
 }
 
+.image-lightbox:not([open]) {
+  display: none;
+}
+
+.image-lightbox::backdrop {
+  background: transparent;
+}
+
 .image-lightbox__image {
+  position: relative;
+  z-index: 1;
   display: block;
   max-width: min(96vw, 1500px);
   max-height: 88vh;
@@ -1208,6 +1241,7 @@ h2 {
 
 .image-lightbox__close {
   position: fixed;
+  z-index: 2;
   top: clamp(14px, 3vw, 28px);
   right: clamp(14px, 3vw, 28px);
   display: grid;

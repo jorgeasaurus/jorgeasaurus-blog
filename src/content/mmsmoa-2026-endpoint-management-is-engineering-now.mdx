@@ -1,0 +1,251 @@
+---
+title: "MMSMOA 2026: Endpoint Management Is an Engineering Discipline Now"
+date: "2026-05-30"
+description: "A practical MMSMOA recap for Intune, Windows, security, PowerShell, and automation work that needs to survive real operations."
+tags: ["intune", "endpoint-management", "powershell", "automation", "windows", "security", "conference"]
+---
+
+I went to MMSMOA looking for the useful part.
+
+Not swag. Not portal screenshots. Not a list of sessions I could pretend to remember perfectly two weeks later.
+
+I wanted the pattern.
+
+After going through the exported materials, the pattern was pretty obvious: endpoint management is not tool administration anymore. It is an engineering discipline.
+
+That is the boring version.
+
+It is also the useful version.
+
+## The Theme Was Operations
+
+The biggest signal was not one product.
+
+It was the way the same words kept showing up around everything: Intune, Windows, security, device, management, access, data, app, policy, update, Entra, Defender, PowerShell, Graph, Autopilot, Autopatch, ConfigMgr, troubleshooting, and Zero Trust.
+
+That list is basically the modern endpoint job description.
+
+The job is not "click the right blade in Intune." The job is:
+
+- Know what state the fleet should be in.
+- Prove what state the fleet is actually in.
+- Roll changes out without lighting the environment on fire.
+- Detect drift quickly.
+- Remediate it safely.
+- Explain the result to security, leadership, and the help desk.
+
+The portal helps.
+
+The portal is not the system.
+
+## Intune Needs Engineering Hygiene
+
+Intune showed up everywhere, but the useful takeaway was not "move everything to Intune."
+
+The useful takeaway was "manage Intune like production infrastructure."
+
+That means boring controls:
+
+- Naming standards that make assignments understandable later.
+- Pilot rings that are real, not decorative.
+- Filters and groups with clear ownership.
+- App detection that tells the truth.
+- Update policies with rollback thinking.
+- Reporting that catches failure before users do.
+- Documentation close enough to the work that someone might actually update it.
+
+The green checkmark is a hint, not a guarantee.
+
+Endpoint engineers need to stop treating policy success like proof. It is only one signal. The better question is whether the device is in the intended state and whether we can prove it without manually clicking through five screens.
+
+## Reporting Is Operational Infrastructure
+
+One of the repeated messages was that built-in reporting is useful, but it is not enough.
+
+That tracks with real life.
+
+Most teams do not need another dashboard because dashboards are fun. They need a way to answer operational questions without starting a research project every time something breaks.
+
+Questions like:
+
+- Which devices are missing critical controls?
+- Which apps failed installation and stayed failed?
+- Which update policies are blocked by readiness issues?
+- Which devices are stale, duplicated, or lying to us?
+- Which security baselines drifted?
+- Which automation identities can touch production?
+
+That is not "reporting" in the decorative sense.
+
+That is instrumentation.
+
+If the fleet is a system, reporting is how we keep the system observable.
+
+## Security Moved Into The Endpoint Workflow
+
+Security was not a side track. It was woven through the endpoint story.
+
+Zero Trust, Defender, WDAC, Entra, Purview, automation identity, AI governance, script allowlisting, and Windows security management all point at the same thing:
+
+Endpoint engineering is security engineering now.
+
+That does not mean every endpoint admin needs to become a full-time security analyst. It means the work has to be designed with security boundaries from the start.
+
+If a script can change the fleet, its identity deserves the same scrutiny as a human admin.
+
+If a policy can break productivity, it needs a rollout plan.
+
+If AI can summarize, query, or act on sensitive data, it needs permissions, logging, and human approval in the right places.
+
+Security is not the team that says no after the endpoint team builds something.
+
+Security is part of the acceptance criteria.
+
+## PowerShell Is Still The Glue
+
+PowerShell was exactly where I expected it to be: everywhere between the official product features.
+
+Graph exports. Intune reporting. Detection scripts. Remediation workflows. Device inventory. App lifecycle work. Troubleshooting. Tenant bootstrap. Automation identities.
+
+The lesson was not "write more scripts."
+
+The lesson was "stop writing disposable scripts for permanent problems."
+
+A production endpoint script needs:
+
+- Parameters instead of edited variables.
+- Predictable output for humans.
+- Predictable exit codes for management tools.
+- Logs that survive after the agent exits.
+- Idempotence.
+- 64-bit and SYSTEM context awareness.
+- Graph permission discipline.
+- A test path before production assignment.
+
+It is not clever.
+
+That is the point.
+
+The more critical the workflow, the less it should feel like a one-off.
+
+## AI Is Useful Inside Guardrails
+
+AI showed up a lot, but the grounded version mattered more than the shiny version.
+
+AI can help with summarization, query generation, troubleshooting, security investigation, script scaffolding, and turning messy notes into a usable plan.
+
+Great.
+
+Now constrain it.
+
+The practical model is:
+
+1. Read.
+2. Validate.
+3. Act.
+
+Let AI help collect context and propose the next move. Make humans own the approval path when the action changes production, touches sensitive data, or affects users.
+
+The same rule applies to AI that applies to automation:
+
+Fast and ungoverned is just a faster incident.
+
+## What Surprised Me
+
+The surprising part was how often the newest topics pointed back to old fundamentals.
+
+Autopatch still needs readiness.
+
+Autopilot still needs clean identity, network, app, and policy assumptions.
+
+AI still needs permissions and review.
+
+Graph still needs sane data handling.
+
+Security baselines still need rollout rings.
+
+ConfigMgr still reminds everyone that mature operations patterns matter, even when the control plane changes.
+
+The future did not make fundamentals obsolete.
+
+It raised the cost of ignoring them.
+
+## Credit Where It Is Due
+
+The content export that made this recap possible came from [AndrewJNet's CopyMMSFiles repo](https://github.com/AndrewJNet/CopyMMSFiles). Thank you, Andrew.
+
+Also, a very real thank you to Mike Terrill and Mattias Benninge. Their `Build Your Test Lab: No Lab? No Problem!` session mentioned and demoed [Intune Hydration Kit](https://www.intunehydrationkit.com/) as part of the Intune lab tooling story.
+
+Seeing something I built show up in a session like that is wild.
+
+In the best way.
+
+## What I Would Bring Back To The Team
+
+Here is the back-to-work list I would actually care about.
+
+First, define the intended state for our endpoints. Not in vague words. In controls, policies, apps, update posture, identity requirements, and reporting signals.
+
+Second, build a reporting backlog around questions we repeatedly ask manually. If we keep clicking around to answer the same thing, that is a system smell.
+
+Third, standardize our automation shape. Script templates, logging, exit codes, Graph auth, error handling, and review expectations should not be reinvented every time.
+
+Fourth, make rollout rings boring and enforced. Pilot, broaden, production. Every risky change should have a path in and a path out.
+
+Fifth, review automation identities. Anything that can change devices, users, groups, apps, or policies should have a documented owner and least-privilege permissions.
+
+Sixth, pick one AI-assisted workflow and govern it properly. Start small. Prove value. Write the rules before people invent five different versions in the shadows.
+
+## A 30/60/90-Day Plan
+
+Thirty days:
+
+- Inventory the top endpoint controls we claim to manage.
+- Map the Intune assignments that matter most.
+- Identify the five reporting questions we answer manually.
+- Choose a standard PowerShell remediation template.
+- Review high-privilege automation identities.
+
+Sixty days:
+
+- Build one Graph-backed operational report.
+- Pilot one update or app lifecycle improvement.
+- Fix two noisy deployment failure modes.
+- Test script signing or allowlisting assumptions.
+- Document one AI-assisted admin workflow with guardrails.
+
+Ninety days:
+
+- Standardize deployment rings for policy, apps, and updates.
+- Turn one recurring manual workflow into a reviewed automation.
+- Add reporting to the team operating rhythm.
+- Publish the endpoint automation standards.
+- Review progress with security using evidence, not vibes.
+
+## Reuse Rules
+
+If I had to compress MMSMOA into rules I would reuse, it would be these:
+
+- Manage endpoints like a platform.
+- Treat reporting as instrumentation.
+- Assume green checkmarks are incomplete evidence.
+- Automate with logs, exit codes, and rollback thinking.
+- Secure automation identities like production admins.
+- Use AI for leverage, not unsupervised authority.
+- Keep ConfigMgr-era operational discipline even when the control plane is Intune.
+
+## Final Thought
+
+MMSMOA did not convince me to chase more buttons.
+
+It convinced me to be more serious about the operating model.
+
+Endpoints are where productivity, security, identity, automation, and user pain all collide. The work is less glamorous than the roadmap slides and more important than most people realize.
+
+Define state.
+
+Measure drift.
+
+Remediate safely.
+
+Keep receipts.

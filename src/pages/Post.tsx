@@ -1,5 +1,12 @@
 import { Link, useParams } from 'react-router-dom'
-import { useState, useEffect, type KeyboardEvent, type MouseEvent } from 'react'
+import {
+  createContext,
+  use,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
 import Topbar from '../components/Topbar'
 import WallpaperStage from '../components/WallpaperStage'
 import { formatDate, sortPostsByDate } from '../lib/posts'
@@ -7,14 +14,122 @@ import postImages from '../content/postImages'
 import posts from '../content/posts'
 import useLiquidGlassSurface from '../hooks/useLiquidGlassSurface'
 
+type MdxImageProps = React.ComponentPropsWithoutRef<'img'>
+
+interface MdxComponents {
+  img?: React.ComponentType<MdxImageProps>
+}
+
+interface MdxContentProps {
+  components?: MdxComponents
+}
+
 interface MdxModule {
-  default: React.ComponentType
+  default: React.ComponentType<MdxContentProps>
 }
 
 interface ExpandedImage {
   src: string
   alt: string
 }
+
+type OpenExpandedImage = (image: ExpandedImage) => void
+
+interface LightboxDialogProps {
+  image: ExpandedImage
+  onClose: () => void
+}
+
+const ExpandImageContext = createContext<OpenExpandedImage | null>(null)
+
+function ExpandablePostImage({ alt = '', src, ...props }: MdxImageProps) {
+  const expandImage = use(ExpandImageContext)
+
+  if (!src || !expandImage) {
+    return <img {...props} alt={alt} />
+  }
+
+  return (
+    <button
+      className="image-expand-trigger image-expand-trigger--content"
+      type="button"
+      onClick={() => expandImage({ src, alt })}
+      aria-label={alt ? `Open image: ${alt}` : 'Open image'}
+    >
+      <img {...props} src={src} alt={alt} />
+    </button>
+  )
+}
+
+const mdxComponents: MdxComponents = {
+  img: ExpandablePostImage,
+}
+
+function LightboxDialog({ image, onClose }: LightboxDialogProps) {
+  const dialogRef = useRef<HTMLDialogElement>(null)
+
+  useEffect(() => {
+    const dialog = dialogRef.current
+
+    if (!dialog) {
+      return
+    }
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    function closeFromBackdrop(event: globalThis.MouseEvent) {
+      if (event.target === dialog) {
+        onClose()
+      }
+    }
+
+    dialog.addEventListener('click', closeFromBackdrop)
+
+    if (!dialog.open) {
+      dialog.showModal()
+    }
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+      dialog.removeEventListener('click', closeFromBackdrop)
+
+      if (dialog.open) {
+        dialog.close()
+      }
+    }
+  }, [onClose])
+
+  return (
+    <dialog
+      ref={dialogRef}
+      className="image-lightbox"
+      aria-label="Expanded image preview"
+      onCancel={onClose}
+    >
+      <button
+        className="image-lightbox__close"
+        type="button"
+        onClick={onClose}
+        aria-label="Close expanded image"
+      >
+        x
+      </button>
+      <img
+        className="image-lightbox__image"
+        src={image.src}
+        alt={image.alt}
+      />
+    </dialog>
+  )
+}
+
+type PostLoadState =
+  | { status: 'loading' }
+  | { status: 'loaded'; content: React.ComponentType<MdxContentProps> }
+  | { status: 'failed' }
+
+const postModules = import.meta.glob<MdxModule>('../content/*.mdx')
 
 export default function Post() {
   const { slug } = useParams<{ slug: string }>()
@@ -26,11 +141,18 @@ export default function Post() {
     postIndex >= 0 && postIndex < sortedPosts.length - 1
       ? sortedPosts[postIndex + 1]
       : null
-  const [PostContent, setPostContent] = useState<React.ComponentType | null>(null)
+  const [postLoad, setPostLoad] = useState<PostLoadState>({
+    status: 'loading',
+  })
   const [readingProgress, setReadingProgress] = useState(0)
   const [expandedImage, setExpandedImage] = useState<ExpandedImage | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const PostContent = postLoad.status === 'loaded' ? postLoad.content : null
+  const openExpandedImage = useCallback((image: ExpandedImage) => {
+    setExpandedImage(image)
+  }, [])
+  const closeExpandedImage = useCallback(() => {
+    setExpandedImage(null)
+  }, [])
   const loadingGlassRef = useLiquidGlassSurface<HTMLDivElement>({
     borderRadius: 30,
     type: 'rounded',
@@ -45,71 +167,46 @@ export default function Post() {
   })
 
   useEffect(() => {
+    let canceled = false
+
     async function loadPost() {
-      setLoading(true)
-      setError(null)
-      setPostContent(null)
+      setPostLoad({ status: 'loading' })
 
       if (!slug || !postMeta) {
-        setError('Post not found')
-        setLoading(false)
+        setPostLoad({ status: 'failed' })
+        return
+      }
+
+      const loadPostModule = postModules[`../content/${slug}.mdx`]
+
+      if (!loadPostModule) {
+        setPostLoad({ status: 'failed' })
         return
       }
 
       try {
-        const module = (await import(`../content/${slug}.mdx`)) as MdxModule
-        setPostContent(() => module.default)
+        const module = await loadPostModule()
+
+        if (!canceled) {
+          setPostLoad({ status: 'loaded', content: module.default })
+        }
       } catch {
-        setError('Post not found')
-      } finally {
-        setLoading(false)
+        if (!canceled) {
+          setPostLoad({ status: 'failed' })
+        }
       }
     }
+
     loadPost()
+
+    return () => {
+      canceled = true
+    }
   }, [slug, postMeta])
 
   useEffect(() => {
     document.title = postMeta ? `${postMeta.title} | Jorgeasaurus` : 'Jorgeasaurus'
   }, [postMeta])
-
-  useEffect(() => {
-    if (!PostContent) {
-      return
-    }
-
-    const images = document.querySelectorAll<HTMLImageElement>('.post-content img')
-
-    images.forEach((image) => {
-      image.tabIndex = 0
-      image.setAttribute('role', 'button')
-      image.setAttribute(
-        'aria-label',
-        image.alt ? `Open image: ${image.alt}` : 'Open image'
-      )
-    })
-  }, [PostContent])
-
-  useEffect(() => {
-    if (!expandedImage) {
-      return
-    }
-
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-
-    function closeOnEscape(event: globalThis.KeyboardEvent) {
-      if (event.key === 'Escape') {
-        setExpandedImage(null)
-      }
-    }
-
-    window.addEventListener('keydown', closeOnEscape)
-
-    return () => {
-      document.body.style.overflow = previousOverflow
-      window.removeEventListener('keydown', closeOnEscape)
-    }
-  }, [expandedImage])
 
   useEffect(() => {
     function updateReadingProgress() {
@@ -139,46 +236,7 @@ export default function Post() {
     }
   }, [PostContent])
 
-  function openExpandedImage(image: HTMLImageElement) {
-    setExpandedImage({
-      src: image.currentSrc || image.src,
-      alt: image.alt,
-    })
-  }
-
-  function handlePostContentClick(event: MouseEvent<HTMLDivElement>) {
-    const target = event.target
-
-    if (!(target instanceof Element)) {
-      return
-    }
-
-    const image = target.closest<HTMLImageElement>('img')
-
-    if (!image) {
-      return
-    }
-
-    event.preventDefault()
-    openExpandedImage(image)
-  }
-
-  function handlePostContentKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-    if (event.key !== 'Enter' && event.key !== ' ') {
-      return
-    }
-
-    const target = event.target
-
-    if (!(target instanceof HTMLImageElement)) {
-      return
-    }
-
-    event.preventDefault()
-    openExpandedImage(target)
-  }
-
-  if (loading) {
+  if (postLoad.status === 'loading') {
     return (
       <main className="blog-shell">
         <WallpaperStage />
@@ -186,14 +244,14 @@ export default function Post() {
         <div className="content-panel glass-panel" ref={loadingGlassRef}>
           <div className="loading-inline">
             <div className="spinner" />
-            Loading...
+            Loading&hellip;
           </div>
         </div>
       </main>
     )
   }
 
-  if (error || !postMeta || !PostContent) {
+  if (!postMeta || !PostContent) {
     return (
       <main className="blog-shell">
         <WallpaperStage />
@@ -251,12 +309,10 @@ export default function Post() {
             {heroImage.caption && <figcaption>{heroImage.caption}</figcaption>}
           </figure>
         )}
-        <div
-          className="post-content"
-          onClick={handlePostContentClick}
-          onKeyDown={handlePostContentKeyDown}
-        >
-          <PostContent />
+        <div className="post-content">
+          <ExpandImageContext.Provider value={openExpandedImage}>
+            <PostContent components={mdxComponents} />
+          </ExpandImageContext.Provider>
         </div>
         {(newerPost || olderPost) && (
           <nav className="article-nav" aria-label="Adjacent field notes">
@@ -280,28 +336,7 @@ export default function Post() {
         )}
       </article>
       {expandedImage && (
-        <div
-          className="image-lightbox"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Expanded image preview"
-          onClick={() => setExpandedImage(null)}
-        >
-          <button
-            className="image-lightbox__close"
-            type="button"
-            onClick={() => setExpandedImage(null)}
-            aria-label="Close expanded image"
-          >
-            x
-          </button>
-          <img
-            className="image-lightbox__image"
-            src={expandedImage.src}
-            alt={expandedImage.alt}
-            onClick={(event) => event.stopPropagation()}
-          />
-        </div>
+        <LightboxDialog image={expandedImage} onClose={closeExpandedImage} />
       )}
     </main>
   )

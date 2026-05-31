@@ -8,11 +8,10 @@
     "generate:rss": "node scripts/generate-rss.mjs",
     "build": "npm run generate:rss && tsc -b && vite build && node scripts/generate-post-html.mjs",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "doctor": "npx -y react-doctor@0.2.14"
   },
   "dependencies": {
-    "@mdx-js/mdx": "^3.1.1",
-    "@mdx-js/react": "^3.1.1",
     "@vercel/analytics": "^2.0.1",
     "html2canvas": "^1.4.1",
     "react": "^19.2.5",
