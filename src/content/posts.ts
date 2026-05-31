@@ -2,6 +2,20 @@ import { type PostMeta } from '../lib/posts'
 
 const posts: PostMeta[] = [
   {
+    slug: 'mmsmoa-2026-endpoint-management-is-engineering-now',
+    title: 'MMSMOA 2026: Endpoint Management Is an Engineering Discipline Now',
+    date: '2026-05-30',
+    description:
+      'A practical MMSMOA recap for Intune, Windows, security, PowerShell, and automation work that needs to survive real operations.',
+    tags: ['intune', 'endpoint-management', 'powershell', 'automation', 'windows', 'security', 'conference'],
+    socialImage: {
+      src: '/images/posts/mmsmoa-2026-endpoint-management-is-engineering-now/socialcard.png',
+      width: 1200,
+      height: 630,
+      type: 'image/png',
+    },
+  },
+  {
     slug: 'reusable-intune-remediation-template',
     title: 'Build a Reusable Intune Remediation Template',
     date: '2026-05-25',

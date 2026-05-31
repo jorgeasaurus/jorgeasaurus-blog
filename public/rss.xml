@@ -6,7 +6,21 @@
     <atom:link href="https://jorgeasaur.us/rss.xml" rel="self" type="application/rss+xml" />
     <description>Field notes on PowerShell, endpoint management, Microsoft Graph, and automation.</description>
     <language>en-us</language>
-    <lastBuildDate>Mon, 25 May 2026 00:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Sat, 30 May 2026 00:00:00 GMT</lastBuildDate>
+    <item>
+      <title>MMSMOA 2026: Endpoint Management Is an Engineering Discipline Now</title>
+      <link>https://jorgeasaur.us/mmsmoa-2026-endpoint-management-is-engineering-now</link>
+      <guid isPermaLink="true">https://jorgeasaur.us/mmsmoa-2026-endpoint-management-is-engineering-now</guid>
+      <pubDate>Sat, 30 May 2026 00:00:00 GMT</pubDate>
+      <description>A practical MMSMOA recap for Intune, Windows, security, PowerShell, and automation work that needs to survive real operations.</description>
+      <category>intune</category>
+      <category>endpoint-management</category>
+      <category>powershell</category>
+      <category>automation</category>
+      <category>windows</category>
+      <category>security</category>
+      <category>conference</category>
+    </item>
     <item>
       <title>Build a Reusable Intune Remediation Template</title>
       <link>https://jorgeasaur.us/reusable-intune-remediation-template</link>
