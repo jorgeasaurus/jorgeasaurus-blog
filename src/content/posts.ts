@@ -2,6 +2,20 @@ import { type PostMeta } from '../lib/posts'
 
 const posts: PostMeta[] = [
   {
+    slug: 'intune-hydration-kit-has-a-tui-now',
+    title: 'Intune Hydration Kit Has a TUI Now',
+    date: '2026-06-01',
+    description:
+      'The v1.0.0 update makes Invoke-IntuneHydration safer to run by putting dry-run, scope, platform, and confirmation prompts in the default path.',
+    tags: ['powershell', 'intune', 'automation', 'microsoft-graph', 'endpoint-management'],
+    socialImage: {
+      src: '/images/posts/intune-hydration-kit-has-a-tui-now/socialcard.png',
+      width: 1200,
+      height: 630,
+      type: 'image/png',
+    },
+  },
+  {
     slug: 'mmsmoa-2026-endpoint-management-is-engineering-now',
     title: 'MMSMOA 2026: Endpoint Management Is an Engineering Discipline Now',
     date: '2026-05-30',

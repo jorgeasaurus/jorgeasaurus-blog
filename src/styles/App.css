@@ -964,6 +964,89 @@ h2 {
   margin: 0;
 }
 
+.post-video-figure {
+  counter-increment: post-figure;
+  margin: 1.4em 0 1.8em;
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid rgba(215, 255, 227, 0.18);
+  background: rgba(0, 0, 0, 0.26);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 18px 44px rgba(0, 0, 0, 0.22);
+}
+
+.post-video-figure video {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  background: #020805;
+}
+
+.post-video-figure figcaption {
+  padding: 12px 14px 13px;
+  color: rgba(238, 255, 244, 0.76);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(90deg, rgba(157, 240, 182, 0.08), transparent),
+    rgba(0, 0, 0, 0.18);
+}
+
+.post-video-figure figcaption::before {
+  content: 'VIDEO ' counter(post-figure, decimal-leading-zero);
+  display: inline-block;
+  margin-right: 10px;
+  color: var(--sprout-bright);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.post-inline-figure {
+  margin: 1.4em 0 1.8em;
+  overflow: hidden;
+  border-radius: 18px;
+  border: 1px solid rgba(215, 255, 227, 0.18);
+  background: rgba(0, 0, 0, 0.26);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    0 18px 44px rgba(0, 0, 0, 0.22);
+}
+
+.post-content .post-inline-figure .image-expand-trigger--content {
+  width: 100%;
+  margin: 0;
+}
+
+.post-content .post-inline-figure img {
+  display: block;
+  width: 100%;
+  margin: 0;
+  border-radius: 0;
+  cursor: default;
+}
+
+.post-content .post-inline-figure img:hover {
+  box-shadow: none;
+  filter: none;
+  transform: none;
+}
+
+.post-inline-figure figcaption {
+  padding: 12px 14px 13px;
+  color: rgba(238, 255, 244, 0.76);
+  font-size: 0.78rem;
+  line-height: 1.45;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background:
+    linear-gradient(90deg, rgba(157, 240, 182, 0.08), transparent),
+    rgba(0, 0, 0, 0.18);
+}
+
 .post-hero-figure figcaption {
   padding: 12px 14px 13px;
   color: rgba(238, 255, 244, 0.76);

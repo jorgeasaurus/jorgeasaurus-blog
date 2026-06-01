@@ -6,7 +6,19 @@
     <atom:link href="https://jorgeasaur.us/rss.xml" rel="self" type="application/rss+xml" />
     <description>Field notes on PowerShell, endpoint management, Microsoft Graph, and automation.</description>
     <language>en-us</language>
-    <lastBuildDate>Sat, 30 May 2026 00:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Mon, 01 Jun 2026 00:00:00 GMT</lastBuildDate>
+    <item>
+      <title>Intune Hydration Kit Has a TUI Now</title>
+      <link>https://jorgeasaur.us/intune-hydration-kit-has-a-tui-now</link>
+      <guid isPermaLink="true">https://jorgeasaur.us/intune-hydration-kit-has-a-tui-now</guid>
+      <pubDate>Mon, 01 Jun 2026 00:00:00 GMT</pubDate>
+      <description>The v1.0.0 update makes Invoke-IntuneHydration safer to run by putting dry-run, scope, platform, and confirmation prompts in the default path.</description>
+      <category>powershell</category>
+      <category>intune</category>
+      <category>automation</category>
+      <category>microsoft-graph</category>
+      <category>endpoint-management</category>
+    </item>
     <item>
       <title>MMSMOA 2026: Endpoint Management Is an Engineering Discipline Now</title>
       <link>https://jorgeasaur.us/mmsmoa-2026-endpoint-management-is-engineering-now</link>
