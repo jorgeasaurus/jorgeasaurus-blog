@@ -1,0 +1,128 @@
+---
+title: "Intune Hydration Kit Has a TUI Now"
+date: "2026-06-01"
+description: "The v1.0.0 update makes Invoke-IntuneHydration safer to run by putting dry-run, scope, platform, and confirmation prompts in the default path."
+tags: ["powershell", "intune", "automation", "microsoft-graph", "endpoint-management"]
+---
+
+<figure className="post-video-figure">
+  <video
+    controls
+    muted
+    playsInline
+    preload="metadata"
+    aria-label="Intune Hydration Kit terminal UI demo"
+    poster="/images/posts/intune-hydration-kit-has-a-tui-now/tui.png"
+  >
+    <source
+      src="/images/posts/intune-hydration-kit-has-a-tui-now/IHDEdit.mp4"
+      type="video/mp4"
+    />
+  </video>
+  <figcaption>
+    The guided flow keeps scope, dry-run, and confirmation in front of the operator.
+  </figcaption>
+</figure>
+
+Single-command tenant hydration is useful until the command is too easy to run against the wrong tenant, the wrong scope, or the wrong workload.
+
+Intune Hydration Kit creates real Intune objects: groups, filters, baselines, compliance policies, apps, enrollment profiles, and Conditional Access starter policies. That kind of tool needs friction in the right places.
+
+The latest update makes the human path the default. Run `Invoke-IntuneHydration` with no arguments and you get a terminal UI instead of a wall of switches.
+
+## The Default Is Guided Now
+
+Install the module and start the guided flow:
+
+```powershell
+Install-Module -Name IntuneHydrationKit -Scope CurrentUser
+Invoke-IntuneHydration
+```
+
+The TUI walks through the decisions that matter before Graph write calls run:
+
+- Azure cloud environment
+- Operation mode: create, delete, or dry-run create
+- Workload targets
+- Platform filter
+- Optional Graph consent prompt
+- Verbose logging
+- Final confirmation
+
+The tenant ID is discovered after browser sign-in, so the first prompt is not "go find a GUID." That is a better default for an operator sitting at a terminal.
+
+No workloads are selected by default. That is not an accident.
+
+## Web App Versus PowerShell Module
+
+There are two front doors now, and they are meant for different jobs.
+
+The **IHD web app** at [IntuneHydrationKit.com](https://intunehydrationkit.com) is the browser-first experience. Use it when you want to explore the template set, preview scope, and run through the guided deployment flow without living in a terminal. It is the better surface for demos, first looks, and operators who need guardrails more than switches.
+
+<figure className="post-inline-figure">
+  <img
+    src="/images/posts/intune-hydration-kit-has-a-tui-now/IHD-WebApp.png"
+    alt="The Intune Hydration Kit web app showing guided deployment categories, sign-in, template docs, and deployment controls."
+  />
+  <figcaption>
+    The web app is the visual front door for guided hydration, template discovery, and deployment review.
+  </figcaption>
+</figure>
+
+The **PowerShell module** on the [PowerShell Gallery](https://www.powershellgallery.com/packages/IntuneHydrationKit) is still the automation surface. Use it when you need local execution, settings files, source-controlled configuration, CI/CD, repeatable lab rebuilds, or the ability to inspect and script every step.
+
+Same project. Different operator shape.
+
+## Dry-Run Belongs In The Happy Path
+
+The first run should be boring:
+
+1. Start the TUI.
+2. Choose dry-run create.
+3. Select a small workload, like Device Filters.
+4. Review the summary.
+5. Run the real create only after the output makes sense.
+
+Dry-run still authenticates and runs pre-flight checks because the kit needs to read tenant state to tell you what would happen. The difference is that the write path is blocked.
+
+Output explains. Confirmation decides.
+
+## Automation Still Works
+
+The TUI did not replace automation mode. It just stopped making humans memorize automation syntax.
+
+These still work when you need repeatable runs:
+
+```powershell
+Invoke-IntuneHydration `
+    -TenantId "00000000-0000-0000-0000-000000000000" `
+    -Interactive `
+    -Create `
+    -DeviceFilters `
+    -WhatIf
+
+Invoke-IntuneHydration -SettingsPath ./settings.json -WhatIf
+```
+
+That split feels right: bare command for an interactive operator, parameters or settings files for CI/CD and repeatable tenant setup.
+
+## Why This Shape Matters
+
+The TUI resolves into the same execution settings used by parameter and settings-file runs. That keeps the feature from becoming a second hydration engine with its own weird behavior.
+
+The update also keeps common PowerShell behavior intact. `-WhatIf` and `-Verbose` flow into the TUI review and execution settings, while non-interactive hosts get a clear error telling them to use settings-file or parameter mode instead.
+
+That is the part I care about most. A friendlier interface is nice. A friendlier interface that still uses the same tested execution path is maintainable.
+
+## First Run Checklist
+
+- Start with `Invoke-IntuneHydration`.
+- Choose dry-run create first.
+- Select one or two workloads, not everything.
+- Keep platform set to `All` unless you are intentionally scoping the import.
+- Review the final summary before confirming.
+- Use settings files once the run needs to be repeatable.
+
+It is not clever. That is the point.
+
+The safest path should be the easiest path to find.
