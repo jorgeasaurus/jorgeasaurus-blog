@@ -49,7 +49,7 @@ export function formatDate(dateStr: string): string {
 }
 
 export function sortPostsByDate(posts: PostMeta[]): PostMeta[] {
-  return posts.toSorted(
+  return [...posts].sort(
     (a, b) => parsePostDate(b.date).getTime() - parsePostDate(a.date).getTime()
   )
 }
