@@ -10,4 +10,15 @@
 
 ## Review
 
-Pushed `dev` to `origin`, deployed Vercel preview at `https://jorgeasaurus-blog-m7obvc8b5-jorgeasaurus-projects.vercel.app`, and opened draft PR `https://github.com/jorgeasaurus/jorgeasaurus-blog/pull/4`.
+Pushed `dev` to `origin`, deployed Vercel preview at `https://jorgeasaurus-blog-m7obvc8b5-jorgeasaurus-projects.vercel.app`, and opened PR `https://github.com/jorgeasaurus/jorgeasaurus-blog/pull/4`.
+
+# PR Review Follow-up
+
+- [x] Fetch unresolved PR review threads.
+- [x] Patch actionable CSS comments.
+- [x] Update PR title/summary for content scope.
+- [x] Run available verification checks.
+
+## Review
+
+Removed the duplicate card-date color, restored expandable-image hover affordance in inline figures, and updated PR metadata for the content scope. `npm run lint`, `npm run build`, and `git diff --check` passed; React Doctor was unavailable because `react-doctor` is not installed or cached locally and network escalation for `npx react-doctor@latest` was rejected.

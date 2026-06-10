@@ -762,7 +762,6 @@ h2 {
   margin: 0;
   font-size: 0.78rem;
   font-weight: 600;
-  color: var(--ink-muted);
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: #fff;
@@ -1035,13 +1034,6 @@ h2 {
   width: 100%;
   margin: 0;
   border-radius: 0;
-  cursor: default;
-}
-
-.post-content .post-inline-figure img:hover {
-  box-shadow: none;
-  filter: none;
-  transform: none;
 }
 
 .post-inline-figure figcaption {
