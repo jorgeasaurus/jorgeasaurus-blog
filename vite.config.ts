@@ -18,5 +18,5 @@ export default defineConfig({
     react(),
   ],
   preview: { port: 3000 },
-  server: { port: 3000, strictPort: true },
+  server: { port: 4000, strictPort: true },
 })
