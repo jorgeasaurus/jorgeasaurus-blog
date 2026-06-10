@@ -1,10 +1,13 @@
-# Squash Dev Branch
+# Publish Dev Changes
 
-- [x] Confirm branch, base, and clean worktree.
-- [x] Squash `dev` commits since `main` into one commit.
-- [x] Verify resulting history and tree state.
-- [x] Decide whether to force-push `origin/dev`.
+- [x] Inspect local diff and branch state.
+- [x] Verify GitHub and Vercel CLI access.
+- [x] Run final checks before publishing.
+- [ ] Commit scoped changes on `dev`.
+- [ ] Push `dev` to `origin`.
+- [ ] Create Vercel preview deployment.
+- [ ] Open PR from `dev` to `main`.
 
 ## Review
 
-Squashed `dev` to one commit on top of `main`; verified history, clean status, `npm run lint`, and `npm run build`. User approved pushing the rewritten branch.
+Pending publish.
