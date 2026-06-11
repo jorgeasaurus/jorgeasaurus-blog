@@ -93,8 +93,8 @@ Regenerated `make-yourself-obsolete` social card to match the Intune Gotchas lay
 - [x] Update local `main` from `origin/main`.
 - [x] Merge `dev` into `main`.
 - [x] Run verification on `main`.
-- [ ] Push `main` to `origin`.
+- [x] Push `main` to `origin`.
 
 ## Review
 
-Pending.
+Merged `dev` into `main` and pushed `main` to `origin` at `7005ef1`. Verified `npm run lint`, `npm run build`, `git diff --check`, RSS entry, and generated social metadata for `/make-yourself-obsolete`. Left the unrelated `.gitignore` change unstaged.
