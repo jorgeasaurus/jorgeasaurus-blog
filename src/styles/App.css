@@ -645,8 +645,10 @@ h2 {
   z-index: 1;
 }
 
+/* Baseline focus indicator on the link itself for browsers without :has(). */
 .post-card-link:focus-visible {
-  outline: none;
+  outline: 2px solid var(--sprout-bright);
+  outline-offset: 4px;
 }
 
 .post-card::after {
@@ -681,10 +683,18 @@ h2 {
   outline-offset: 4px;
 }
 
-.post-card:has(.post-card-link:focus-visible) {
-  outline: 2px solid var(--sprout-bright);
-  outline-offset: 4px;
-  border-color: rgba(215, 255, 227, 0.58);
+/* Progressive enhancement: when :has() is supported, move the focus ring to
+   the whole card and suppress the baseline link outline to avoid doubling. */
+@supports selector(:has(*)) {
+  .post-card-link:focus-visible {
+    outline: none;
+  }
+
+  .post-card:has(.post-card-link:focus-visible) {
+    outline: 2px solid var(--sprout-bright);
+    outline-offset: 4px;
+    border-color: rgba(215, 255, 227, 0.58);
+  }
 }
 
 .post-card:hover::after {
