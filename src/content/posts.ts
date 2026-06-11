@@ -2,6 +2,20 @@ import { type PostMeta } from '../lib/posts'
 
 const posts: PostMeta[] = [
   {
+    slug: 'intune-gotchas-every-admin-learns-eventually',
+    title: 'Intune Gotchas Every Admin Learns Eventually',
+    date: '2026-06-10',
+    description:
+      'The Microsoft Intune behaviors that surprise admins most often, why they happen, and how to avoid getting burned by them.',
+    tags: ['intune', 'endpoint-management', 'windows', 'security', 'device-management'],
+    socialImage: {
+      src: '/images/posts/intune-gotchas-every-admin-learns-eventually/socialcard.png',
+      width: 1200,
+      height: 630,
+      type: 'image/png',
+    },
+  },
+  {
     slug: 'intune-hydration-kit-has-a-tui-now',
     title: 'Intune Hydration Kit Has a TUI Now',
     date: '2026-06-01',
@@ -112,7 +126,7 @@ const posts: PostMeta[] = [
       'WinGet Without WinGet: Building a Cross-Platform Package Manifest Fetcher',
     date: '2025-07-20',
     description:
-      'Query WinGet packages from macOS or Linux by hitting the winget-pkgs GitHub repo directly — no WinGet client required.',
+      'Query WinGet packages from macOS or Linux by hitting the winget-pkgs GitHub repo directly - no WinGet client required.',
     tags: ['powershell', 'winget', 'cross-platform', 'github-api', 'devops'],
   },
   {
@@ -164,7 +178,7 @@ const posts: PostMeta[] = [
       'Automating Device Management with PowerShell: Function Invoke-AppInstalledDevicesGroup',
     date: '2024-03-03',
     description:
-      'Build a device group in Intune based on detected application installs — automatically add and remove devices as software appears and disappears.',
+      'Build a device group in Intune based on detected application installs - automatically add and remove devices as software appears and disappears.',
     tags: ['powershell', 'intune', 'automation', 'microsoft-graph', 'scripting'],
   },
   {
@@ -181,7 +195,7 @@ const posts: PostMeta[] = [
       'Streamlining Application Detection in Intune and MECM with PowerShell',
     date: '2024-01-05',
     description:
-      'A PowerShell function for precise application detection across 32-bit, 64-bit, and user-context installs — perfect for Intune Win32 app detection.',
+      'A PowerShell function for precise application detection across 32-bit, 64-bit, and user-context installs - perfect for Intune Win32 app detection.',
     tags: ['powershell', 'intune', 'mecm', 'application-detection', 'scripting'],
   },
   {
@@ -206,7 +220,7 @@ const posts: PostMeta[] = [
     title: 'Proactive Remediation to Remind Windows Users to Reboot',
     date: '2023-05-07',
     description:
-      'Use Intune Proactive Remediations to detect Windows devices that haven\'t rebooted in 7+ days and display a customizable toast notification reminder.',
+      "Use Intune Proactive Remediations to detect Windows devices that haven't rebooted in 7+ days and display a customizable toast notification reminder.",
     tags: ['intune', 'powershell', 'proactive-remediation', 'windows'],
   },
   {

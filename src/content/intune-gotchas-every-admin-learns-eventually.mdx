@@ -1,0 +1,293 @@
+---
+title: "Intune Gotchas Every Admin Learns Eventually"
+date: "2026-06-10"
+description: "The Microsoft Intune behaviors that surprise admins most often, why they happen, and how to avoid getting burned by them."
+tags: ["intune", "endpoint-management", "windows", "security", "device-management"]
+---
+
+Intune problems usually come from timing, targeting, or overlapping policy surfaces.
+
+That sounds boring.
+
+It is also the pattern behind a lot of tickets that look random at first glance.
+
+The setting was correct, but the device had not checked in. The policy was assigned, but the group had not evaluated. The app was packaged correctly, but detection was looking in the wrong registry view. The device was compliant, but only because no compliance policy was assigned.
+
+Here are the Intune gotchas I would want every new admin to learn early.
+
+## Intune Is Not Instant
+
+Intune is a cloud management plane. Devices check in, evaluate what applies, run the workload, and report back.
+
+That loop takes time.
+
+Microsoft documents several sync patterns: change-based syncs, client-initiated syncs, and single-device syncs. Newly enrolled Windows devices check in frequently at first, then settle into a roughly eight-hour maintenance rhythm. Reporting in the admin center can lag behind the actual device state too. The source worth bookmarking is [Common questions with policies and profiles in Intune](https://learn.microsoft.com/en-us/intune/device-configuration/troubleshoot-device-profiles).
+
+Mitigation:
+
+- Use device sync or Company Portal sync when you need a faster check-in.
+- Troubleshoot the layers in order: assignment, device receipt, execution, then reporting.
+- Teach the help desk that "not visible in the portal yet" does not always mean "not applied."
+- For urgent controls, validate on the endpoint instead of relying only on portal status.
+
+## Policy Conflicts Are Easy To Create
+
+Intune has several places where you can configure the same underlying Windows setting: Settings Catalog, endpoint security policies, security baselines, compliance policies, custom OMA-URI profiles, and sometimes legacy templates.
+
+That flexibility is useful.
+
+It is also how you accidentally tell the same device to do two different things.
+
+Microsoft calls out that conflicts happen when different policies configure the same setting to different values. Security baselines can also overlap with other baselines or device configuration profiles. Start with Microsoft's [policy conflict guidance](https://learn.microsoft.com/en-us/intune/device-configuration/troubleshoot-device-profiles) and [security baseline guidance](https://learn.microsoft.com/en-us/intune/device-security/security-baselines/overview).
+
+Mitigation:
+
+- Pick one policy surface as the owner for each control.
+- Name policies by platform, workload, scope, and intent.
+- Do not blindly deploy multiple default baselines.
+- Keep a small pilot group where conflicts are allowed to show up before production.
+- Document exceptions as explicit policy decisions, not portal archaeology.
+
+## Some Settings Tattoo
+
+Admins often assume removing an Intune assignment removes the setting from the device.
+
+Sometimes it does.
+
+Sometimes the setting remains until another policy changes it, the device is reset, or the underlying CSP supports removal cleanly.
+
+This is not unique to Intune. It is a side effect of how some configuration service providers and Windows policies behave.
+
+Mitigation:
+
+- Test rollback before production rollout.
+- For risky settings, create both the enforcement policy and the rollback policy.
+- Know whether the setting supports removal, "not configured," or only replacement.
+- Avoid testing destructive settings on your daily driver.
+
+## Dynamic Groups Can Be Too Slow For Enrollment-Time Decisions
+
+Dynamic Entra groups are useful, but they are not always the right tool for Autopilot and first-check-in targeting.
+
+Group membership evaluation can add delay, and that delay matters during enrollment.
+
+Assignment filters are often better for Intune-specific targeting because they evaluate device or app properties when policy applicability is evaluated. Microsoft positions filters for properties like OS version, manufacturer, ownership, model, and other Intune-facing attributes. See [assignment filters in Intune](https://learn.microsoft.com/en-us/intune/fundamentals/filters/overview).
+
+Mitigation:
+
+- Use assignment filters for Intune-specific targeting.
+- Use dynamic groups when the target must also work outside Intune, such as licensing or Conditional Access.
+- Avoid complex dynamic rules for apps or policies that must apply during Autopilot.
+- Preview filter results before assigning broadly.
+
+## Compliance Does Not Configure Anything
+
+Compliance policies evaluate state.
+
+They do not make the device match the state.
+
+If BitLocker is required by compliance, you still need a configuration policy that enables BitLocker. If a minimum OS version is required, you still need update management. If Defender must be healthy, you still need Defender configuration and remediation.
+
+The bigger gotcha is the tenant-wide compliance setting for devices with no compliance policy. Microsoft documents that the default is to mark devices with no compliance policy as compliant. If you use Conditional Access, that default can give you a false sense of control. See [Intune compliance policy settings](https://learn.microsoft.com/en-us/intune/device-security/compliance/overview).
+
+Mitigation:
+
+- Set "Mark devices with no compliance policy assigned as" to "Not compliant" when using compliance with Conditional Access.
+- Assign explicit compliance policies for every managed platform.
+- Pair each compliance rule with a configuration or remediation path.
+- Test the user experience in Company Portal before enforcing access blocks.
+
+## Conditional Access Can Make A Bad Intune Setup Painful
+
+Conditional Access is where Intune state becomes access control.
+
+That is powerful.
+
+It is also where small mistakes become user-facing incidents.
+
+Microsoft's device compliance Conditional Access guidance says to create compliance policies first, confirm at least one compliant device, exclude emergency access accounts, and start in report-only mode. That advice is not ceremony. It prevents lockouts. See [Require device compliance with Conditional Access](https://learn.microsoft.com/en-us/entra/identity/conditional-access/policy-all-users-device-compliance).
+
+Mitigation:
+
+- Exclude break-glass accounts.
+- Start in report-only mode.
+- Confirm compliant devices exist before enforcement.
+- Do not target "all users, all resources" without understanding enrollment, registration, and recovery paths.
+- Keep a documented rollback procedure.
+
+## Enrollment Restrictions Are Not Security Boundaries
+
+Enrollment restrictions help steer normal users away from unsupported scenarios.
+
+They are not strong security controls.
+
+Microsoft is direct about this: enrollment restrictions are not security features, and compromised devices can misrepresent themselves. They are still useful, especially for blocking accidental personal Windows, macOS, iOS, or Android enrollment, but they should not carry your trust model. See [Intune enrollment restrictions](https://learn.microsoft.com/en-us/intune/device-enrollment/restrictions).
+
+Mitigation:
+
+- Use restrictions to reduce mistakes, not to prove trust.
+- Use Autopilot, Apple Automated Device Enrollment, Android Enterprise, ownership controls, and Conditional Access for stronger enforcement.
+- Review the default restriction policy because some non-user-driven enrollment flows use it.
+- Document which enrollment paths are allowed for corporate and personal devices.
+
+## Device Limits Are Split Between Intune And Entra
+
+There are Intune device limits and Microsoft Entra device limits.
+
+They apply differently depending on platform and enrollment method.
+
+For example, Intune device limit restrictions do not apply to several admin-driven or automatic scenarios, including Windows Autopilot. Microsoft Entra device limits also have their own exceptions. See [Intune and Entra device limit restrictions](https://learn.microsoft.com/en-us/intune/device-enrollment/limits-intune-entra).
+
+Mitigation:
+
+- Decide whether the limit is about Intune enrollment, Entra join/register, or both.
+- Check the exact enrollment method before assuming a limit applies.
+- Keep stale device cleanup healthy so legitimate users are not blocked by old records.
+- Include device-limit behavior in enrollment troubleshooting runbooks.
+
+## Windows Automatic Enrollment Depends On Scope And Licensing
+
+Windows automatic MDM enrollment only works when the prerequisites are right.
+
+You need the right licensing, the MDM user scope must include the user, and the related enrollment settings must not fight each other.
+
+Microsoft documents the MDM user scope values as None, Some, and All. If the scope is None, automatic MDM enrollment is disabled. If you are doing BYOD, Microsoft also notes scope considerations around WIP. See [Enable Windows automatic enrollment](https://learn.microsoft.com/en-us/intune/device-enrollment/windows/enable-automatic-mdm).
+
+Mitigation:
+
+- Verify Intune and Entra ID Premium licensing before troubleshooting the endpoint.
+- Set MDM user scope intentionally.
+- Keep pilot scope small while validating Autopilot and BYOD behavior.
+- Avoid overlapping legacy Windows Information Protection scope with MDM enrollment intent.
+
+## Win32 App Detection Is The App Deployment Contract
+
+Packaging gets attention.
+
+Detection deserves more.
+
+Intune uses detection rules to decide whether a Win32 app is installed. Multiple manual detection rules must all be met. File and registry detection can evaluate in 32-bit or 64-bit context. Script-based detection depends on exit code and output behavior. Microsoft documents these details in the Win32 app deployment flow: [Add and assign Win32 apps](https://learn.microsoft.com/en-us/intune/app-management/deployment/add-win32).
+
+Mitigation:
+
+- Treat detection as part of the package, not an afterthought.
+- Test detection before assignment.
+- Be explicit about 32-bit vs 64-bit registry and file paths.
+- Standardize return codes and reboot behavior.
+- Avoid detection scripts that write noisy output or depend on user context unless that is intentional.
+
+## Autopilot ESP Is Sensitive To App Strategy
+
+The Enrollment Status Page is useful because it blocks first use until required setup is complete.
+
+It is also where weak app strategy becomes visible.
+
+Microsoft documents several ESP gotchas: packaged reboots can hang or fail ESP, mixing LOB MSI and Win32 apps can fail because both use TrustedInstaller, and Microsoft 365 Apps can hang when tracked during ESP alongside other Win32 installs. See [Set up the Enrollment Status Page](https://learn.microsoft.com/en-us/intune/device-enrollment/windows/setup-status-page).
+
+Mitigation:
+
+- Keep blocking apps minimal.
+- Use Intune reboot behavior instead of hiding reboots inside installers.
+- Package Microsoft 365 Apps as Win32 when ESP tracking is involved.
+- Avoid mixing LOB MSI and Win32 apps during Autopilot.
+- Turn on ESP diagnostics and log collection for users.
+- Increase ESP timeout only after reducing unnecessary blocking work.
+
+## Autopilot Still Needs Network Reality
+
+Autopilot depends on cloud services, DNS, time sync, Windows activation, Microsoft Entra ID, Intune, Windows Update, Delivery Optimization, TPM attestation endpoints, and sometimes vendor-specific TPM certificate endpoints.
+
+If your network requires proxy authentication, blocks Microsoft Store, blocks Windows Update, or breaks NTP, Autopilot may fail in ways that look like Intune bugs. See [Windows Autopilot requirements](https://learn.microsoft.com/en-us/autopilot/requirements).
+
+Mitigation:
+
+- Validate Autopilot from the same network users will use.
+- Check DNS, NTP, activation, Intune, Entra, Windows Update, and TPM attestation endpoints.
+- Do not rely on an Intune policy to fix proxy requirements during OOBE.
+- Keep a known-good external network test path for isolating network issues.
+
+## Apple MDM Push Certificates Are Tenant-Critical
+
+If you manage Apple devices, the Apple MDM push certificate is not just another certificate.
+
+It is required for Intune to manage iOS, iPadOS, and macOS devices.
+
+Microsoft documents that the certificate must be renewed annually, has a 365-day validity period, and should be renewed with the same Apple account used to create it. Microsoft also recommends a company Apple ID backed by a monitored mailbox, not a personal Apple ID. See [Apple MDM push certificates for Intune](https://learn.microsoft.com/en-us/intune/device-enrollment/apple/create-mdm-push-certificate).
+
+Mitigation:
+
+- Use a shared company-controlled Apple ID.
+- Monitor the mailbox with more than one person.
+- Put renewal on a calendar with escalation.
+- Record the certificate UID and Apple account used.
+- Never let the only person who knows the Apple ID leave without a handoff.
+
+## Security Baselines Are Starting Points, Not Magic
+
+Security baselines are helpful because Microsoft ships a recommended posture.
+
+They are dangerous when admins deploy them without reading the defaults.
+
+Microsoft notes that separate baselines can include the same settings with different defaults, and that baseline defaults are often restrictive. Some settings can also conflict with other policy surfaces. See [Intune security baselines](https://learn.microsoft.com/en-us/intune/device-security/security-baselines/overview).
+
+Mitigation:
+
+- Use baselines as a starting point.
+- Compare baseline settings against existing endpoint security and configuration policies.
+- Pilot baselines by device role.
+- Track baseline versions and update old profiles deliberately.
+- Do not deploy preview baselines to production.
+
+## Windows Update Management Has Multiple Layers
+
+Intune can configure update rings, feature updates, quality updates, driver updates, hotpatch, expedited updates, and Windows Autopatch-backed flows.
+
+That is a lot of control.
+
+It also means you need to know which layer owns which outcome.
+
+Microsoft's Windows update management overview explains that Intune stores policy assignments while devices download approved updates directly from Windows Update. It also documents prerequisites for Autopatch-backed capabilities, including supported join state, endpoints, licensing, diagnostic data, and the Microsoft Account Sign-In Assistant service. See [Windows update management in Intune](https://learn.microsoft.com/en-us/intune/device-updates/windows/).
+
+Mitigation:
+
+- Assign update rings to device groups.
+- Decide whether Autopatch or custom rings own rollout behavior.
+- Validate Windows Update endpoints and diagnostic data requirements.
+- Be careful with old WSUS and GPO assumptions during cloud migration.
+- Keep feature update policy separate from monthly quality update operations.
+
+## Wipe Is Not The Same As Full Lifecycle Cleanup
+
+Wipe resets a device.
+
+It does not automatically mean every related cloud object is gone.
+
+Microsoft's wipe guidance calls out follow-up cleanup for Windows Autopilot registration and Microsoft Entra device records. That matters for inventory accuracy, compliance reporting, device limits, and access decisions. See [Intune device wipe](https://learn.microsoft.com/en-us/intune/device-management/actions/wipe).
+
+Mitigation:
+
+- Document retire, wipe, Autopilot deregistration, and Entra device deletion as separate steps.
+- Know the difference between wipe, retire, delete, and Autopilot deregister.
+- Use destructive wipe options only when the recovery plan is clear.
+- Audit stale records regularly.
+
+## A Practical Baseline For New Tenants
+
+If I were setting up Intune from scratch, I would start with this:
+
+- Create platform-specific compliance policies before Conditional Access enforcement.
+- Set devices without compliance policy to Not compliant.
+- Use report-only Conditional Access with break-glass exclusions.
+- Define ownership and enrollment paths for Windows, Apple, and Android.
+- Use assignment filters for Intune-specific targeting.
+- Keep Autopilot ESP blocking apps minimal.
+- Standardize Win32 packaging and detection rules.
+- Track Apple MDM push certificate renewal.
+- Choose one owner per setting to avoid policy conflicts.
+- Pilot security baselines before broad assignment.
+- Decide whether Windows updates are owned by Autopatch or custom policy.
+- Build a lifecycle cleanup runbook for stale, retired, wiped, and repurposed devices.
+
+The point is not to memorize every Intune edge case.
+
+The point is to build habits that make the edge cases less painful: know the timing model, know the targeting model, know the policy owner, and prove the behavior on a real endpoint before broad rollout.

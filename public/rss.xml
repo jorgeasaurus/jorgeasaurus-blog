@@ -6,7 +6,19 @@
     <atom:link href="https://jorgeasaur.us/rss.xml" rel="self" type="application/rss+xml" />
     <description>Field notes on PowerShell, endpoint management, Microsoft Graph, and automation.</description>
     <language>en-us</language>
-    <lastBuildDate>Mon, 01 Jun 2026 00:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Wed, 10 Jun 2026 00:00:00 GMT</lastBuildDate>
+    <item>
+      <title>Intune Gotchas Every Admin Learns Eventually</title>
+      <link>https://jorgeasaur.us/intune-gotchas-every-admin-learns-eventually</link>
+      <guid isPermaLink="true">https://jorgeasaur.us/intune-gotchas-every-admin-learns-eventually</guid>
+      <pubDate>Wed, 10 Jun 2026 00:00:00 GMT</pubDate>
+      <description>The Microsoft Intune behaviors that surprise admins most often, why they happen, and how to avoid getting burned by them.</description>
+      <category>intune</category>
+      <category>endpoint-management</category>
+      <category>windows</category>
+      <category>security</category>
+      <category>device-management</category>
+    </item>
     <item>
       <title>Intune Hydration Kit Has a TUI Now</title>
       <link>https://jorgeasaur.us/intune-hydration-kit-has-a-tui-now</link>
@@ -133,7 +145,7 @@
       <link>https://jorgeasaur.us/winget-without-winget-building-a-cross-platform-package-manifest-fetcher</link>
       <guid isPermaLink="true">https://jorgeasaur.us/winget-without-winget-building-a-cross-platform-package-manifest-fetcher</guid>
       <pubDate>Sun, 20 Jul 2025 00:00:00 GMT</pubDate>
-      <description>Query WinGet packages from macOS or Linux by hitting the winget-pkgs GitHub repo directly — no WinGet client required.</description>
+      <description>Query WinGet packages from macOS or Linux by hitting the winget-pkgs GitHub repo directly - no WinGet client required.</description>
       <category>powershell</category>
       <category>winget</category>
       <category>cross-platform</category>
@@ -204,7 +216,7 @@
       <link>https://jorgeasaur.us/automating-device-management-with-powershell-function-invoke-appinstalleddevicesgroup</link>
       <guid isPermaLink="true">https://jorgeasaur.us/automating-device-management-with-powershell-function-invoke-appinstalleddevicesgroup</guid>
       <pubDate>Sun, 03 Mar 2024 00:00:00 GMT</pubDate>
-      <description>Build a device group in Intune based on detected application installs — automatically add and remove devices as software appears and disappears.</description>
+      <description>Build a device group in Intune based on detected application installs - automatically add and remove devices as software appears and disappears.</description>
       <category>powershell</category>
       <category>intune</category>
       <category>automation</category>
@@ -228,7 +240,7 @@
       <link>https://jorgeasaur.us/streamlining-application-detection-in-intune-and-mecm-with-powershell</link>
       <guid isPermaLink="true">https://jorgeasaur.us/streamlining-application-detection-in-intune-and-mecm-with-powershell</guid>
       <pubDate>Fri, 05 Jan 2024 00:00:00 GMT</pubDate>
-      <description>A PowerShell function for precise application detection across 32-bit, 64-bit, and user-context installs — perfect for Intune Win32 app detection.</description>
+      <description>A PowerShell function for precise application detection across 32-bit, 64-bit, and user-context installs - perfect for Intune Win32 app detection.</description>
       <category>powershell</category>
       <category>intune</category>
       <category>mecm</category>
