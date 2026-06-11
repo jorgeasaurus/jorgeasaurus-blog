@@ -2,6 +2,20 @@ import { type PostMeta } from '../lib/posts'
 
 const posts: PostMeta[] = [
   {
+    slug: 'make-yourself-obsolete',
+    title: 'Make Yourself Obsolete',
+    date: '2026-06-11',
+    description:
+      'A practical career note on turning repeated work into automation, documentation, and room for harder problems.',
+    tags: ['career', 'engineering', 'automation', 'growth'],
+    socialImage: {
+      src: '/images/posts/make-yourself-obsolete/socialcard.png',
+      width: 1200,
+      height: 630,
+      type: 'image/png',
+    },
+  },
+  {
     slug: 'intune-gotchas-every-admin-learns-eventually',
     title: 'Intune Gotchas Every Admin Learns Eventually',
     date: '2026-06-10',

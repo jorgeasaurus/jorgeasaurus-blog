@@ -63,3 +63,38 @@ Regenerated the new post social card with the foggy forest background, glass pan
 ## Review
 
 Created `jorgeasaurus-glass-ui` in `/Users/jorgeasaurus/.agents/skills` with `SKILL.md` guidance and `agents/openai.yaml` UI metadata. Validated installed YAML/frontmatter with Ruby because the bundled validator requires unavailable `PyYAML`.
+
+# Create Make Yourself Obsolete Post
+
+- [x] Inspect existing post structure and style references.
+- [x] Add the MDX post using the blog voice guide.
+- [x] Register post metadata and social image.
+- [x] Create a 1200x630 social card asset.
+- [x] Run lint/build and inspect generated metadata.
+
+## Review
+
+Created `make-yourself-obsolete` with metadata, RSS output, and a 1200x630 social card. Verified `npm run lint`, `npm run build`, `git diff --check`, generated social metadata, RSS entry, and local route render at `/make-yourself-obsolete`.
+
+# Match Make Yourself Obsolete Content Card
+
+- [x] Compare the current card against the Intune Gotchas reference.
+- [x] Regenerate the card in the Intune Gotchas card style.
+- [x] Verify dimensions, metadata, and build output.
+
+## Review
+
+Regenerated `make-yourself-obsolete` social card to match the Intune Gotchas layout and visual language. Verified 1200x630 PNG dimensions, generated `og:image` and `twitter:image` metadata, `npm run lint`, `npm run build`, and `git diff --check`.
+
+# Merge Make Yourself Obsolete Into Main
+
+- [x] Inspect branch state and pending changes.
+- [x] Commit scoped post changes on `dev`.
+- [ ] Update local `main` from `origin/main`.
+- [ ] Merge `dev` into `main`.
+- [ ] Run verification on `main`.
+- [ ] Push `main` to `origin`.
+
+## Review
+
+Pending.
