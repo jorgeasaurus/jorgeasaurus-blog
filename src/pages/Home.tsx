@@ -10,31 +10,42 @@ import useLiquidGlassSurface from '../hooks/useLiquidGlassSurface'
 
 const POSTS_PER_PAGE = 5
 
-function getPagePath(page: number) {
-  return page === 1 ? '/' : `/?page=${page}`
+function getPagePath(page: number, tag: string | null) {
+  const params = new URLSearchParams()
+  if (tag) params.set('tag', tag)
+  if (page > 1) params.set('page', String(page))
+  const query = params.toString()
+  return query ? `/?${query}` : '/'
 }
 
 export default function Home() {
+  const [searchParams] = useSearchParams()
+  const heroGlassRef = useLiquidGlassSurface<HTMLElement>({
+    borderRadius: 44,
+    type: 'rounded',
+  })
+
   useEffect(() => {
     document.title = 'Jorgeasaurus'
   }, [])
 
-  const [searchParams] = useSearchParams()
+  const activeTag = searchParams.get('tag')
   const sorted = sortPostsByDate(posts)
-  const totalPages = Math.max(1, Math.ceil(sorted.length / POSTS_PER_PAGE))
+  const filtered = activeTag
+    ? sorted.filter((post) => post.tags?.includes(activeTag))
+    : sorted
+  const totalPages = Math.max(1, Math.ceil(filtered.length / POSTS_PER_PAGE))
   const requestedPage = Number.parseInt(searchParams.get('page') ?? '1', 10)
   const currentPage = Math.min(
     Math.max(Number.isFinite(requestedPage) ? requestedPage : 1, 1),
     totalPages
   )
   const pageStart = (currentPage - 1) * POSTS_PER_PAGE
-  const visiblePosts = sorted.slice(pageStart, pageStart + POSTS_PER_PAGE)
-  const [featuredPost, ...archivePosts] = visiblePosts
-  const showFeaturedCard = currentPage === 1
-  const heroGlassRef = useLiquidGlassSurface<HTMLElement>({
-    borderRadius: 44,
-    type: 'rounded',
-  })
+  const visiblePosts = filtered.slice(pageStart, pageStart + POSTS_PER_PAGE)
+
+  useEffect(() => {
+    window.scrollTo(0, 0)
+  }, [currentPage, activeTag])
 
   return (
     <main className="blog-shell">
@@ -76,17 +87,28 @@ export default function Home() {
         <div className="content-heading">
           <div>
             <p className="eyebrow">Posts</p>
-            <h2>Recent field notes</h2>
+            <h2>{activeTag ? `Tagged: ${activeTag}` : 'Recent field notes'}</h2>
           </div>
+          {activeTag && (
+            <Link className="tag-filter-clear" to="/">
+              Clear filter ×
+            </Link>
+          )}
         </div>
-        {featuredPost && <PostCard post={featuredPost} featured={showFeaturedCard} />}
-        {archivePosts.map((post) => (
-          <PostCard key={post.slug} post={post} />
+        {visiblePosts.length === 0 && (
+          <p className="tag-filter-empty">No posts tagged “{activeTag}”.</p>
+        )}
+        {visiblePosts.map((post, index) => (
+          <PostCard
+            key={post.slug}
+            post={post}
+            featured={index === 0 && currentPage === 1 && !activeTag}
+          />
         ))}
         {totalPages > 1 && (
           <nav className="pagination" aria-label="Posts pagination">
             {currentPage > 1 ? (
-              <Link className="pagination-link pagination-link--wide" to={getPagePath(currentPage - 1)}>
+              <Link className="pagination-link pagination-link--wide" to={getPagePath(currentPage - 1, activeTag)}>
                 ← Newer
               </Link>
             ) : (
@@ -108,14 +130,14 @@ export default function Home() {
                     {page}
                   </span>
                 ) : (
-                  <Link className="pagination-link" to={getPagePath(page)} key={page}>
+                  <Link className="pagination-link" to={getPagePath(page, activeTag)} key={page}>
                     {page}
                   </Link>
                 )
               })}
             </div>
             {currentPage < totalPages ? (
-              <Link className="pagination-link pagination-link--wide" to={getPagePath(currentPage + 1)}>
+              <Link className="pagination-link pagination-link--wide" to={getPagePath(currentPage + 1, activeTag)}>
                 Older →
               </Link>
             ) : (

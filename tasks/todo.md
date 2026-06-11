@@ -31,3 +31,35 @@ Removed the duplicate card-date color, restored expandable-image hover affordanc
 ## Review
 
 Resolved the `src/styles/App.css` conflict by keeping the PR review fix that preserves expandable-image hover affordance. `npm run lint`, `npm run build`, and `git diff --check` passed.
+
+# Complete New Post
+
+- [x] Identify missing new-post metadata/assets.
+- [x] Add post social-card asset and metadata.
+- [x] Regenerate RSS/build artifacts through normal build.
+- [x] Verify new post with lint/build and metadata checks.
+
+## Review
+
+Added the new post social card, wired `socialImage` metadata, regenerated RSS through `npm run build`, and verified generated post metadata.
+
+# Refine New Post Social Card
+
+- [x] Compare the new social card with the reference card.
+- [x] Regenerate the new card in the reference visual style.
+- [x] Verify dimensions and generated metadata still match.
+
+## Review
+
+Regenerated the new post social card with the foggy forest background, glass panel, large title treatment, terminal/device illustration, and bottom tag/icon row matching the reference style. Verified the 1200x630 asset, generated metadata, lint, build, and diff whitespace check.
+
+# Create Glass UI Skill
+
+- [x] Extract the concrete glass UI patterns from the current page.
+- [x] Create a reusable agent skill for building pages in this style.
+- [x] Install the skill where agents can discover it.
+- [x] Validate the skill structure and summarize usage.
+
+## Review
+
+Created `jorgeasaurus-glass-ui` in `/Users/jorgeasaurus/.agents/skills` with `SKILL.md` guidance and `agents/openai.yaml` UI metadata. Validated installed YAML/frontmatter with Ruby because the bundled validator requires unavailable `PyYAML`.
