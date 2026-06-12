@@ -49,7 +49,7 @@ function updateMetaTag(html, selector, value) {
 }
 
 function applyHead(template, config) {
-  const fullTitle = `${config.title} | Jorgeasaurus`
+  const fullTitle = `${config.title} | ${siteName}`
   let html = template.replace(/<title>.*?<\/title>/u, `<title>${escapeXml(fullTitle)}</title>`)
 
   html = updateMetaTag(html, 'name="description"', config.description)

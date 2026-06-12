@@ -24,6 +24,7 @@ function App() {
             }
           />
           <Route path="/:slug" element={<Post />} />
+          <Route path="*" element={<Post />} />
         </Routes>
       </BrowserRouter>
       <Analytics />
