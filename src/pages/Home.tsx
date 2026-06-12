@@ -47,10 +47,16 @@ export default function Home() {
   useEffect(() => {
     const meta = document.querySelector<HTMLMetaElement>('meta[name="robots"]')
     if (!meta) return
-    meta.setAttribute('content', isFiltered ? 'noindex,follow' : 'index,follow')
+    const previous = meta.getAttribute('content') ?? 'index,follow'
     return () => {
-      meta.setAttribute('content', 'index,follow')
+      meta.setAttribute('content', previous)
     }
+  }, [])
+
+  useEffect(() => {
+    document
+      .querySelector<HTMLMetaElement>('meta[name="robots"]')
+      ?.setAttribute('content', isFiltered ? 'noindex,follow' : 'index,follow')
   }, [isFiltered])
 
   useEffect(() => {

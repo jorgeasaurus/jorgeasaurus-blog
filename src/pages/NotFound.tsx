@@ -17,9 +17,10 @@ export default function NotFound() {
   useEffect(() => {
     const meta = document.querySelector<HTMLMetaElement>('meta[name="robots"]')
     if (!meta) return
+    const previous = meta.getAttribute('content') ?? 'index,follow'
     meta.setAttribute('content', 'noindex,nofollow')
     return () => {
-      meta.setAttribute('content', 'index,follow')
+      meta.setAttribute('content', previous)
     }
   }, [])
 
