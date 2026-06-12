@@ -4,6 +4,7 @@ import Home from './pages/Home.tsx'
 import Post from './pages/Post.tsx'
 import About from './pages/About.tsx'
 import SocialCard from './pages/SocialCard.tsx'
+import NotFound from './pages/NotFound.tsx'
 
 function App() {
   return (
@@ -24,7 +25,7 @@ function App() {
             }
           />
           <Route path="/:slug" element={<Post />} />
-          <Route path="*" element={<Post />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
       <Analytics />

@@ -45,9 +45,12 @@ export default function Home() {
   const visiblePosts = filtered.slice(pageStart, pageStart + POSTS_PER_PAGE)
 
   useEffect(() => {
-    document
-      .querySelector<HTMLMetaElement>('meta[name="robots"]')
-      ?.setAttribute('content', isFiltered ? 'noindex,follow' : 'index,follow')
+    const meta = document.querySelector<HTMLMetaElement>('meta[name="robots"]')
+    if (!meta) return
+    meta.setAttribute('content', isFiltered ? 'noindex,follow' : 'index,follow')
+    return () => {
+      meta.setAttribute('content', 'index,follow')
+    }
   }, [isFiltered])
 
   useEffect(() => {
