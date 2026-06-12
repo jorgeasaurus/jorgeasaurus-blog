@@ -1,44 +1,14 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import vm from 'node:vm'
-import ts from 'typescript'
+import { escapeXml, loadPosts, siteUrl } from './lib/site.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const rootDir = resolve(__dirname, '..')
-const postsPath = resolve(rootDir, 'src/content/posts.ts')
 const outputPath = resolve(rootDir, 'public/rss.xml')
-const siteUrl = 'https://jorgeasaur.us'
 const feedTitle = 'Jorgeasaurus'
 const feedDescription =
   'Field notes on PowerShell, endpoint management, Microsoft Graph, and automation.'
-
-function escapeXml(value) {
-  return String(value)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&apos;')
-}
-
-async function loadPosts() {
-  const source = await readFile(postsPath, 'utf8')
-  const { outputText } = ts.transpileModule(source, {
-    compilerOptions: {
-      module: ts.ModuleKind.CommonJS,
-      target: ts.ScriptTarget.ES2022,
-    },
-  })
-  const context = {
-    exports: {},
-    module: { exports: {} },
-  }
-
-  vm.runInNewContext(outputText, context, { filename: postsPath })
-
-  return context.exports.default
-}
 
 function buildRss(posts) {
   const sortedPosts = [...posts].sort(

@@ -40,8 +40,15 @@ export default function Home() {
     Math.max(Number.isFinite(requestedPage) ? requestedPage : 1, 1),
     totalPages
   )
+  const isFiltered = Boolean(activeTag) || currentPage > 1
   const pageStart = (currentPage - 1) * POSTS_PER_PAGE
   const visiblePosts = filtered.slice(pageStart, pageStart + POSTS_PER_PAGE)
+
+  useEffect(() => {
+    document
+      .querySelector<HTMLMetaElement>('meta[name="robots"]')
+      ?.setAttribute('content', isFiltered ? 'noindex,follow' : 'index,follow')
+  }, [isFiltered])
 
   useEffect(() => {
     window.scrollTo(0, 0)
