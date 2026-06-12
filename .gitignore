@@ -3,6 +3,7 @@ node_modules
 
 # Build
 dist
+*.tsbuildinfo
 
 # Environment
 .env
@@ -27,3 +28,4 @@ playwright-report/
 test-results/
 
 conference-talks/
+tasks/todo.md

@@ -1,5 +1,6 @@
 {
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+  "redirects": [
+    { "source": "/post/:slug", "destination": "/:slug", "permanent": true },
+    { "source": "/untitled", "destination": "/intune-device-queries-to-level-up-your-device-management", "permanent": true }
   ]
 }

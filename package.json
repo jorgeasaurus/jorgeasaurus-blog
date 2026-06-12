@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "generate:rss": "node scripts/generate-rss.mjs",
-    "build": "npm run generate:rss && tsc -b && vite build && node scripts/generate-post-html.mjs",
+    "generate:sitemap": "node scripts/generate-sitemap.mjs",
+    "build": "npm run generate:rss && npm run generate:sitemap && tsc -b && vite build && node scripts/generate-post-html.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
     "doctor": "npx -y react-doctor@0.2.14"
