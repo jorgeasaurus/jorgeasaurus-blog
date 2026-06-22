@@ -209,8 +209,8 @@ Share URL: `https://jorgeasaurus-blog-bhuuzz6vq-jorgeasaurus-projects.vercel.app
 - [x] Run final verification before merging.
 - [x] Commit the scoped branch changes.
 - [x] Merge into `main` and push to `origin`.
-- [ ] Deploy Vercel production and verify the live site.
+- [x] Deploy Vercel production and verify the live site.
 
 ## Review
 
-Pending.
+Pushed the liquid-glass styling to `main`, deployed Vercel production, and verified `https://www.jorgeasaur.us` renders the existing blog with no agency-page copy and no desktop/mobile horizontal overflow.
