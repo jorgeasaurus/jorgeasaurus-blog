@@ -179,7 +179,11 @@ Moved Graph Explorer Plus, NukeTune, and Intune Gazette into the Live projects s
 # Publish Projects Page
 
 - [x] Run final local verification.
-- [ ] Commit projects page changes on `main`.
-- [ ] Push `main` to `origin`.
-- [ ] Deploy Vercel production.
-- [ ] Verify production `/projects`.
+- [x] Commit projects page changes on `main`.
+- [x] Push `main` to `origin`.
+- [x] Deploy Vercel production.
+- [x] Verify production `/projects`.
+
+## Review
+
+Committed projects page changes on `main` at `833e1cc` and pushed to `origin/main`. Deployed production at `https://jorgeasaurus-blog-8ov326601-jorgeasaurus-projects.vercel.app`, aliased to `https://jorgeasaur.us` and `https://www.jorgeasaur.us`. Verified Vercel production status `Ready` and `/projects` static HTML with `vercel curl`.
