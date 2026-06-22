@@ -6,3 +6,5 @@
 - When matching a visual reference, inspect the reference first and verify the rendered output for text/icon collisions before marking it done.
 - On the projects page, prefer a project’s public site URL over its GitHub repository URL when a live site exists.
 - On the projects page, place public web apps/sites in the Live projects section instead of leaving them under repos.
+- Before replacing the glass UI system, compare against production screenshots and reject changes that look visually worse.
+- When asked to apply a design prompt to this blog, preserve the existing blog content, routes, and identity unless a replacement page is explicitly requested.

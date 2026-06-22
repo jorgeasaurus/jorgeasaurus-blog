@@ -187,3 +187,30 @@ Moved Graph Explorer Plus, NukeTune, and Intune Gazette into the Live projects s
 ## Review
 
 Committed projects page changes on `main` at `833e1cc` and pushed to `origin/main`. Deployed production at `https://jorgeasaurus-blog-8ov326601-jorgeasaurus-projects.vercel.app`, aliased to `https://jorgeasaur.us` and `https://www.jorgeasaur.us`. Verified Vercel production status `Ready` and `/projects` static HTML with `vercel curl`.
+
+# Apply Liquid Glass Styling To Blog
+
+- [x] Reset the mistaken agency landing-page replacement.
+- [x] Keep the existing blog app, routes, content, and brand identity intact.
+- [x] Apply prompt-inspired liquid-glass styling to existing blog surfaces.
+- [x] Verify lint, build, whitespace, and responsive render.
+- [x] Deploy and verify a Vercel preview.
+
+## Review
+
+Preserved the existing blog app and applied only the liquid-glass styling to current blog surfaces. Verified lint, build, whitespace, local desktop/mobile render, and protected Vercel preview render.
+
+Preview: `https://jorgeasaurus-blog-bhuuzz6vq-jorgeasaurus-projects.vercel.app`
+Share URL: `https://jorgeasaurus-blog-bhuuzz6vq-jorgeasaurus-projects.vercel.app/?_vercel_share=rjNb4c7IkvAge0iY1EQL82b3MCnLqH2u`
+
+# Publish Liquid Glass Styling
+
+- [x] Confirm branch state and final diff.
+- [x] Run final verification before merging.
+- [x] Commit the scoped branch changes.
+- [x] Merge into `main` and push to `origin`.
+- [ ] Deploy Vercel production and verify the live site.
+
+## Review
+
+Pending.

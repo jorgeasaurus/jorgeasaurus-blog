@@ -61,32 +61,46 @@
   gap: 22px;
   padding: 24px;
   border-radius: 30px;
-  border: 1px solid var(--glass-line);
+  border: 0;
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.13), rgba(1, 8, 5, 0.6) 38%, rgba(0, 0, 0, 0.38)),
-    rgba(2, 9, 6, 0.54);
-  -webkit-backdrop-filter: blur(9px) saturate(1.18) brightness(0.78);
-  backdrop-filter: blur(9px) saturate(1.18) brightness(0.78);
+    linear-gradient(135deg, rgba(255, 255, 255, 0.035), rgba(1, 8, 5, 0.16) 44%, rgba(0, 0, 0, 0.12)),
+    rgba(255, 255, 255, 0.012);
+  background-blend-mode: luminosity;
+  -webkit-backdrop-filter: blur(16px) saturate(1.18) brightness(0.78);
+  backdrop-filter: blur(16px) saturate(1.18) brightness(0.78);
   background-clip: padding-box;
   color: inherit;
-  overflow: visible;
+  overflow: hidden;
   box-shadow:
-    0 26px 80px rgba(0, 0, 0, 0.38),
-    inset 0 1px 0 rgba(255, 255, 255, 0.24),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.08);
+    0 26px 80px rgba(0, 0, 0, 0.34),
+    inset 0 1px 1px rgba(255, 255, 255, 0.12);
 }
 
 .glass-panel::before {
   content: '';
   position: absolute;
-  inset: 1px;
+  inset: 0;
   z-index: 0;
   pointer-events: none;
   border-radius: inherit;
-  background:
-    radial-gradient(circle at 14% 0%, rgba(255, 255, 255, 0.2), transparent 30%),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.16), transparent 32%, rgba(255, 255, 255, 0.04) 68%, transparent);
-  opacity: 0.82;
+  padding: 1.4px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.45) 0%,
+    rgba(255, 255, 255, 0.15) 20%,
+    rgba(255, 255, 255, 0) 40%,
+    rgba(255, 255, 255, 0) 60%,
+    rgba(255, 255, 255, 0.15) 80%,
+    rgba(255, 255, 255, 0.45) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
 }
 
 .glass-panel > * {
@@ -114,25 +128,28 @@
 
 .liquid-glass-surface {
   isolation: isolate;
-  border-color: rgba(232, 255, 239, 0.28);
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.024), transparent 42%),
-    rgba(5, 18, 11, 0.1);
-  -webkit-backdrop-filter: blur(1.2px) saturate(1.06);
-  backdrop-filter: blur(1.2px) saturate(1.06);
+    linear-gradient(135deg, rgba(255, 255, 255, 0.028), transparent 42%),
+    rgba(255, 255, 255, 0.01);
+  -webkit-backdrop-filter: blur(22px) saturate(1.14) brightness(0.84);
+  backdrop-filter: blur(22px) saturate(1.14) brightness(0.84);
   box-shadow:
+    4px 4px 4px rgba(0, 0, 0, 0.05),
     0 28px 72px rgba(0, 0, 0, 0.24),
-    inset 0 1px 0 rgba(255, 255, 255, 0.36),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.1);
+    inset 0 1px 1px rgba(255, 255, 255, 0.16);
 }
 
 .liquid-glass-surface::before {
   inset: 0;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent 22%, transparent 72%, rgba(255, 255, 255, 0.08)),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.12), transparent 12%, transparent 88%, rgba(255, 255, 255, 0.08));
-  opacity: 0.72;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.5) 0%,
+    rgba(255, 255, 255, 0.2) 20%,
+    rgba(255, 255, 255, 0) 40%,
+    rgba(255, 255, 255, 0) 60%,
+    rgba(255, 255, 255, 0.2) 80%,
+    rgba(255, 255, 255, 0.5) 100%
+  );
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,
     linear-gradient(#000 0 0);
@@ -326,29 +343,46 @@
   align-content: center;
   gap: 28px;
   padding: 72px;
-  border: 1px solid rgba(229, 255, 237, 0.32);
+  border: 0;
   border-radius: 56px;
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.2), rgba(4, 18, 12, 0.44) 46%, rgba(0, 0, 0, 0.2)),
-    rgba(2, 9, 6, 0.34);
-  -webkit-backdrop-filter: blur(8px) saturate(1.1) brightness(0.88);
-  backdrop-filter: blur(8px) saturate(1.1) brightness(0.88);
+    linear-gradient(135deg, rgba(255, 255, 255, 0.045), rgba(4, 18, 12, 0.2) 46%, rgba(0, 0, 0, 0.14)),
+    rgba(255, 255, 255, 0.012);
+  background-blend-mode: luminosity;
+  -webkit-backdrop-filter: blur(24px) saturate(1.14) brightness(0.88);
+  backdrop-filter: blur(24px) saturate(1.14) brightness(0.88);
   box-shadow:
     0 30px 90px rgba(0, 0, 0, 0.34),
-    inset 0 1px 0 rgba(255, 255, 255, 0.26),
-    inset 0 -1px 0 rgba(255, 255, 255, 0.1);
+    4px 4px 4px rgba(0, 0, 0, 0.05),
+    inset 0 1px 1px rgba(255, 255, 255, 0.15);
+  overflow: hidden;
 }
 
 .social-card-panel::before {
   content: '';
   position: absolute;
-  inset: 1px;
+  inset: 0;
   z-index: 0;
   border-radius: inherit;
   pointer-events: none;
-  background:
-    radial-gradient(circle at 12% 0%, rgba(255, 255, 255, 0.24), transparent 28%),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.14), transparent 32%, rgba(255, 255, 255, 0.05) 72%, transparent);
+  padding: 1.4px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.5) 0%,
+    rgba(255, 255, 255, 0.2) 20%,
+    rgba(255, 255, 255, 0) 40%,
+    rgba(255, 255, 255, 0) 60%,
+    rgba(255, 255, 255, 0.2) 80%,
+    rgba(255, 255, 255, 0.5) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
 }
 
 .social-card-brand,
@@ -611,14 +645,15 @@ h2 {
   contain-intrinsic-size: auto 220px;
   padding: 24px;
   border-radius: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 0;
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.11), rgba(1, 8, 5, 0.5) 45%, rgba(0, 0, 0, 0.34)),
-    rgba(2, 9, 6, 0.42);
-  -webkit-backdrop-filter: blur(7px) saturate(1.14) brightness(0.78);
-  backdrop-filter: blur(7px) saturate(1.14) brightness(0.78);
+    linear-gradient(135deg, rgba(255, 255, 255, 0.026), rgba(1, 8, 5, 0.22) 48%, rgba(0, 0, 0, 0.16)),
+    rgba(255, 255, 255, 0.01);
+  background-blend-mode: luminosity;
+  -webkit-backdrop-filter: blur(14px) saturate(1.14) brightness(0.78);
+  backdrop-filter: blur(14px) saturate(1.14) brightness(0.78);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    inset 0 1px 1px rgba(255, 255, 255, 0.12),
     0 16px 44px rgba(0, 0, 0, 0.24);
   text-decoration: none;
   color: inherit;
@@ -671,12 +706,11 @@ h2 {
 
 .post-card:hover {
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.14), rgba(1, 8, 5, 0.42) 48%, rgba(0, 0, 0, 0.24)),
-    rgba(2, 9, 6, 0.36);
+    linear-gradient(135deg, rgba(255, 255, 255, 0.045), rgba(1, 8, 5, 0.24) 48%, rgba(0, 0, 0, 0.18)),
+    rgba(255, 255, 255, 0.016);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.26),
+    inset 0 1px 1px rgba(255, 255, 255, 0.18),
     0 18px 52px rgba(0, 0, 0, 0.3);
-  border-color: var(--glass-line-strong);
   transform: translateY(-3px);
 }
 
@@ -714,10 +748,10 @@ h2 {
   border-radius: 34px;
   gap: 16px;
   background:
-    radial-gradient(circle at 16% 10%, rgba(157, 240, 182, 0.24), transparent 32%),
-    radial-gradient(circle at 94% 96%, rgba(255, 255, 255, 0.08), transparent 30%),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.15), rgba(1, 8, 5, 0.56) 46%, rgba(0, 0, 0, 0.3)),
-    rgba(2, 9, 6, 0.44);
+    radial-gradient(circle at 16% 10%, rgba(157, 240, 182, 0.16), transparent 32%),
+    radial-gradient(circle at 94% 96%, rgba(255, 255, 255, 0.06), transparent 30%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.04), rgba(1, 8, 5, 0.28) 46%, rgba(0, 0, 0, 0.18)),
+    rgba(255, 255, 255, 0.012);
 }
 
 .post-card.liquid-glass-surface,
@@ -728,17 +762,18 @@ h2 {
 .projects-hero.liquid-glass-surface,
 .topbar.liquid-glass-surface {
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.024), transparent 42%),
-    rgba(5, 18, 11, 0.1);
-  -webkit-backdrop-filter: blur(1.2px) saturate(1.06);
-  backdrop-filter: blur(1.2px) saturate(1.06);
+    linear-gradient(135deg, rgba(255, 255, 255, 0.026), transparent 42%),
+    rgba(255, 255, 255, 0.01);
+  -webkit-backdrop-filter: blur(22px) saturate(1.12) brightness(0.84);
+  backdrop-filter: blur(22px) saturate(1.12) brightness(0.84);
 }
 
 .post-card.liquid-glass-surface {
   --glass-rim-width: 24px;
   background:
-    linear-gradient(180deg, rgba(8, 20, 14, 0.14), rgba(8, 20, 14, 0.42)),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.024), transparent 42%);
+    linear-gradient(180deg, rgba(8, 20, 14, 0.06), rgba(8, 20, 14, 0.2)),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.026), transparent 42%),
+    rgba(255, 255, 255, 0.01);
 }
 
 .post-card--featured.liquid-glass-surface,
@@ -755,10 +790,10 @@ h2 {
 .topbar.liquid-glass-surface {
   --glass-rim-width: 18px;
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.05), transparent 46%),
-    rgba(5, 18, 11, 0.4);
-  -webkit-backdrop-filter: blur(14px) saturate(1.2);
-  backdrop-filter: blur(14px) saturate(1.2);
+    linear-gradient(135deg, rgba(255, 255, 255, 0.045), transparent 46%),
+    rgba(255, 255, 255, 0.014);
+  -webkit-backdrop-filter: blur(28px) saturate(1.22) brightness(0.9);
+  backdrop-filter: blur(28px) saturate(1.22) brightness(0.9);
 }
 
 .post-card.glass-container {
@@ -1771,15 +1806,16 @@ h2 {
   gap: 14px;
   min-height: 246px;
   padding: 22px;
-  border: 1px solid rgba(215, 255, 227, 0.16);
+  border: 0;
   border-radius: 24px;
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(1, 8, 5, 0.42) 48%, rgba(0, 0, 0, 0.24)),
-    rgba(2, 9, 6, 0.38);
-  -webkit-backdrop-filter: blur(7px) saturate(1.1) brightness(0.78);
-  backdrop-filter: blur(7px) saturate(1.1) brightness(0.78);
+    linear-gradient(135deg, rgba(255, 255, 255, 0.026), rgba(1, 8, 5, 0.2) 48%, rgba(0, 0, 0, 0.16)),
+    rgba(255, 255, 255, 0.01);
+  background-blend-mode: luminosity;
+  -webkit-backdrop-filter: blur(14px) saturate(1.1) brightness(0.8);
+  backdrop-filter: blur(14px) saturate(1.1) brightness(0.8);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 1px 1px rgba(255, 255, 255, 0.12),
     0 16px 44px rgba(0, 0, 0, 0.22);
   overflow: hidden;
   transition: border-color 180ms ease, transform 180ms ease, background 180ms ease, box-shadow 180ms ease;
@@ -1788,12 +1824,27 @@ h2 {
 .project-card::before {
   content: '';
   position: absolute;
-  inset: 1px;
+  inset: 0;
   z-index: 0;
   border-radius: inherit;
-  background:
-    radial-gradient(circle at 12% 0%, rgba(255, 255, 255, 0.16), transparent 28%),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.1), transparent 36%, rgba(157, 240, 182, 0.04));
+  padding: 1.4px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.45) 0%,
+    rgba(255, 255, 255, 0.15) 20%,
+    rgba(255, 255, 255, 0) 40%,
+    rgba(255, 255, 255, 0) 60%,
+    rgba(255, 255, 255, 0.15) 80%,
+    rgba(255, 255, 255, 0.45) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask-composite: exclude;
   pointer-events: none;
 }
 
@@ -1803,12 +1854,11 @@ h2 {
 }
 
 .project-card:hover {
-  border-color: rgba(215, 255, 227, 0.36);
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.13), rgba(1, 8, 5, 0.36) 48%, rgba(0, 0, 0, 0.2)),
-    rgba(2, 9, 6, 0.32);
+    linear-gradient(135deg, rgba(255, 255, 255, 0.045), rgba(1, 8, 5, 0.22) 48%, rgba(0, 0, 0, 0.18)),
+    rgba(255, 255, 255, 0.016);
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    inset 0 1px 1px rgba(255, 255, 255, 0.18),
     0 18px 52px rgba(0, 0, 0, 0.28);
   transform: translateY(-2px);
 }
@@ -1818,9 +1868,9 @@ h2 {
   padding: clamp(24px, 4vw, 30px);
   border-radius: 30px;
   background:
-    radial-gradient(circle at 14% 10%, rgba(157, 240, 182, 0.2), transparent 34%),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.13), rgba(1, 8, 5, 0.48) 46%, rgba(0, 0, 0, 0.24)),
-    rgba(2, 9, 6, 0.4);
+    radial-gradient(circle at 14% 10%, rgba(157, 240, 182, 0.14), transparent 34%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.035), rgba(1, 8, 5, 0.24) 46%, rgba(0, 0, 0, 0.18)),
+    rgba(255, 255, 255, 0.012);
 }
 
 .project-card-heading {
