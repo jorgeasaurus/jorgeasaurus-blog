@@ -18,9 +18,15 @@ export default function Topbar() {
       <div className="topbar-links">
         <Link
           to="/"
-          className={`nav-link ${pathname === '/' ? 'nav-link--active' : ''}`}
+          className={`nav-link nav-link--home ${pathname === '/' ? 'nav-link--active' : ''}`}
         >
           Home
+        </Link>
+        <Link
+          to="/projects"
+          className={`nav-link ${pathname === '/projects' ? 'nav-link--active' : ''}`}
+        >
+          Projects
         </Link>
         <Link
           to="/about"
@@ -30,7 +36,7 @@ export default function Topbar() {
         </Link>
         <a
           href="https://github.com/jorgeasaurus"
-          className="nav-link nav-link--icon"
+          className="nav-link nav-link--icon nav-link--social"
           target="_blank"
           rel="noopener noreferrer"
           aria-label="GitHub"
@@ -40,7 +46,7 @@ export default function Topbar() {
         </a>
         <a
           href="https://www.linkedin.com/in/jorgeasaurus/"
-          className="nav-link nav-link--icon"
+          className="nav-link nav-link--icon nav-link--social"
           target="_blank"
           rel="noopener noreferrer"
           aria-label="LinkedIn"

@@ -3,6 +3,7 @@ import { Analytics } from '@vercel/analytics/react'
 import Home from './pages/Home.tsx'
 import Post from './pages/Post.tsx'
 import About from './pages/About.tsx'
+import Projects from './pages/Projects.tsx'
 import SocialCard from './pages/SocialCard.tsx'
 import NotFound from './pages/NotFound.tsx'
 
@@ -15,6 +16,7 @@ function App() {
           <Route path="/social-card" element={<SocialCard />} />
           <Route path="/post/:slug" element={<Post />} />
           <Route path="/about" element={<About />} />
+          <Route path="/projects" element={<Projects />} />
           <Route
             path="/untitled"
             element={

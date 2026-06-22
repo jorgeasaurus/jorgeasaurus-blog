@@ -29,6 +29,18 @@ const staticPages = [
     },
   },
   {
+    path: 'projects',
+    config: {
+      title: 'Projects',
+      description:
+        'Projects by Jorgeasaurus: endpoint engineering tools, Microsoft Graph apps, PowerShell modules, and automation projects.',
+      ogType: 'website',
+      robots: 'index,follow',
+      url: `${siteUrl}/projects`,
+      canonical: `${siteUrl}/projects`,
+    },
+  },
+  {
     path: 'social-card',
     config: {
       title: 'Social Card',

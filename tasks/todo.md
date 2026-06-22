@@ -98,3 +98,88 @@ Regenerated `make-yourself-obsolete` social card to match the Intune Gotchas lay
 ## Review
 
 Merged `dev` into `main` and pushed `main` to `origin` at `7005ef1`. Verified `npm run lint`, `npm run build`, `git diff --check`, RSS entry, and generated social metadata for `/make-yourself-obsolete`. Left the unrelated `.gitignore` change unstaged.
+
+# Install Global Skills
+
+- [x] Inventory local skill directories.
+- [x] Sync `/Users/jorgeasaurus/Code/agent-skills` into `~/.codex/skills`.
+- [x] Verify every source skill has a global `SKILL.md`.
+
+## Review
+
+Installed all 54 source skills globally. Verification found no missing source skills under `~/.codex/skills`; the global directory now has 58 total skills including existing global-only entries.
+
+# Debug Hook Failures
+
+- [x] Review current lessons and locate hook configuration.
+- [x] Reproduce `PreToolUse` and `SessionStart` hook failures.
+- [x] Identify the root cause and smallest durable fix.
+- [x] Apply the fix.
+- [x] Verify hooks no longer fail.
+
+## Review
+
+Updated global Codex/Claude Python hook commands from `python` to `python3`. Patched both installed Vercel Codex plugin hook manifests to use absolute hook script paths instead of unresolved `CODEX_PLUGIN_ROOT`. Verified JSON parsing, representative PreToolUse guard execution, and all three Vercel SessionStart hook commands.
+
+# Add Projects Page
+
+- [x] Review current page, nav, and sitemap patterns.
+- [x] Add `/projects` route and project page content.
+- [x] Style the page responsively in the existing glass UI.
+- [x] Add `/projects` to generated sitemap output.
+- [x] Verify lint, build, and local render.
+
+## Review
+
+Added `/projects` with 2 live apps and 17 repositories, wired the top nav and sitemap generator, and verified desktop/mobile render with Playwright against local Chrome. `npm run lint`, `npm run build`, `git diff --check`, sitemap output, and overflow/card-count checks passed.
+
+# Deploy Projects Preview
+
+- [x] Confirm Vercel project link and local status.
+- [x] Fix `/projects` static HTML output.
+- [x] Create Vercel preview deployment.
+- [x] Record preview URL and result.
+
+## Review
+
+Deployed corrected preview at `https://jorgeasaurus-blog-ewk8xpc29-jorgeasaurus-projects.vercel.app`. Verified deployment status `Ready` with `vercel inspect` and verified `/projects` returns the Projects static HTML with `vercel curl`. `npm run lint`, `npm run build`, and `git diff --check` passed.
+
+# Projects Page Link Cleanup
+
+- [x] Point Graph Explorer Plus, MgGraphIndex, and NukeTune cards at their public sites.
+- [x] Remove the hero stats block.
+- [x] Verify lint, build, and diff whitespace.
+- [x] Deploy updated Vercel preview.
+
+## Review
+
+Updated Graph Explorer Plus, MgGraphIndex, and NukeTune to use their public site URLs and removed the hero stats panel. Verified `npm run lint`, `npm run build`, `git diff --check`, desktop/mobile Playwright render checks, and Vercel preview `https://jorgeasaurus-blog-5yo2asp6j-jorgeasaurus-projects.vercel.app`.
+
+# Win32Forge Project Link Fix
+
+- [x] Point Win32Forge at its public site.
+- [x] Verify lint, build, and diff whitespace.
+- [x] Deploy updated Vercel preview.
+
+## Review
+
+Updated Win32Forge to link to `https://jorgeasaurus.github.io/Win32Forge/` and changed its CTA to `Visit site`. Verified `npm run lint`, `npm run build`, `git diff --check`, Vercel preview `Ready`, and `/projects` static HTML on `https://jorgeasaurus-blog-fjw0hmim2-jorgeasaurus-projects.vercel.app`.
+
+# Promote Live Project Cards
+
+- [x] Move Graph Explorer Plus, NukeTune, and Intune Gazette into Live projects.
+- [x] Point Intune Gazette at its GitHub Pages site.
+- [x] Verify lint, build, and rendered project grouping.
+- [x] Deploy updated Vercel preview.
+
+## Review
+
+Moved Graph Explorer Plus, NukeTune, and Intune Gazette into the Live projects section. Intune Gazette now points to `https://jorgeasaurus.github.io/IntuneDocsAutomation/`. Verified lint, build, desktop/mobile rendered grouping, Vercel `Ready`, and `/projects` static HTML on `https://jorgeasaurus-blog-l2hi544ux-jorgeasaurus-projects.vercel.app`.
+
+# Publish Projects Page
+
+- [x] Run final local verification.
+- [ ] Commit projects page changes on `main`.
+- [ ] Push `main` to `origin`.
+- [ ] Deploy Vercel production.
+- [ ] Verify production `/projects`.

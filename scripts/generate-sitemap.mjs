@@ -31,6 +31,11 @@ function buildSitemap(posts) {
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
   </url>`,
+    `  <url>
+    <loc>${siteUrl}/projects</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>`,
     ...sortedPosts.map((post) => `  <url>
     <loc>${escapeXml(`${siteUrl}/${post.slug}`)}</loc>
     <lastmod>${isoDate(post.date)}</lastmod>
