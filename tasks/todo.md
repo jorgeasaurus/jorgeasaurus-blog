@@ -214,3 +214,26 @@ Share URL: `https://jorgeasaurus-blog-bhuuzz6vq-jorgeasaurus-projects.vercel.app
 ## Review
 
 Pushed the liquid-glass styling to `main`, deployed Vercel production, and verified `https://www.jorgeasaur.us` renders the existing blog with no agency-page copy and no desktop/mobile horizontal overflow.
+
+# Add Tenant Graph Project
+
+- [x] Inspect the existing projects page structure and Tenant Graph metadata.
+- [x] Add Tenant Graph to the live projects section.
+- [x] Verify lint, build, and rendered project grouping.
+
+## Review
+
+Added Tenant Graph to Live projects with the public site URL and metadata-aligned description. Verified lint, build, whitespace, and local `/projects` render with Tenant Graph in the featured grid.
+
+# Deploy Tenant Graph Preview
+
+- [x] Confirm current diff is scoped.
+- [x] Create Vercel preview deployment.
+- [x] Verify preview status and `/projects` render.
+
+## Review
+
+Deployed Vercel preview `dpl_CaNeXzNF6Y1XqbaezFtGfxJFGEYt` and verified `/projects` renders Tenant Graph in the featured grid.
+
+Preview: `https://jorgeasaurus-blog-sy9l9dbuh-jorgeasaurus-projects.vercel.app`
+Share URL: `https://jorgeasaurus-blog-sy9l9dbuh-jorgeasaurus-projects.vercel.app/?_vercel_share=g9gqYq92FXTEXUJJHN8aUdar8WLczPxh`

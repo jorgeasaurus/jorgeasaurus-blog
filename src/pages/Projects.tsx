@@ -41,6 +41,15 @@ const featuredProjects: Project[] = [
     cta: 'Visit site',
   },
   {
+    name: 'Tenant Graph',
+    href: 'https://tenantgraph.com/',
+    kind: 'Tenant map',
+    description:
+      'Visualizes Microsoft Intune and Entra relationships across users, devices, groups, apps, policies, and Conditional Access.',
+    tags: ['Intune', 'Entra', 'Graph'],
+    cta: 'Visit site',
+  },
+  {
     name: 'NukeTune',
     href: 'https://nuketune.com/',
     kind: 'Tenant reset',
