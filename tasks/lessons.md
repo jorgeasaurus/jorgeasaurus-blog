@@ -8,3 +8,8 @@
 - On the projects page, place public web apps/sites in the Live projects section instead of leaving them under repos.
 - Before replacing the glass UI system, compare against production screenshots and reject changes that look visually worse.
 - When asked to apply a design prompt to this blog, preserve the existing blog content, routes, and identity unless a replacement page is explicitly requested.
+- When the user asks to move work back to `main`, preserve current branch changes first, switch branches cleanly, and keep the new diff scoped to the requested change.
+- For homepage hero placement tweaks, adjust the title block independently from the intro block so user-directed title movement does not undo the lower-right intro placement.
+- Keep the homepage hero at the origin/main content width unless the user explicitly asks for a wider panel; solve title/intro collisions with vertical placement first.
+- When increasing the homepage hero wordmark size, lift the title block in the same change and verify desktop overlap against the lower-right intro.
+- When matching card glass treatments, confirm which reference surface the user means and compare the complete computed backdrop-filter tuple, not just the blur radius.

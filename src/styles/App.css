@@ -228,7 +228,8 @@
 /* ── Hero ── */
 .hero-panel {
   grid-area: hero;
-  min-height: 360px;
+  min-height: clamp(360px, 42vw, 430px);
+  padding: clamp(30px, 4vw, 46px);
   border-radius: 44px;
   justify-content: space-between;
   overflow: hidden;
@@ -248,16 +249,17 @@
 
 .hero-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(330px, 340px);
-  gap: clamp(20px, 3vw, 40px);
-  align-items: start;
-  min-height: 292px;
+  grid-template-columns: minmax(0, 1.08fr) minmax(330px, 0.82fr);
+  gap: clamp(18px, 3.2vw, 44px);
+  align-items: stretch;
+  min-height: clamp(300px, 32vw, 338px);
 }
 
 .hero-title-block {
   display: grid;
   gap: 16px;
-  align-self: start;
+  align-self: center;
+  transform: translateY(-78px);
 }
 
 .hero-signal {
@@ -284,7 +286,8 @@
 .hero-intro {
   display: grid;
   gap: 16px;
-  align-self: center;
+  align-self: end;
+  padding-bottom: clamp(2px, 1.5vw, 18px);
 }
 
 .hero-links,
@@ -534,7 +537,7 @@ h1 {
   gap: 0.18em;
   max-width: none;
   white-space: nowrap;
-  font-size: clamp(3rem, 5.1vw, 4.65rem);
+  font-size: clamp(3rem, 5.6vw, 5.15rem);
 }
 
 .hero-title-block h1 span {
@@ -1812,8 +1815,8 @@ h2 {
     linear-gradient(135deg, rgba(255, 255, 255, 0.026), rgba(1, 8, 5, 0.2) 48%, rgba(0, 0, 0, 0.16)),
     rgba(255, 255, 255, 0.01);
   background-blend-mode: luminosity;
-  -webkit-backdrop-filter: blur(14px) saturate(1.1) brightness(0.8);
-  backdrop-filter: blur(14px) saturate(1.1) brightness(0.8);
+  -webkit-backdrop-filter: blur(22px) saturate(1.12) brightness(0.84);
+  backdrop-filter: blur(22px) saturate(1.12) brightness(0.84);
   box-shadow:
     inset 0 1px 1px rgba(255, 255, 255, 0.12),
     0 16px 44px rgba(0, 0, 0, 0.22);
@@ -2150,6 +2153,27 @@ code {
 
   .panel-copy {
     text-align: left;
+  }
+}
+
+@media (max-width: 980px) {
+  .hero-panel {
+    min-height: 0;
+  }
+
+  .hero-layout {
+    grid-template-columns: 1fr;
+    min-height: 0;
+  }
+
+  .hero-title-block,
+  .hero-intro {
+    align-self: start;
+    transform: none;
+  }
+
+  .hero-intro {
+    padding-bottom: 0;
   }
 }
 

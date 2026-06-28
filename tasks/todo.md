@@ -237,3 +237,26 @@ Deployed Vercel preview `dpl_CaNeXzNF6Y1XqbaezFtGfxJFGEYt` and verified `/projec
 
 Preview: `https://jorgeasaurus-blog-sy9l9dbuh-jorgeasaurus-projects.vercel.app`
 Share URL: `https://jorgeasaurus-blog-sy9l9dbuh-jorgeasaurus-projects.vercel.app/?_vercel_share=g9gqYq92FXTEXUJJHN8aUdar8WLczPxh`
+# Main Hero Placement
+
+- [x] Switch back to `main` and preserve branch work.
+- [x] Adjust homepage hero placement to match the supplied reference.
+- [x] Verify lint, build, screenshots, and responsive layout.
+
+## Review
+
+Switched to `main`, preserved the prior Three.js branch work in a stash, restored the hero to the origin/main width, enlarged the title wordmark, and lifted the title/signal block to keep it clear of the lower-right intro.
+
+Verified `npm run lint`, `npx tsc -b --pretty false`, `git diff --check`, `npm run build`, and Playwright desktop/tablet/mobile screenshots plus overflow checks.
+
+# Project Card Blur Match
+
+- [x] Compare project-card and project-hero glass blur values.
+- [x] Match project-card backdrop filtering to the project hero.
+- [x] Verify lint, build, and `/projects` screenshots.
+
+## Review
+
+Matched `.project-card` backdrop filtering to the project hero: `blur(22px) saturate(1.12) brightness(0.84)`.
+
+Verified `npm run lint`, `npx tsc -b --pretty false`, `git diff --check`, `npm run build`, computed project-card styles, and Playwright desktop/mobile `/projects` screenshots.
