@@ -1,3 +1,7 @@
+:root {
+  --main-hero-glass-filter: blur(22px) saturate(1.12) brightness(0.84);
+}
+
 /* ── Blog app shell ── */
 .blog-shell {
   --fixed-nav-block-size: 82px;
@@ -66,8 +70,8 @@
     linear-gradient(135deg, rgba(255, 255, 255, 0.035), rgba(1, 8, 5, 0.16) 44%, rgba(0, 0, 0, 0.12)),
     rgba(255, 255, 255, 0.012);
   background-blend-mode: luminosity;
-  -webkit-backdrop-filter: blur(16px) saturate(1.18) brightness(0.78);
-  backdrop-filter: blur(16px) saturate(1.18) brightness(0.78);
+  -webkit-backdrop-filter: var(--main-hero-glass-filter);
+  backdrop-filter: var(--main-hero-glass-filter);
   background-clip: padding-box;
   color: inherit;
   overflow: hidden;
@@ -76,7 +80,8 @@
     inset 0 1px 1px rgba(255, 255, 255, 0.12);
 }
 
-.glass-panel::before {
+.glass-panel::before,
+.project-card::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -131,15 +136,16 @@
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.028), transparent 42%),
     rgba(255, 255, 255, 0.01);
-  -webkit-backdrop-filter: blur(22px) saturate(1.14) brightness(0.84);
-  backdrop-filter: blur(22px) saturate(1.14) brightness(0.84);
+  -webkit-backdrop-filter: var(--main-hero-glass-filter);
+  backdrop-filter: var(--main-hero-glass-filter);
   box-shadow:
     4px 4px 4px rgba(0, 0, 0, 0.05),
     0 28px 72px rgba(0, 0, 0, 0.24),
     inset 0 1px 1px rgba(255, 255, 255, 0.16);
 }
 
-.liquid-glass-surface::before {
+.liquid-glass-surface::before,
+.project-card::before {
   inset: 0;
   background: linear-gradient(
     180deg,
@@ -161,7 +167,8 @@
   padding: 1px;
 }
 
-.liquid-glass-surface > :not(.liquid-glass-canvas) {
+.liquid-glass-surface > :not(.liquid-glass-canvas),
+.project-card > * {
   position: relative;
   z-index: 1;
 }
@@ -352,8 +359,8 @@
     linear-gradient(135deg, rgba(255, 255, 255, 0.045), rgba(4, 18, 12, 0.2) 46%, rgba(0, 0, 0, 0.14)),
     rgba(255, 255, 255, 0.012);
   background-blend-mode: luminosity;
-  -webkit-backdrop-filter: blur(24px) saturate(1.14) brightness(0.88);
-  backdrop-filter: blur(24px) saturate(1.14) brightness(0.88);
+  -webkit-backdrop-filter: var(--main-hero-glass-filter);
+  backdrop-filter: var(--main-hero-glass-filter);
   box-shadow:
     0 30px 90px rgba(0, 0, 0, 0.34),
     4px 4px 4px rgba(0, 0, 0, 0.05),
@@ -641,33 +648,43 @@ h2 {
   gap: 16px;
 }
 
-.post-card {
+.post-card,
+.project-card {
   position: relative;
   z-index: 1;
-  content-visibility: auto;
-  contain-intrinsic-size: auto 220px;
+  display: grid;
+  gap: 12px;
   padding: 24px;
   border-radius: 24px;
   border: 0;
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.026), rgba(1, 8, 5, 0.22) 48%, rgba(0, 0, 0, 0.16)),
+    linear-gradient(180deg, rgba(8, 20, 14, 0.06), rgba(8, 20, 14, 0.2)),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.026), transparent 42%),
     rgba(255, 255, 255, 0.01);
   background-blend-mode: luminosity;
-  -webkit-backdrop-filter: blur(14px) saturate(1.14) brightness(0.78);
-  backdrop-filter: blur(14px) saturate(1.14) brightness(0.78);
+  -webkit-backdrop-filter: var(--main-hero-glass-filter);
+  backdrop-filter: var(--main-hero-glass-filter);
   box-shadow:
     inset 0 1px 1px rgba(255, 255, 255, 0.12),
     0 16px 44px rgba(0, 0, 0, 0.24);
+  overflow: hidden;
+  transition: background 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.post-card {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 220px;
   text-decoration: none;
   color: inherit;
-  display: grid;
   align-items: start;
   justify-content: stretch;
   justify-items: start;
-  gap: 12px;
   text-align: left;
-  overflow: hidden;
-  transition: background 180ms ease, border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.project-card {
+  align-content: start;
+  min-height: 246px;
 }
 
 .post-card-body {
@@ -695,7 +712,8 @@ h2 {
   outline-offset: 4px;
 }
 
-.post-card::after {
+.post-card::after,
+.project-card::after {
   content: '';
   position: absolute;
   inset: auto 24px 18px auto;
@@ -707,10 +725,12 @@ h2 {
   transition: opacity 180ms ease, transform 180ms ease;
 }
 
-.post-card:hover {
+.post-card:hover,
+.project-card:hover {
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.045), rgba(1, 8, 5, 0.24) 48%, rgba(0, 0, 0, 0.18)),
-    rgba(255, 255, 255, 0.016);
+    linear-gradient(180deg, rgba(8, 20, 14, 0.08), rgba(8, 20, 14, 0.22)),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.032), transparent 42%),
+    rgba(255, 255, 255, 0.014);
   box-shadow:
     inset 0 1px 1px rgba(255, 255, 255, 0.18),
     0 18px 52px rgba(0, 0, 0, 0.3);
@@ -740,16 +760,21 @@ h2 {
   }
 }
 
-.post-card:hover::after {
+.post-card:hover::after,
+.project-card:hover::after {
   opacity: 1;
   transform: translateX(0);
 }
 
-.post-card--featured {
-  min-height: 250px;
+.post-card--featured,
+.project-card--featured {
   padding: clamp(28px, 4vw, 38px);
   border-radius: 34px;
   gap: 16px;
+}
+
+.post-card--featured {
+  min-height: 250px;
   background:
     radial-gradient(circle at 16% 10%, rgba(157, 240, 182, 0.16), transparent 32%),
     radial-gradient(circle at 94% 96%, rgba(255, 255, 255, 0.06), transparent 30%),
@@ -767,8 +792,8 @@ h2 {
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.026), transparent 42%),
     rgba(255, 255, 255, 0.01);
-  -webkit-backdrop-filter: blur(22px) saturate(1.12) brightness(0.84);
-  backdrop-filter: blur(22px) saturate(1.12) brightness(0.84);
+  -webkit-backdrop-filter: var(--main-hero-glass-filter);
+  backdrop-filter: var(--main-hero-glass-filter);
 }
 
 .post-card.liquid-glass-surface {
@@ -795,8 +820,8 @@ h2 {
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.045), transparent 46%),
     rgba(255, 255, 255, 0.014);
-  -webkit-backdrop-filter: blur(28px) saturate(1.22) brightness(0.9);
-  backdrop-filter: blur(28px) saturate(1.22) brightness(0.9);
+  -webkit-backdrop-filter: var(--main-hero-glass-filter);
+  backdrop-filter: var(--main-hero-glass-filter);
 }
 
 .post-card.glass-container {
@@ -841,9 +866,9 @@ h2 {
   text-transform: uppercase;
 }
 
-.post-card-title {
+.post-card-title,
+.project-card h2 {
   margin: 0;
-  font-size: 1.3rem;
   font-weight: 700;
   color: #fff;
   line-height: 1.2;
@@ -852,7 +877,12 @@ h2 {
     0 1px 1px rgba(0, 0, 0, 0.5);
 }
 
-.post-card-date {
+.post-card-title {
+  font-size: 1.3rem;
+}
+
+.post-card-date,
+.project-kind {
   margin: 0;
   font-family: 'IBM Plex Mono', monospace;
   font-size: 0.74rem;
@@ -862,7 +892,8 @@ h2 {
   color: #fff;
 }
 
-.post-card-desc {
+.post-card-desc,
+.project-description {
   margin: 0 0 0;
   font-size: 0.94rem;
   color: #fff;
@@ -871,17 +902,16 @@ h2 {
   text-shadow: 0 1px 6px rgba(0, 0, 0, 0.38);
 }
 
-.post-card-tags {
+.post-card-tags,
+.project-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
   padding-top: 2px;
 }
 
-.post-card-tags a {
-  position: relative;
-  z-index: 2;
-  cursor: pointer;
+.post-card-tags a,
+.project-tags span {
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.16);
   background: rgba(0, 0, 0, 0.22);
@@ -892,8 +922,14 @@ h2 {
   letter-spacing: 0.08em;
   line-height: 1;
   padding: 7px 9px;
-  text-decoration: none;
   text-transform: uppercase;
+}
+
+.post-card-tags a {
+  position: relative;
+  z-index: 2;
+  cursor: pointer;
+  text-decoration: none;
   transition: background 180ms ease, border-color 180ms ease, color 180ms ease;
 }
 
@@ -933,7 +969,8 @@ h2 {
   font-size: 0.86rem;
 }
 
-.post-card-cta {
+.post-card-cta,
+.project-link {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -947,11 +984,24 @@ h2 {
   text-transform: uppercase;
 }
 
-.post-card-cta span {
+.project-link {
+  position: relative;
+  z-index: 2;
+  text-decoration: none;
+}
+
+.post-card-cta span,
+.project-link::after {
   transition: transform 180ms ease;
 }
 
-.post-card:hover .post-card-cta span {
+.project-link::after {
+  content: '→';
+}
+
+.post-card:hover .post-card-cta span,
+.project-card:hover .project-link::after,
+.project-link:hover::after {
   transform: translateX(4px);
 }
 
@@ -1429,7 +1479,8 @@ h2 {
     radial-gradient(circle at 74% 78%, rgba(215, 255, 227, 0.1), transparent 32%),
     rgba(1, 6, 4, 0.88);
   color: inherit;
-  backdrop-filter: blur(18px) saturate(1.18);
+  -webkit-backdrop-filter: var(--main-hero-glass-filter);
+  backdrop-filter: var(--main-hero-glass-filter);
   box-sizing: border-box;
   animation: lightbox-fade-in 160ms ease-out;
 }
@@ -1801,79 +1852,8 @@ h2 {
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-.project-card {
-  position: relative;
-  z-index: 1;
-  display: grid;
-  align-content: start;
-  gap: 14px;
-  min-height: 246px;
-  padding: 22px;
-  border: 0;
-  border-radius: 24px;
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.026), rgba(1, 8, 5, 0.2) 48%, rgba(0, 0, 0, 0.16)),
-    rgba(255, 255, 255, 0.01);
-  background-blend-mode: luminosity;
-  -webkit-backdrop-filter: blur(22px) saturate(1.12) brightness(0.84);
-  backdrop-filter: blur(22px) saturate(1.12) brightness(0.84);
-  box-shadow:
-    inset 0 1px 1px rgba(255, 255, 255, 0.12),
-    0 16px 44px rgba(0, 0, 0, 0.22);
-  overflow: hidden;
-  transition: border-color 180ms ease, transform 180ms ease, background 180ms ease, box-shadow 180ms ease;
-}
-
-.project-card::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  border-radius: inherit;
-  padding: 1.4px;
-  background: linear-gradient(
-    180deg,
-    rgba(255, 255, 255, 0.45) 0%,
-    rgba(255, 255, 255, 0.15) 20%,
-    rgba(255, 255, 255, 0) 40%,
-    rgba(255, 255, 255, 0) 60%,
-    rgba(255, 255, 255, 0.15) 80%,
-    rgba(255, 255, 255, 0.45) 100%
-  );
-  -webkit-mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask:
-    linear-gradient(#fff 0 0) content-box,
-    linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  pointer-events: none;
-}
-
-.project-card > * {
-  position: relative;
-  z-index: 1;
-}
-
-.project-card:hover {
-  background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.045), rgba(1, 8, 5, 0.22) 48%, rgba(0, 0, 0, 0.18)),
-    rgba(255, 255, 255, 0.016);
-  box-shadow:
-    inset 0 1px 1px rgba(255, 255, 255, 0.18),
-    0 18px 52px rgba(0, 0, 0, 0.28);
-  transform: translateY(-2px);
-}
-
 .project-card--featured {
   min-height: 270px;
-  padding: clamp(24px, 4vw, 30px);
-  border-radius: 30px;
-  background:
-    radial-gradient(circle at 14% 10%, rgba(157, 240, 182, 0.14), transparent 34%),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.035), rgba(1, 8, 5, 0.24) 46%, rgba(0, 0, 0, 0.18)),
-    rgba(255, 255, 255, 0.012);
 }
 
 .project-card-heading {
@@ -1882,89 +1862,22 @@ h2 {
   min-width: 0;
 }
 
-.project-kind {
-  margin: 0;
-  color: var(--sprout-bright);
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
 .project-card h2 {
   max-width: none;
   overflow-wrap: anywhere;
   font-size: 1.35rem;
-  line-height: 1.08;
 }
 
 .project-card--featured h2 {
-  max-width: 11ch;
-  font-size: clamp(2rem, 4vw, 2.85rem);
-  line-height: 0.98;
-}
-
-.project-description {
-  margin: 0;
-  color: #fff;
-  font-size: 0.94rem;
-  font-weight: 500;
-  line-height: 1.5;
-  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.36);
+  max-width: 12ch;
+  font-size: clamp(2.1rem, 4.8vw, 3.25rem);
+  letter-spacing: -0.055em;
+  line-height: 0.95;
 }
 
 .project-card--featured .project-description {
   max-width: 48ch;
   font-size: 1rem;
-}
-
-.project-tags {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: auto;
-}
-
-.project-tags span {
-  border: 1px solid rgba(126, 196, 158, 0.3);
-  border-radius: 999px;
-  background: rgba(126, 196, 158, 0.12);
-  color: rgba(214, 255, 227, 0.9);
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.64rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  line-height: 1;
-  padding: 7px 9px;
-  text-transform: uppercase;
-}
-
-.project-link {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: fit-content;
-  min-height: 38px;
-  padding: 0 13px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.24);
-  color: #fff;
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-decoration: none;
-  text-transform: uppercase;
-  transition: background 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease;
-}
-
-.project-link:hover {
-  border-color: rgba(215, 255, 227, 0.42);
-  background: rgba(157, 240, 182, 0.14);
-  color: var(--sprout-bright);
-  transform: translateY(-1px);
 }
 
 .project-link:focus-visible {
@@ -2345,11 +2258,15 @@ code {
     grid-template-columns: 1fr;
   }
 
-  .project-card,
-  .project-card--featured {
+  .project-card {
     min-height: 0;
-    border-radius: 22px;
+    border-radius: 24px;
     padding: 20px;
+  }
+
+  .project-card--featured {
+    border-radius: 34px;
+    padding: 24px;
   }
 
   .project-card h2,

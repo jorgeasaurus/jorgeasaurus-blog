@@ -105,6 +105,14 @@
       <category>github-copilot</category>
     </item>
     <item>
+      <title>Hello, World</title>
+      <link>https://jorgeasaur.us/hello-world</link>
+      <guid isPermaLink="true">https://jorgeasaur.us/hello-world</guid>
+      <pubDate>Fri, 01 May 2026 00:00:00 GMT</pubDate>
+      <description>Welcome to my new blog. Built with React, Vite, and MDX.</description>
+
+    </item>
+    <item>
       <title>PowerShell Summit 2026: We Are All Insane, and That Is the Opportunity</title>
       <link>https://jorgeasaur.us/powershell-summit-2026-we-are-all-insane-and-that-is-the-opportunity</link>
       <guid isPermaLink="true">https://jorgeasaur.us/powershell-summit-2026-we-are-all-insane-and-that-is-the-opportunity</guid>

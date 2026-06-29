@@ -29,3 +29,4 @@ test-results/
 
 conference-talks/
 tasks/todo.md
+.agents/*

@@ -13,3 +13,6 @@
 - Keep the homepage hero at the origin/main content width unless the user explicitly asks for a wider panel; solve title/intro collisions with vertical placement first.
 - When increasing the homepage hero wordmark size, lift the title block in the same change and verify desktop overlap against the lower-right intro.
 - When matching card glass treatments, confirm which reference surface the user means and compare the complete computed backdrop-filter tuple, not just the blur radius.
+- If repeated glass cards still look clear, prefer CSS tint/overlay adjustments over per-card liquid-glass canvases to avoid too many WebGL contexts.
+- When the user asks for glass blur consistency, use a shared CSS filter token before tuning individual surfaces by eye.
+- When matching card styles, compare the browser-computed runtime surface, including liquid-glass classes, not only the fallback CSS block.

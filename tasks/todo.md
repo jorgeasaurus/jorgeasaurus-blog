@@ -257,6 +257,67 @@ Verified `npm run lint`, `npx tsc -b --pretty false`, `git diff --check`, `npm r
 
 ## Review
 
-Matched `.project-card` backdrop filtering to the project hero: `blur(22px) saturate(1.12) brightness(0.84)`.
+Superseded by the shared hero blur pass below; project cards now keep the darker forest tint and inner glass overlay while using the same blur filter as the main hero.
 
-Verified `npm run lint`, `npx tsc -b --pretty false`, `git diff --check`, `npm run build`, computed project-card styles, and Playwright desktop/mobile `/projects` screenshots.
+Verified again in the shared hero blur pass below.
+
+# Shared Hero Blur
+
+- [x] Replace per-surface blur radii with the main hero blur filter token.
+- [x] Verify lint, build, and desktop/mobile screenshots.
+
+## Review
+
+Added `--main-hero-glass-filter` and routed the hero, topbar, post cards, project cards, social card panel, and image lightbox through the same `blur(22px) saturate(1.12) brightness(0.84)` filter.
+
+Verified `npm run lint`, `npx tsc -b --pretty false`, `git diff --check`, `npm run build`, and Playwright desktop/mobile screenshots for `/` and `/projects` with no horizontal overflow or WebGL warnings.
+
+# Project/Post Card Style Alignment
+
+- [x] Compare post-card and project-card style differences.
+- [x] Move project cards onto the post-card glass surface recipe.
+- [x] Verify lint, build, and `/projects` screenshots.
+
+## Review
+
+Moved project cards onto the same visible card recipe as post cards: liquid-card background stack, shared blur filter, matching rim strength, glint line, shadow, tag chips, and text CTA. Project-specific dimensions and title sizing remain separate.
+
+Verified `npm run lint`, `npx tsc -b --pretty false`, `git diff --check`, `npm run build`, and Playwright desktop/mobile screenshots for `/` and `/projects` with matching computed card styles, no horizontal overflow, and no WebGL warnings.
+
+# Ponytail Card CSS Simplification
+
+- [x] Review current diff for over-engineered duplicated card CSS.
+- [x] Group shared post/project card selectors.
+- [x] Verify lint, build, and Playwright screenshots.
+
+## Review
+
+Grouped duplicated post/project card CSS into shared selectors for the card shell, rim, glint, featured spacing, title/meta/description, tags, and CTA while keeping project-specific sizing separate.
+
+Verified `npm run lint`, `npx tsc -b --pretty false`, `git diff --check`, `npm run build`, and Playwright desktop/mobile screenshots for `/` and `/projects`. Playwright computed-style checks matched featured and regular post/project cards on background, blur, radius, rim, glint, tags, and CTA with no horizontal overflow or console errors.
+
+# Feature User Story Audit
+
+- [x] Inspect current routes, pages, components, content data, and build scripts.
+- [x] Create the canonical feature-status spreadsheet with user stories and expected behavior.
+- [x] Verify the spreadsheet opens, renders legibly, and has no formula errors.
+- [x] Start the user-story testing loop and document errors in the spreadsheet.
+- [x] Fix verified logistical or UX errors.
+- [x] Retest every user behavior after fixes.
+
+## Review
+
+Created `tasks/feature-status.xlsx` as the single canonical tracker. It contains code-derived user stories, expected behavior, source evidence, status columns, test/fix/retest fields, summary formulas, issue log, source inventory, post catalog, and project catalog.
+
+Verified all workbook sheets render legibly from the spreadsheet runtime, re-imported the saved `.xlsx`, confirmed six sheets are present, sampled the User Stories and Issue Log tables, and found zero formula-error matches.
+
+Expanded the tracker to 40 user stories after auditing MDX content behavior. The first testing loop found one logistical issue: `src/content/hello-world.mdx` existed without a matching `posts.ts` metadata entry, making it unreachable from the list, routes, RSS, sitemap, and static HTML generation. Registered the existing post metadata without rewriting the content.
+
+Verified `npm run lint`, `npx tsc -b --pretty false`, `git diff --check`, `npm run build`, a 40-story Playwright sweep, and a post-fix 40-story Playwright retest. The canonical workbook now shows 40 total user stories and 40 `Retest Passed` rows with no formula errors.
+
+# Main Production Push
+
+- [x] Run final verification before commit.
+- [ ] Commit current app and audit changes on `main`.
+- [ ] Push `main` to origin.
+- [ ] Deploy production on Vercel and verify.

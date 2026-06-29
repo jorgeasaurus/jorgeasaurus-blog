@@ -102,6 +102,12 @@ const posts: PostMeta[] = [
     tags: ['llm', 'ai', 'powershell', 'automation', 'github-copilot'],
   },
   {
+    slug: 'hello-world',
+    title: 'Hello, World',
+    date: '2026-05-01',
+    description: 'Welcome to my new blog. Built with React, Vite, and MDX.',
+  },
+  {
     slug: 'powershell-summit-2026-we-are-all-insane-and-that-is-the-opportunity',
     title: 'PowerShell Summit 2026: We Are All Insane, and That Is the Opportunity',
     date: '2026-04-18',
