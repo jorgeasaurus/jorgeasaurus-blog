@@ -327,3 +327,10 @@ Verified `npm run lint`, `npx tsc -b --pretty false`, `git diff --check`, `npm r
 Committed the glass/card polish, restored `hello-world` post coverage, pushed `main`, and deployed production on Vercel.
 
 Verified the production deployment is Ready, aliased to `https://www.jorgeasaur.us`, serves the homepage, includes `/hello-world` article metadata, and includes `hello-world` in RSS and sitemap.
+
+# Remove Snapshot Console Noise
+
+- [x] Trace production console output to the glass snapshot implementation.
+- [x] Replace snapshot/WebGL glass activation with native CSS glass activation.
+- [x] Verify lint, typecheck, build, and browser console output.
+- [ ] Commit, push, and deploy the production-facing fix.

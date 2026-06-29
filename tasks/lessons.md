@@ -16,3 +16,4 @@
 - If repeated glass cards still look clear, prefer CSS tint/overlay adjustments over per-card liquid-glass canvases to avoid too many WebGL contexts.
 - When the user asks for glass blur consistency, use a shared CSS filter token before tuning individual surfaces by eye.
 - When matching card styles, compare the browser-computed runtime surface, including liquid-glass classes, not only the fallback CSS block.
+- Do not use DOM snapshot libraries like `html2canvas` for always-on production glass effects; native CSS backdrop-filter avoids console noise, `document.write`, and heavy bundle cost.
