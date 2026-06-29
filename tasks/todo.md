@@ -333,4 +333,10 @@ Verified the production deployment is Ready, aliased to `https://www.jorgeasaur.
 - [x] Trace production console output to the glass snapshot implementation.
 - [x] Replace snapshot/WebGL glass activation with native CSS glass activation.
 - [x] Verify lint, typecheck, build, and browser console output.
-- [ ] Commit, push, and deploy the production-facing fix.
+- [x] Commit, push, and deploy the production-facing fix.
+
+## Review
+
+Removed the vendored liquid-glass WebGL/html2canvas implementation and kept glass surfaces on native CSS backdrop filters. This removes the `document.write` path and the html2canvas clone/render console output from production.
+
+Verified `npm run lint`, `npx tsc -b --pretty false`, `git diff --check`, `npm run build`, local Playwright console checks, desktop/mobile screenshots, and production Playwright console checks across `/`, `/projects`, and `/hello-world`.
