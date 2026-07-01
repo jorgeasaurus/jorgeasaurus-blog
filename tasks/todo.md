@@ -672,6 +672,7 @@ Tightened `lib/resend.mjs` so invalid/missing segment failures still throw while
 - [x] Commit current changes on `main`.
 - [x] Push `main` to `origin`.
 - [x] Fix production URL polling after apex-to-www redirect.
+- [x] Bump workflow actions past Node 20 deprecation warnings.
 - [ ] Deploy Vercel production and verify live routes.
 
 ## Review
