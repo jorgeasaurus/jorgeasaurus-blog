@@ -30,3 +30,7 @@ test-results/
 conference-talks/
 tasks/todo.md
 .agents/*
+!.agents/skills/
+.agents/skills/*
+!.agents/skills/resend-newsletter/
+!.agents/skills/resend-newsletter/**

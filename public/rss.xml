@@ -6,12 +6,24 @@
     <atom:link href="https://jorgeasaur.us/rss.xml" rel="self" type="application/rss+xml" />
     <description>Field notes on PowerShell, endpoint management, Microsoft Graph, and automation.</description>
     <language>en-us</language>
-    <lastBuildDate>Thu, 11 Jun 2026 00:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Wed, 01 Jul 2026 12:00:00 GMT</lastBuildDate>
+    <item>
+      <title>Why I Built Endpoint Jobs</title>
+      <link>https://jorgeasaur.us/why-i-built-endpoint-jobs</link>
+      <guid isPermaLink="true">https://jorgeasaur.us/why-i-built-endpoint-jobs</guid>
+      <pubDate>Wed, 01 Jul 2026 12:00:00 GMT</pubDate>
+      <description>A project field note on building a focused endpoint engineering job board for the community.</description>
+      <category>endpoint-management</category>
+      <category>career</category>
+      <category>community</category>
+      <category>automation</category>
+      <category>jobs</category>
+    </item>
     <item>
       <title>Make Yourself Obsolete</title>
       <link>https://jorgeasaur.us/make-yourself-obsolete</link>
       <guid isPermaLink="true">https://jorgeasaur.us/make-yourself-obsolete</guid>
-      <pubDate>Thu, 11 Jun 2026 00:00:00 GMT</pubDate>
+      <pubDate>Thu, 11 Jun 2026 12:00:00 GMT</pubDate>
       <description>A practical career note on turning repeated work into automation, documentation, and room for harder problems.</description>
       <category>career</category>
       <category>engineering</category>
@@ -22,7 +34,7 @@
       <title>Intune Gotchas Every Admin Learns Eventually</title>
       <link>https://jorgeasaur.us/intune-gotchas-every-admin-learns-eventually</link>
       <guid isPermaLink="true">https://jorgeasaur.us/intune-gotchas-every-admin-learns-eventually</guid>
-      <pubDate>Wed, 10 Jun 2026 00:00:00 GMT</pubDate>
+      <pubDate>Wed, 10 Jun 2026 12:00:00 GMT</pubDate>
       <description>The Microsoft Intune behaviors that surprise admins most often, why they happen, and how to avoid getting burned by them.</description>
       <category>intune</category>
       <category>endpoint-management</category>
@@ -34,7 +46,7 @@
       <title>Intune Hydration Kit Has a TUI Now</title>
       <link>https://jorgeasaur.us/intune-hydration-kit-has-a-tui-now</link>
       <guid isPermaLink="true">https://jorgeasaur.us/intune-hydration-kit-has-a-tui-now</guid>
-      <pubDate>Mon, 01 Jun 2026 00:00:00 GMT</pubDate>
+      <pubDate>Mon, 01 Jun 2026 12:00:00 GMT</pubDate>
       <description>The v1.0.0 update makes Invoke-IntuneHydration safer to run by putting dry-run, scope, platform, and confirmation prompts in the default path.</description>
       <category>powershell</category>
       <category>intune</category>
@@ -46,7 +58,7 @@
       <title>MMSMOA 2026: Endpoint Management Is an Engineering Discipline Now</title>
       <link>https://jorgeasaur.us/mmsmoa-2026-endpoint-management-is-engineering-now</link>
       <guid isPermaLink="true">https://jorgeasaur.us/mmsmoa-2026-endpoint-management-is-engineering-now</guid>
-      <pubDate>Sat, 30 May 2026 00:00:00 GMT</pubDate>
+      <pubDate>Sat, 30 May 2026 12:00:00 GMT</pubDate>
       <description>A practical MMSMOA recap for Intune, Windows, security, PowerShell, and automation work that needs to survive real operations.</description>
       <category>intune</category>
       <category>endpoint-management</category>
@@ -60,7 +72,7 @@
       <title>Build a Reusable Intune Remediation Template</title>
       <link>https://jorgeasaur.us/reusable-intune-remediation-template</link>
       <guid isPermaLink="true">https://jorgeasaur.us/reusable-intune-remediation-template</guid>
-      <pubDate>Mon, 25 May 2026 00:00:00 GMT</pubDate>
+      <pubDate>Mon, 25 May 2026 12:00:00 GMT</pubDate>
       <description>A reusable PowerShell pattern for Intune Remediations with predictable exit codes, logging, 64-bit handling, and portal-friendly output.</description>
       <category>powershell</category>
       <category>intune</category>
@@ -72,7 +84,7 @@
       <title>Creating Dynamic Device Model Groups in Entra with PowerShell</title>
       <link>https://jorgeasaur.us/creating-dynamic-device-model-groups-in-entra-with-powershell</link>
       <guid isPermaLink="true">https://jorgeasaur.us/creating-dynamic-device-model-groups-in-entra-with-powershell</guid>
-      <pubDate>Tue, 12 May 2026 00:00:00 GMT</pubDate>
+      <pubDate>Tue, 12 May 2026 12:00:00 GMT</pubDate>
       <description>A PowerShell walkthrough for creating OS-scoped dynamic Entra device groups based on Intune device models.</description>
       <category>powershell</category>
       <category>intune</category>
@@ -84,7 +96,7 @@
       <title>Set Up and View App Inventory Data in Intune</title>
       <link>https://jorgeasaur.us/set-up-and-view-app-inventory-data-in-intune</link>
       <guid isPermaLink="true">https://jorgeasaur.us/set-up-and-view-app-inventory-data-in-intune</guid>
-      <pubDate>Thu, 07 May 2026 00:00:00 GMT</pubDate>
+      <pubDate>Thu, 07 May 2026 12:00:00 GMT</pubDate>
       <description>App inventory gives you richer Windows app data in Intune, but only after you turn it on with a Properties catalog policy.</description>
       <category>intune</category>
       <category>windows</category>
@@ -96,7 +108,7 @@
       <title>AI Coding Agents Changed How I Build Things</title>
       <link>https://jorgeasaur.us/ai-agents-changed-how-i-build-things</link>
       <guid isPermaLink="true">https://jorgeasaur.us/ai-agents-changed-how-i-build-things</guid>
-      <pubDate>Tue, 05 May 2026 00:00:00 GMT</pubDate>
+      <pubDate>Tue, 05 May 2026 12:00:00 GMT</pubDate>
       <description>I used to think LLMs were just fancy autocomplete. Then I started letting them live inside my repos. Here&apos;s what changed.</description>
       <category>llm</category>
       <category>ai</category>
@@ -108,7 +120,7 @@
       <title>Hello, World</title>
       <link>https://jorgeasaur.us/hello-world</link>
       <guid isPermaLink="true">https://jorgeasaur.us/hello-world</guid>
-      <pubDate>Fri, 01 May 2026 00:00:00 GMT</pubDate>
+      <pubDate>Fri, 01 May 2026 12:00:00 GMT</pubDate>
       <description>Welcome to my new blog. Built with React, Vite, and MDX.</description>
 
     </item>
@@ -116,7 +128,7 @@
       <title>PowerShell Summit 2026: We Are All Insane, and That Is the Opportunity</title>
       <link>https://jorgeasaur.us/powershell-summit-2026-we-are-all-insane-and-that-is-the-opportunity</link>
       <guid isPermaLink="true">https://jorgeasaur.us/powershell-summit-2026-we-are-all-insane-and-that-is-the-opportunity</guid>
-      <pubDate>Sat, 18 Apr 2026 00:00:00 GMT</pubDate>
+      <pubDate>Sat, 18 Apr 2026 12:00:00 GMT</pubDate>
       <description>To quote Jeffrey Snover, &quot;you are all insane.&quot; Not as an insult. As a diagnosis.</description>
       <category>powershell</category>
       <category>ai</category>
@@ -128,7 +140,7 @@
       <title>Using .NET Methods in PowerShell (with practical examples you&apos;ll actually reuse)</title>
       <link>https://jorgeasaur.us/using-net-methods-in-powershell-with-practical-examples-youll-actually-reuse</link>
       <guid isPermaLink="true">https://jorgeasaur.us/using-net-methods-in-powershell-with-practical-examples-youll-actually-reuse</guid>
-      <pubDate>Sat, 14 Feb 2026 00:00:00 GMT</pubDate>
+      <pubDate>Sat, 14 Feb 2026 12:00:00 GMT</pubDate>
       <description>PowerShell is already sitting on top of .NET. Here are the patterns I use most: strings, paths, file I/O, time, crypto, and more.</description>
       <category>powershell</category>
       <category>dotnet</category>
@@ -139,7 +151,7 @@
       <title>Bootstrap Your Intune Tenant in a Single Command</title>
       <link>https://jorgeasaur.us/bootstrap-your-intune-tenant-in-a-single-command</link>
       <guid isPermaLink="true">https://jorgeasaur.us/bootstrap-your-intune-tenant-in-a-single-command</guid>
-      <pubDate>Sun, 28 Dec 2025 00:00:00 GMT</pubDate>
+      <pubDate>Sun, 28 Dec 2025 12:00:00 GMT</pubDate>
       <description>Turn a fresh Intune tenant into a best-practice baseline without babysitting the portal using the Intune Hydration Kit PowerShell module.</description>
       <category>powershell</category>
       <category>intune</category>
@@ -151,7 +163,7 @@
       <title>Finding WMI Usage Before Microsoft Finds It For You</title>
       <link>https://jorgeasaur.us/finding-wmi-usage-before-microsoft-finds-it-for-you</link>
       <guid isPermaLink="true">https://jorgeasaur.us/finding-wmi-usage-before-microsoft-finds-it-for-you</guid>
-      <pubDate>Sun, 12 Oct 2025 00:00:00 GMT</pubDate>
+      <pubDate>Sun, 12 Oct 2025 12:00:00 GMT</pubDate>
       <description>Microsoft is deprecating WMIC and legacy WMI cmdlets. Find every instance in your codebase before your scripts start breaking in production.</description>
       <category>powershell</category>
       <category>wmi</category>
@@ -163,7 +175,7 @@
       <title>WinGet Without WinGet: Building a Cross-Platform Package Manifest Fetcher</title>
       <link>https://jorgeasaur.us/winget-without-winget-building-a-cross-platform-package-manifest-fetcher</link>
       <guid isPermaLink="true">https://jorgeasaur.us/winget-without-winget-building-a-cross-platform-package-manifest-fetcher</guid>
-      <pubDate>Sun, 20 Jul 2025 00:00:00 GMT</pubDate>
+      <pubDate>Sun, 20 Jul 2025 12:00:00 GMT</pubDate>
       <description>Query WinGet packages from macOS or Linux by hitting the winget-pkgs GitHub repo directly - no WinGet client required.</description>
       <category>powershell</category>
       <category>winget</category>
@@ -175,7 +187,7 @@
       <title>Supercharge Microsoft Graph API Data Retrieval with PowerShell Batch Requests</title>
       <link>https://jorgeasaur.us/supercharge-microsoft-graph-api-data-retrieval-with-powershell-batch-requests</link>
       <guid isPermaLink="true">https://jorgeasaur.us/supercharge-microsoft-graph-api-data-retrieval-with-powershell-batch-requests</guid>
-      <pubDate>Tue, 15 Jul 2025 00:00:00 GMT</pubDate>
+      <pubDate>Tue, 15 Jul 2025 12:00:00 GMT</pubDate>
       <description>Reduce Graph API data export times by up to 88% using batch requests and parallel processing. Real production metrics included.</description>
       <category>powershell</category>
       <category>microsoft-graph</category>
@@ -187,7 +199,7 @@
       <title>Are You Even Good Enough to Have Imposter Syndrome?</title>
       <link>https://jorgeasaur.us/are-you-even-good-enough-to-have-imposter-syndrome</link>
       <guid isPermaLink="true">https://jorgeasaur.us/are-you-even-good-enough-to-have-imposter-syndrome</guid>
-      <pubDate>Fri, 18 Apr 2025 00:00:00 GMT</pubDate>
+      <pubDate>Fri, 18 Apr 2025 12:00:00 GMT</pubDate>
       <description>Imposter syndrome doesn&apos;t go away. If anything, it scales with you. Here&apos;s how to use it as fuel rather than fear.</description>
       <category>career</category>
       <category>growth</category>
@@ -198,7 +210,7 @@
       <title>Back Up or Restore Jamf Pro Objects with PowerShell</title>
       <link>https://jorgeasaur.us/back-up-or-restore-jamf-pro-objects-with-powershell</link>
       <guid isPermaLink="true">https://jorgeasaur.us/back-up-or-restore-jamf-pro-objects-with-powershell</guid>
-      <pubDate>Sun, 23 Mar 2025 00:00:00 GMT</pubDate>
+      <pubDate>Sun, 23 Mar 2025 12:00:00 GMT</pubDate>
       <description>A PowerShell tool for backing up and restoring Jamf Pro configurations with selective exports, OAuth support, and organized backups.</description>
       <category>powershell</category>
       <category>jamf</category>
@@ -210,7 +222,7 @@
       <title>Synchronizing Device Groups with Entra User Groups Using PowerShell</title>
       <link>https://jorgeasaur.us/synchronizing-device-groups-with-entra-user-groups-using-powershell</link>
       <guid isPermaLink="true">https://jorgeasaur.us/synchronizing-device-groups-with-entra-user-groups-using-powershell</guid>
-      <pubDate>Mon, 03 Feb 2025 00:00:00 GMT</pubDate>
+      <pubDate>Mon, 03 Feb 2025 12:00:00 GMT</pubDate>
       <description>Given a list of usernames, automatically find their Intune-managed devices and sync them to a device group using parallel Graph API calls.</description>
       <category>powershell</category>
       <category>intune</category>
@@ -222,7 +234,7 @@
       <title>Syncing ABM and VPP Tokens with Intune: A PowerShell Script for the Lazy Admin</title>
       <link>https://jorgeasaur.us/syncing-abm-and-vpp-tokens-with-intune-a-powershell-script-for-the-lazy-admin</link>
       <guid isPermaLink="true">https://jorgeasaur.us/syncing-abm-and-vpp-tokens-with-intune-a-powershell-script-for-the-lazy-admin</guid>
-      <pubDate>Sat, 31 Aug 2024 00:00:00 GMT</pubDate>
+      <pubDate>Sat, 31 Aug 2024 12:00:00 GMT</pubDate>
       <description>Automate the manual process of syncing Apple Business Manager and Volume Purchase Program tokens in Microsoft Intune with PowerShell.</description>
       <category>powershell</category>
       <category>intune</category>
@@ -234,7 +246,7 @@
       <title>Automating Device Management with PowerShell: Function Invoke-AppInstalledDevicesGroup</title>
       <link>https://jorgeasaur.us/automating-device-management-with-powershell-function-invoke-appinstalleddevicesgroup</link>
       <guid isPermaLink="true">https://jorgeasaur.us/automating-device-management-with-powershell-function-invoke-appinstalleddevicesgroup</guid>
-      <pubDate>Sun, 03 Mar 2024 00:00:00 GMT</pubDate>
+      <pubDate>Sun, 03 Mar 2024 12:00:00 GMT</pubDate>
       <description>Build a device group in Intune based on detected application installs - automatically add and remove devices as software appears and disappears.</description>
       <category>powershell</category>
       <category>intune</category>
@@ -246,7 +258,7 @@
       <title>20+ Intune Device Queries to Level Up Your Device Management</title>
       <link>https://jorgeasaur.us/intune-device-queries-to-level-up-your-device-management</link>
       <guid isPermaLink="true">https://jorgeasaur.us/intune-device-queries-to-level-up-your-device-management</guid>
-      <pubDate>Mon, 19 Feb 2024 00:00:00 GMT</pubDate>
+      <pubDate>Mon, 19 Feb 2024 12:00:00 GMT</pubDate>
       <description>Leverage Kusto Query Language with Intune Device Query to gain deep insights into your device fleet, from BIOS info to installed applications.</description>
       <category>intune</category>
       <category>kql</category>
@@ -258,7 +270,7 @@
       <title>Streamlining Application Detection in Intune and MECM with PowerShell</title>
       <link>https://jorgeasaur.us/streamlining-application-detection-in-intune-and-mecm-with-powershell</link>
       <guid isPermaLink="true">https://jorgeasaur.us/streamlining-application-detection-in-intune-and-mecm-with-powershell</guid>
-      <pubDate>Fri, 05 Jan 2024 00:00:00 GMT</pubDate>
+      <pubDate>Fri, 05 Jan 2024 12:00:00 GMT</pubDate>
       <description>A PowerShell function for precise application detection across 32-bit, 64-bit, and user-context installs - perfect for Intune Win32 app detection.</description>
       <category>powershell</category>
       <category>intune</category>
@@ -270,7 +282,7 @@
       <title>Top 20 Graph API Cmdlets</title>
       <link>https://jorgeasaur.us/top-20-graph-api-cmdlets</link>
       <guid isPermaLink="true">https://jorgeasaur.us/top-20-graph-api-cmdlets</guid>
-      <pubDate>Mon, 31 Jul 2023 00:00:00 GMT</pubDate>
+      <pubDate>Mon, 31 Jul 2023 12:00:00 GMT</pubDate>
       <description>A practical tour of the 20 most useful Microsoft Graph PowerShell cmdlets for managing users, groups, devices, apps, and more in Microsoft 365.</description>
       <category>powershell</category>
       <category>microsoft-graph</category>
@@ -282,7 +294,7 @@
       <title>Using Filters to Assign Apps, Policies, and Profiles in Microsoft Intune</title>
       <link>https://jorgeasaur.us/using-filters-to-assign-apps-policies-and-profiles-in-microsoft-intune</link>
       <guid isPermaLink="true">https://jorgeasaur.us/using-filters-to-assign-apps-policies-and-profiles-in-microsoft-intune</guid>
-      <pubDate>Sun, 14 May 2023 00:00:00 GMT</pubDate>
+      <pubDate>Sun, 14 May 2023 12:00:00 GMT</pubDate>
       <description>A comprehensive guide to using Intune device filters to dynamically target devices based on properties like manufacturer, model, and OS version.</description>
       <category>intune</category>
       <category>device-management</category>
@@ -293,7 +305,7 @@
       <title>Proactive Remediation to Remind Windows Users to Reboot</title>
       <link>https://jorgeasaur.us/proactive-remediation-to-remind-windows-users-to-reboot</link>
       <guid isPermaLink="true">https://jorgeasaur.us/proactive-remediation-to-remind-windows-users-to-reboot</guid>
-      <pubDate>Sun, 07 May 2023 00:00:00 GMT</pubDate>
+      <pubDate>Sun, 07 May 2023 12:00:00 GMT</pubDate>
       <description>Use Intune Proactive Remediations to detect Windows devices that haven&apos;t rebooted in 7+ days and display a customizable toast notification reminder.</description>
       <category>intune</category>
       <category>powershell</category>
@@ -304,7 +316,7 @@
       <title>Find Registry Uninstall Keys with PowerShell</title>
       <link>https://jorgeasaur.us/find-registry-uninstall-keys-with-powershell</link>
       <guid isPermaLink="true">https://jorgeasaur.us/find-registry-uninstall-keys-with-powershell</guid>
-      <pubDate>Sun, 07 May 2023 00:00:00 GMT</pubDate>
+      <pubDate>Sun, 07 May 2023 12:00:00 GMT</pubDate>
       <description>A PowerShell function to search the Windows registry for uninstall keys matching a specified string, with support for 64-bit and 32-bit applications.</description>
       <category>powershell</category>
       <category>windows</category>

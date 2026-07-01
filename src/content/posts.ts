@@ -2,6 +2,20 @@ import { type PostMeta } from '../lib/posts'
 
 const posts: PostMeta[] = [
   {
+    slug: 'why-i-built-endpoint-jobs',
+    title: 'Why I Built Endpoint Jobs',
+    date: '2026-07-01',
+    description:
+      'A project field note on building a focused endpoint engineering job board for the community.',
+    tags: ['endpoint-management', 'career', 'community', 'automation', 'jobs'],
+    socialImage: {
+      src: '/images/posts/why-i-built-endpoint-jobs/socialcard.png',
+      width: 1200,
+      height: 630,
+      type: 'image/png',
+    },
+  },
+  {
     slug: 'make-yourself-obsolete',
     title: 'Make Yourself Obsolete',
     date: '2026-06-11',

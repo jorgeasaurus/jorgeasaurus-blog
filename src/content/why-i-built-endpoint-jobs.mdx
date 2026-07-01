@@ -1,0 +1,199 @@
+---
+title: "Why I Built Endpoint Jobs"
+date: "2026-07-01"
+description: "A project field note on building a focused endpoint engineering job board for the community."
+tags: ["endpoint-management", "career", "community", "automation", "jobs"]
+---
+
+Finding endpoint engineering jobs is harder than it should be.
+
+Not because the work is rare.
+
+Because the titles are a mess.
+
+The same kind of role can show up as Endpoint Engineer, EUC Engineer, Client Platform Engineer, IT Systems Engineer, Workplace Engineer, MDM Engineer, macOS Engineer, Intune Engineer, Desktop Engineering, Client Infrastructure, Device Trust, or something that sounds like it was assembled during a meeting nobody enjoyed.
+
+When I was getting started, I did not know all those names.
+
+I knew I liked automating devices. I knew I wanted to work around Windows, macOS, MDM, identity, app deployment, security agents, and the weird middle space between IT operations and software engineering.
+
+But the job boards were not built for that shape of work.
+
+So I built the thing I wish existed when I was new.
+
+[Endpoint Jobs](https://endpointjobs.dev/) is a focused job board for endpoint engineering, macOS, Windows, MDM, UEM, client platform, endpoint security, packaging, and automation work.
+
+It is not trying to be a general tech job board.
+
+That is the point.
+
+## Why This Exists
+
+Endpoint engineering is one of those disciplines that people often find by accident.
+
+You start in support. You get tired of clicking the same thing in a portal. You learn PowerShell. Then Graph. Then Intune. Then Jamf. Then packaging. Then detection logic. Then compliance. Then someone asks why the VPN profile failed on 4,000 machines and suddenly you are a platform engineer whether the org chart admits it or not.
+
+That path can be hard to explain from the outside.
+
+It is also hard to search for.
+
+Generic job boards usually understand broad labels like "DevOps" or "Security Engineer." They are less useful when you are looking for the work behind the work: device management, endpoint security rollout, operating system lifecycle, application deployment, MDM policy design, employee experience engineering, or the automation that makes all of it survivable.
+
+I wanted a place where someone could search for the actual tools and language endpoint people use.
+
+Jamf.
+
+Intune.
+
+SCCM.
+
+Fleet.
+
+Kandji.
+
+NinjaOne.
+
+Workspace ONE.
+
+Tanium.
+
+Okta.
+
+Autopilot.
+
+Defender.
+
+Not because tool names are the whole job. They are not. But they are often the breadcrumb trail that helps someone find the right door.
+
+This was also a small way to give something back.
+
+I have learned a lot from people who shared scripts, examples, talks, docs, and blunt warnings on the internet. Endpoint Jobs is in that same spirit. It is a public utility for a niche community that has always been better when people leave ladders behind them.
+
+## The Page Is The Product
+
+I did not want a landing page with a dramatic headline and a button that eventually gets you to the useful part.
+
+The first screen is the job board.
+
+<figure className="post-inline-figure">
+  <img
+    src="/images/posts/why-i-built-endpoint-jobs/endpointjobs-desktop.png"
+    alt="Endpoint Jobs desktop page showing search, filters, tracked roles, mapped jobs, and open listings."
+  />
+  <figcaption>
+    Endpoint Jobs opens directly into the searchable board with filters for role family, freshness, platform, seniority, tools, remote work, salary visibility, and sort order.
+  </figcaption>
+</figure>
+
+The page lets you search across titles, companies, locations, summaries, descriptions, tags, tools, and platforms. That matters because endpoint roles hide in different fields depending on the source. Sometimes the title is useful. Sometimes the description is the only place that mentions Intune or Jamf. Sometimes the company calls the role one thing and the actual work another thing entirely.
+
+The filters are intentionally practical:
+
+- `Remote` for people who need remote roles.
+- `Salary shown` because compensation transparency should not require detective work.
+- Role family for narrowing endpoint, security, packaging, platform, and support-adjacent work.
+- Freshness so stale listings do not dominate the board.
+- Platform filters for macOS, Windows, iOS, Android, and Linux.
+- Tool filters for the names people actually search.
+- Sorting by newest, compensation, or company.
+
+Listings open directly to the application source. If something is stale, missing, duplicated, or wrong, the `Report / request` path opens a GitHub issue so the data can be improved in public.
+
+The mobile view has the same bias.
+
+<figure className="post-inline-figure">
+  <img
+    src="/images/posts/why-i-built-endpoint-jobs/endpointjobs-mobile.png"
+    alt="Endpoint Jobs mobile page showing compact filters and open endpoint role listings."
+  />
+  <figcaption>
+    The mobile layout keeps the search and high-signal filters first, then gets out of the way.
+  </figcaption>
+</figure>
+
+I care about that because job hunting already has enough friction. A niche board should reduce the number of tabs, not add a new ceremony.
+
+## The Data Refresh Is Boring On Purpose
+
+Endpoint Jobs is a static Next.js app backed by `src/data/jobs.json`.
+
+There is no database in the visitor path. No runtime job API that has to be warm. No queue that has to be explained to the page.
+
+The refresh flow is intentionally boring:
+
+```text
+GitHub Action or local command
+-> npm run jobs:refresh
+-> scripts/refresh-jobs.ts
+-> provider adapters in scripts/job-refresh/providers
+-> endpoint relevance filtering, normalization, dedupe, salary extraction
+-> src/data/jobs.json
+-> Next.js static build
+-> Vercel deployment
+```
+
+The scheduled GitHub Action runs daily at `11:17 UTC`. It can also be run manually.
+
+When it runs, it installs dependencies, refreshes the job feed, builds the app, commits `src/data/jobs.json` if listings changed, and pushes back to `main`. Vercel sees the commit and deploys the updated static site.
+
+That shape keeps the operational surface small.
+
+The expensive work happens before deploy. The visitor gets a fast static page.
+
+## The Hard Part Is Relevance
+
+Fetching jobs is not the interesting part.
+
+Filtering them is.
+
+The refresh script pulls from public providers and direct job-board adapters, including sources like Remotive, Arbeitnow, Jobicy, Remote OK, Greenhouse, Lever, The Muse, Ashby, Amazon Jobs, Workday, Jibe, Activate, and curated listings. Optional providers can be configured for broader feeds.
+
+Then the normalizer does the part that makes the board useful:
+
+- Filters for endpoint, macOS, Windows, MDM, UEM, client platform, and endpoint security relevance.
+- Infers workplace, seniority, role family, tools, platforms, and match reasons.
+- Extracts long descriptions when providers expose useful detail.
+- Extracts annual salary ranges from descriptions when structured salary fields are missing.
+- De-dupes equivalent jobs across sources.
+- Drops stale listings.
+- Excludes known-dead source URLs when aggregators keep returning them.
+
+That is the real product.
+
+Not the card layout.
+
+The judgment encoded into the filter.
+
+Anyone can query a broad job API and dump results into a grid. The useful part is knowing that "client platform" might mean endpoint engineering, that "EUC" might be the exact role someone wants, and that "desktop support" may or may not belong depending on the actual responsibilities.
+
+That is community knowledge.
+
+The site just gives it a place to live.
+
+## What I Hope It Does
+
+I hope someone finds a role they would have missed.
+
+I hope someone new to the field learns the vocabulary faster than I did.
+
+I hope someone realizes endpoint engineering is a real path, not just the accidental consequence of being good at troubleshooting laptops.
+
+And I hope people improve it.
+
+The source is public: [jorgeasaurus/EndpointJobs](https://github.com/jorgeasaurus/EndpointJobs).
+
+If a source is missing, open an issue.
+
+If a listing is stale, report it.
+
+If the filters are wrong, say why.
+
+If you know a better way to identify this work, contribute it.
+
+This project is not finished.
+
+Useful tools rarely are.
+
+But it is already doing the job I wanted it to do: turning scattered endpoint career signals into a focused board that someone else can use.
+
+That is enough reason to keep making it better.

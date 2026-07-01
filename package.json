@@ -7,6 +7,10 @@
     "dev": "vite",
     "generate:rss": "node scripts/generate-rss.mjs",
     "generate:sitemap": "node scripts/generate-sitemap.mjs",
+    "newsletter:latest": "node scripts/notify-latest-post.mjs",
+    "newsletter:template:adhoc": "node scripts/create-adhoc-template.mjs",
+    "newsletter:count": "node scripts/count-newsletter-members.mjs",
+    "check:js": "node --check lib/resend.mjs && node --check src/lib/postDates.mjs && node --check api/subscribe.js && node --check scripts/lib/cli.mjs && node --check scripts/lib/site.mjs && node --check scripts/lib/newsletter-template.mjs && node --check scripts/generate-rss.mjs && node --check scripts/generate-sitemap.mjs && node --check scripts/resolve-newsletter-draft.mjs && node --check scripts/notify-latest-post.mjs && node --check scripts/create-adhoc-template.mjs && node --check scripts/count-newsletter-members.mjs",
     "build": "npm run generate:rss && npm run generate:sitemap && tsc -b && vite build && node scripts/generate-post-html.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
@@ -16,7 +20,8 @@
     "@vercel/analytics": "^2.0.1",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
-    "react-router-dom": "^7.14.2"
+    "react-router-dom": "^7.14.2",
+    "resend": "^6.16.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

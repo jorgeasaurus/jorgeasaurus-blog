@@ -1,0 +1,108 @@
+name: Create newsletter draft
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "src/content/posts.ts"
+      - "src/content/**/*.mdx"
+  workflow_dispatch:
+    inputs:
+      slug:
+        description: "Post slug to draft. Defaults to the newest post."
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: newsletter-draft-${{ github.event_name == 'workflow_dispatch' && inputs.slug || github.sha }}
+  cancel-in-progress: false
+
+jobs:
+  draft:
+    name: Create Resend draft
+    runs-on: ubuntu-latest
+    env:
+      SITE_URL: https://jorgeasaur.us
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check newsletter scripts
+        run: npm run check:js
+
+      - name: Resolve post slug
+        id: post
+        env:
+          INPUT_SLUG: ${{ github.event_name == 'workflow_dispatch' && inputs.slug || '' }}
+          BEFORE_SHA: ${{ github.event.before || '' }}
+        run: node scripts/resolve-newsletter-draft.mjs
+
+      - name: Check draft tag
+        id: draft-tag
+        if: steps.post.outputs.skip != 'true'
+        run: |
+          set -euo pipefail
+
+          git fetch --tags --force
+
+          if git rev-parse -q --verify "refs/tags/${{ steps.post.outputs.tag }}" >/dev/null; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+            echo "Draft tag already exists for ${{ steps.post.outputs.slug }}."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Wait for production post
+        if: steps.post.outputs.skip != 'true' && steps.draft-tag.outputs.exists != 'true'
+        run: |
+          set -euo pipefail
+
+          URL="${{ steps.post.outputs.url }}"
+
+          for attempt in {1..60}; do
+            STATUS="$(curl -sS -o /tmp/newsletter-post.html -w "%{http_code}" "$URL" || true)"
+
+            if [ "$STATUS" = "200" ] && grep -q "<title>" /tmp/newsletter-post.html; then
+              echo "Production post is live: $URL"
+              exit 0
+            fi
+
+            echo "Waiting for production post ($STATUS), attempt $attempt/60."
+            sleep 10
+          done
+
+          echo "Timed out waiting for production post: $URL" >&2
+          exit 1
+
+      - name: Create Resend broadcast draft
+        if: steps.post.outputs.skip != 'true' && steps.draft-tag.outputs.exists != 'true'
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          NEWSLETTER_SEGMENT_ID: ${{ secrets.NEWSLETTER_SEGMENT_ID }}
+          NEWSLETTER_FROM: ${{ secrets.NEWSLETTER_FROM }}
+        run: npm run newsletter:latest -- --draft --slug "${{ steps.post.outputs.slug }}"
+
+      - name: Tag drafted post
+        if: steps.post.outputs.skip != 'true' && steps.draft-tag.outputs.exists != 'true'
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag "${{ steps.post.outputs.tag }}"
+          git push origin "refs/tags/${{ steps.post.outputs.tag }}"

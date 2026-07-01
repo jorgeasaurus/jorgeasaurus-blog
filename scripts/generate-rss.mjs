@@ -1,6 +1,7 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { comparePostDatesDesc, formatPostRssDate } from '../src/lib/postDates.mjs'
 import { escapeXml, loadPosts, siteUrl } from './lib/site.mjs'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
@@ -11,12 +12,10 @@ const feedDescription =
   'Field notes on PowerShell, endpoint management, Microsoft Graph, and automation.'
 
 function buildRss(posts) {
-  const sortedPosts = [...posts].sort(
-    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
-  )
+  const sortedPosts = [...posts].sort(comparePostDatesDesc)
   const latestPost = sortedPosts[0]
   const lastBuildDate = latestPost
-    ? new Date(latestPost.date).toUTCString()
+    ? formatPostRssDate(latestPost.date)
     : new Date().toUTCString()
 
   const items = sortedPosts
@@ -30,7 +29,7 @@ function buildRss(posts) {
       <title>${escapeXml(post.title)}</title>
       <link>${escapeXml(url)}</link>
       <guid isPermaLink="true">${escapeXml(url)}</guid>
-      <pubDate>${new Date(post.date).toUTCString()}</pubDate>
+      <pubDate>${formatPostRssDate(post.date)}</pubDate>
       <description>${escapeXml(post.description)}</description>
 ${categories}
     </item>`

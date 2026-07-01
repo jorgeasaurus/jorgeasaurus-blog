@@ -1,0 +1,3 @@
+interface:
+  display_name: "Resend Newsletter"
+  short_description: "Use Resend safely for this blog's newsletter, broadcasts, templates, and subscribers"

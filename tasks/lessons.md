@@ -17,3 +17,18 @@
 - When the user asks for glass blur consistency, use a shared CSS filter token before tuning individual surfaces by eye.
 - When matching card styles, compare the browser-computed runtime surface, including liquid-glass classes, not only the fallback CSS block.
 - Do not use DOM snapshot libraries like `html2canvas` for always-on production glass effects; native CSS backdrop-filter avoids console noise, `document.write`, and heavy bundle cost.
+- When adding caveats to a technical post, update the examples in the same pass so snippets do not contradict the new guidance; dry-run paths must not report real changes.
+- For idempotence guidance, separate repeat-run safety from concurrency safety and report dry-run results as `WouldChange`, not generic skipped work.
+- For opt-in/signup UI on this blog, place the signup at the bottom of the reading/listing flow unless the user explicitly asks for an above-the-fold capture surface.
+- For newsletter signup alignment, keep the input and submit button on explicit matching control heights and verify their rendered bounding boxes on desktop and mobile.
+- When removing a post, remove metadata, MDX source, social assets, and regenerated feed/sitemap references together.
+- For newsletter controls, put the input and submit button inside the same row container instead of aligning a standalone button against a label+input grid item.
+- In email templates, keep brand prompt marks and wordmarks in a no-wrap unit so narrow clients do not split the logo from the name.
+- When the user references Resend template creation, use the Resend Templates API and SDK pattern instead of treating "template" as only a local HTML renderer.
+- For project social cards, make the actual product/page the first visual signal; do not bury screenshots under oversized dark panels or heavy overlays.
+- When unignoring one repo-local skill under `.agents`, keep the broad `.agents/*` ignore and add targeted negations; verify unrelated `.agents/*` folders stay ignored before finishing.
+- For post dates, use the shared date helper and never parse date-only strings with raw `new Date('YYYY-MM-DD')`; timezone conversion can shift the displayed day.
+- Keep Resend access behind the shared SDK helper instead of mixing raw REST calls with SDK calls across scripts and API functions.
+- Keep GitHub Actions as orchestration; move non-trivial Node logic into checked scripts and verify the workflow calls those scripts.
+- When multiple Node scripts need flags or `.env.local`, add or reuse `scripts/lib/cli.mjs`; do not copy CLI boilerplate across scripts.
+- Resend duplicate-resource predicates must be specific; never treat every `400` or generic `exist` text as success because validation and missing-resource failures can otherwise be hidden.

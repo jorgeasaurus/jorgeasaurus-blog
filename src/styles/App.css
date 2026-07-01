@@ -624,6 +624,136 @@ h2 {
   font-weight: 700;
 }
 
+/* ── Newsletter signup ── */
+.newsletter-signup {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 18px;
+  overflow: hidden;
+}
+
+.newsletter-signup--panel {
+  border-radius: 30px;
+}
+
+.newsletter-signup--inline {
+  max-width: 72ch;
+  margin-top: 8px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(215, 255, 227, 0.14);
+}
+
+.newsletter-signup__content {
+  display: grid;
+  gap: 8px;
+}
+
+.newsletter-signup__content h2 {
+  max-width: none;
+  font-size: clamp(1.55rem, 3vw, 2rem);
+}
+
+.newsletter-signup__content .hero-copy {
+  max-width: 58ch;
+}
+
+.newsletter-signup__form {
+  display: grid;
+  gap: 12px;
+}
+
+.newsletter-signup__field {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+
+.newsletter-signup__controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.newsletter-signup__field label {
+  color: var(--sprout-bright);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.newsletter-signup__field input {
+  width: 100%;
+  height: 48px;
+  min-height: 48px;
+  border: 1px solid rgba(215, 255, 227, 0.18);
+  border-radius: 999px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(1, 8, 5, 0.32)),
+    rgba(0, 0, 0, 0.2);
+  color: #fff;
+  padding: 0 16px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  outline: none;
+  transition:
+    border-color 180ms ease,
+    background 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.newsletter-signup__field input::placeholder {
+  color: rgba(238, 255, 244, 0.46);
+}
+
+.newsletter-signup__field input:focus {
+  border-color: rgba(215, 255, 227, 0.52);
+  background:
+    linear-gradient(135deg, rgba(157, 240, 182, 0.12), rgba(255, 255, 255, 0.06)),
+    rgba(0, 0, 0, 0.24);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    0 0 0 3px rgba(157, 240, 182, 0.12);
+}
+
+.newsletter-signup__trap {
+  position: absolute;
+  left: -10000px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+
+.newsletter-signup__message {
+  min-height: 1.4em;
+  margin: 0;
+  color: var(--ink-soft);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.newsletter-signup__message--success {
+  color: var(--sprout-bright);
+}
+
+.newsletter-signup__message--error {
+  color: #ffd2d2;
+}
+
+.newsletter-signup__form .action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 48px;
+  min-height: 48px;
+  white-space: nowrap;
+}
+
 /* ── Blog post list ── */
 .post-list {
   display: grid;
@@ -769,6 +899,7 @@ h2 {
 .content-panel.liquid-glass-surface,
 .about-panel.liquid-glass-surface,
 .hero-panel.liquid-glass-surface,
+.newsletter-signup--panel.liquid-glass-surface,
 .projects-hero.liquid-glass-surface,
 .topbar.liquid-glass-surface {
   background:
@@ -789,7 +920,8 @@ h2 {
 .post-card--featured.liquid-glass-surface,
 .content-panel.liquid-glass-surface,
 .about-panel.liquid-glass-surface,
-.hero-panel.liquid-glass-surface {
+.hero-panel.liquid-glass-surface,
+.newsletter-signup--panel.liquid-glass-surface {
   --glass-rim-width: 34px;
 }
 
@@ -2155,6 +2287,14 @@ code {
     align-items: start;
     flex-direction: column;
     gap: 6px;
+  }
+
+  .newsletter-signup__controls {
+    grid-template-columns: 1fr;
+  }
+
+  .newsletter-signup__form .action {
+    width: 100%;
   }
 
   .pagination {

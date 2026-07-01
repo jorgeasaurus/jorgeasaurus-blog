@@ -2,6 +2,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { useEffect } from 'react'
 import Topbar from '../components/Topbar'
 import PostCard from '../components/PostCard'
+import NewsletterSignup from '../components/NewsletterSignup'
 import SocialIcon from '../components/SocialIcon'
 import WallpaperStage from '../components/WallpaperStage'
 import { sortPostsByDate } from '../lib/posts'
@@ -163,6 +164,7 @@ export default function Home() {
             )}
           </nav>
         )}
+        <NewsletterSignup />
       </section>
     </main>
   )

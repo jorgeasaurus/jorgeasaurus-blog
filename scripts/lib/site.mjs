@@ -21,8 +21,7 @@ export function escapeXml(value) {
     .replaceAll("'", '&apos;')
 }
 
-export async function loadPosts() {
-  const source = await readFile(postsPath, 'utf8')
+export function parsePostsSource(source, filename = postsPath) {
   const { outputText } = ts.transpileModule(source, {
     compilerOptions: {
       module: ts.ModuleKind.CommonJS,
@@ -33,6 +32,11 @@ export async function loadPosts() {
     exports: {},
     module: { exports: {} },
   }
-  vm.runInNewContext(outputText, context, { filename: postsPath })
+  vm.runInNewContext(outputText, context, { filename })
   return context.exports.default
+}
+
+export async function loadPosts() {
+  const source = await readFile(postsPath, 'utf8')
+  return parsePostsSource(source)
 }

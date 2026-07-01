@@ -8,6 +8,7 @@ import {
   useState,
 } from 'react'
 import Topbar from '../components/Topbar'
+import NewsletterSignup from '../components/NewsletterSignup'
 import WallpaperStage from '../components/WallpaperStage'
 import { formatDate, sortPostsByDate } from '../lib/posts'
 import postImages from '../content/postImages'
@@ -334,6 +335,7 @@ export default function Post() {
             )}
           </nav>
         )}
+        <NewsletterSignup surface="inline" />
       </article>
       {expandedImage && (
         <LightboxDialog image={expandedImage} onClose={closeExpandedImage} />
