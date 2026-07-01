@@ -75,7 +75,7 @@ jobs:
           URL="${{ steps.post.outputs.url }}"
 
           for attempt in {1..60}; do
-            STATUS="$(curl -sS -o /tmp/newsletter-post.html -w "%{http_code}" "$URL" || true)"
+            STATUS="$(curl -sSL -o /tmp/newsletter-post.html -w "%{http_code}" "$URL" || true)"
 
             if [ "$STATUS" = "200" ] && grep -q "<title>" /tmp/newsletter-post.html; then
               echo "Production post is live: $URL"

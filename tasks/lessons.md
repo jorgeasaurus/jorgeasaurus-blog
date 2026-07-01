@@ -32,3 +32,4 @@
 - Keep GitHub Actions as orchestration; move non-trivial Node logic into checked scripts and verify the workflow calls those scripts.
 - When multiple Node scripts need flags or `.env.local`, add or reuse `scripts/lib/cli.mjs`; do not copy CLI boilerplate across scripts.
 - Resend duplicate-resource predicates must be specific; never treat every `400` or generic `exist` text as success because validation and missing-resource failures can otherwise be hidden.
+- When a workflow polls production URLs, follow redirects or use the exact canonical host; `curl` without `-L` can fail against apex-to-www redirects even when the page is live.

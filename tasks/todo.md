@@ -669,8 +669,9 @@ Tightened `lib/resend.mjs` so invalid/missing segment failures still throw while
 
 - [x] Confirm branch, Vercel link, and secret safety.
 - [x] Run final verification checks.
-- [ ] Commit current changes on `main`.
-- [ ] Push `main` to `origin`.
+- [x] Commit current changes on `main`.
+- [x] Push `main` to `origin`.
+- [x] Fix production URL polling after apex-to-www redirect.
 - [ ] Deploy Vercel production and verify live routes.
 
 ## Review
