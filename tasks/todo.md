@@ -673,8 +673,8 @@ Tightened `lib/resend.mjs` so invalid/missing segment failures still throw while
 - [x] Push `main` to `origin`.
 - [x] Fix production URL polling after apex-to-www redirect.
 - [x] Bump workflow actions past Node 20 deprecation warnings.
-- [ ] Deploy Vercel production and verify live routes.
+- [x] Deploy Vercel production and verify live routes.
 
 ## Review
 
-Pending.
+Committed and pushed the newsletter automation, EndpointJobs post, workflow redirect fix, and workflow action-version bump to `main`. Deployed Vercel production, verified Ready status, aliases, live post route, homepage post/signup rendering, invalid subscribe `400`, manual Resend draft creation, and repeat workflow skip via the newsletter draft tag.
