@@ -678,3 +678,98 @@ Tightened `lib/resend.mjs` so invalid/missing segment failures still throw while
 ## Review
 
 Committed and pushed the newsletter automation, EndpointJobs post, workflow redirect fix, and workflow action-version bump to `main`. Deployed Vercel production, verified Ready status, aliases, live post route, homepage post/signup rendering, invalid subscribe `400`, manual Resend draft creation, and repeat workflow skip via the newsletter draft tag.
+
+# Write Tenant Graph Blog Post
+
+- [x] Research Tenant Graph repo, live app, and sample flow.
+- [x] Capture usable screenshots and create post assets.
+- [x] Rename the post away from the repeated "Why I Built" pattern.
+- [x] Remove repeated "boring on purpose" wording.
+- [x] Draft the MDX post in the Jorgeasaurus field-note style.
+- [x] Register post metadata and social image.
+- [x] Verify lint, build, metadata, and rendered route.
+
+## Review
+
+Added `tenant-graph-seeing-the-blast-radius` with TenantGraph screenshots, metadata, RSS/sitemap output, and a 1200x630 social card. Also renamed the draft away from the repeated "Why I Built" pattern and removed the repeated "boring on purpose" wording from this draft and the Endpoint Jobs post. Verified `npm run check:js`, `npx tsc -b --pretty false`, `npm run lint`, `npm run build`, generated social metadata, RSS/sitemap entries, desktop/mobile browser render, image availability, `npm run newsletter:latest`, and `git diff --check`.
+
+# Remove Tenant Graph Blog Post
+
+- [x] Remove Tenant Graph post source and post assets.
+- [x] Remove Tenant Graph post metadata.
+- [x] Regenerate RSS/sitemap output.
+- [x] Run verification checks.
+- [x] Record review results.
+
+## Review
+
+Removed `tenant-graph-seeing-the-blast-radius` from the blog content, post assets, post metadata, generated RSS, generated sitemap, and generated static output. Left the Projects page Tenant Graph link intact because this task only removed the blog post. Verified `npm run lint`, `npm run build`, `git diff --check`, no post route under `dist`, no post source/assets, and no Tenant Graph post references in `src/content`, RSS, sitemap, or `dist`.
+
+# Research Entra Intune PowerShell Tutorials
+
+- [x] Scan Reddit sentiment and recurring tutorial recommendations.
+- [x] Cross-check against Microsoft Learn, GitHub, YouTube/blogs, and training providers.
+- [x] Rank high-value tutorials by practical usefulness, freshness, and community trust.
+- [x] Record review results and source coverage.
+
+## Review
+
+Researched current Entra, Intune, and PowerShell tutorial sources across Microsoft Learn, GitHub, YouTube metadata, major community blogs, Microsoft/community tools, and attempted Reddit access. Reddit direct/API/search/proxy reads were blocked by network security, so Reddit-derived confidence is lower and explicitly called out. Verified active source freshness for Microsoft Learn pages, Andrew Taylor, Call4Cloud/Patch My PC, MSEndpointMgr, Maester, Merill/Entra.News, Intune Training, and John Savill.
+
+# Research Blog Ideas From Public Sentiment
+
+- [x] Review existing blog coverage to avoid duplicate post ideas.
+- [x] Mine current Entra, Intune, and PowerShell pain points from public sources.
+- [x] Convert recurring pain points into high-value post angles.
+- [x] Rank ideas by fit for this blog and likely reader value.
+- [x] Record review results and source coverage.
+
+## Review
+
+Corrected the research target from tutorial recommendations to blog post ideas. Reviewed existing blog coverage, then mined Microsoft Intune what's-new, Microsoft Entra releases/blogs, PowerShell releases/blogs, Graph PowerShell issues, IntuneWin32App issues, Andrew Taylor, Call4Cloud, and Microsoft Tech Community view/comment signals. Reddit remained blocked by network security, so Reddit is treated as a weak/indirect signal only.
+
+# Write Entra Backup And Recovery Post
+
+- [x] Research current Microsoft Entra Backup and Recovery behavior.
+- [x] Draft a Jorgeasaurus-style field note focused on what it does not replace.
+- [x] Register post metadata and social image.
+- [x] Create deterministic 1200x630 social card asset.
+- [x] Verify lint, build, generated metadata, and rendered route.
+- [x] Record review results.
+
+## Review
+
+Added `entra-backup-and-recovery-is-not-a-tenant-strategy` with official Microsoft references, metadata, RSS/sitemap output, and a deterministic 1200x630 social card. Verified `npm run lint`, `npm run build`, `git diff --check`, social card dimensions, generated `og:image`/`twitter:image`, RSS/sitemap entries, and local route render at `/entra-backup-and-recovery-is-not-a-tenant-strategy` with the expected title, checklist, and 5 official references.
+
+# Deploy Entra Backup Preview
+
+- [x] Inspect Vercel link and current workspace status.
+- [x] Create a Vercel preview deployment.
+- [x] Verify deployment readiness and post route.
+- [x] Record preview URL and review results.
+
+## Review
+
+Created Vercel preview deployment `https://jorgeasaurus-blog-ek8qekjtx-jorgeasaurus-projects.vercel.app`. Verified `Ready` status with `vercel inspect --wait` and confirmed `/entra-backup-and-recovery-is-not-a-tenant-strategy` returns the expected static HTML, title, `og:image`, and `twitter:image` through `vercel curl`.
+
+# Remove Entra Backup Blog Post
+
+- [x] Remove post metadata, source, and social asset.
+- [x] Regenerate RSS/sitemap/static output.
+- [x] Run verification checks.
+- [x] Record review results.
+
+## Review
+
+Removed `entra-backup-and-recovery-is-not-a-tenant-strategy` from blog metadata, deleted its MDX source and social-card asset, and regenerated RSS/sitemap/static output. Verified `npm run lint`, `npm run build`, `git diff --check`, no deleted post files/assets under `dist` or `public/images/posts`, and no remaining site references under `src`, `public`, or `dist`.
+
+# Remove Retired Intune Graph Post
+
+- [x] Remove source, metadata, images, script artifact, and local Graph context files.
+- [x] Regenerate feed/sitemap output.
+- [x] Verify no stale references remain.
+- [x] Record review results.
+
+## Review
+
+Removed the retired Intune Graph post from content, metadata, images, support script files, local Graph context files, feed, sitemap, and prior stale task notes. Verified `npm run lint`, `npm run build`, exact stale-reference search, and `git diff --check`.

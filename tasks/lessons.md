@@ -22,6 +22,7 @@
 - For opt-in/signup UI on this blog, place the signup at the bottom of the reading/listing flow unless the user explicitly asks for an above-the-fold capture surface.
 - For newsletter signup alignment, keep the input and submit button on explicit matching control heights and verify their rendered bounding boxes on desktop and mobile.
 - When removing a post, remove metadata, MDX source, social assets, and regenerated feed/sitemap references together.
+- When researching tutorial/resource sentiment, confirm whether the user wants learning resources or blog-post ideas before ranking external tutorials.
 - For newsletter controls, put the input and submit button inside the same row container instead of aligning a standalone button against a label+input grid item.
 - In email templates, keep brand prompt marks and wordmarks in a no-wrap unit so narrow clients do not split the logo from the name.
 - When the user references Resend template creation, use the Resend Templates API and SDK pattern instead of treating "template" as only a local HTML renderer.
@@ -33,3 +34,4 @@
 - When multiple Node scripts need flags or `.env.local`, add or reuse `scripts/lib/cli.mjs`; do not copy CLI boilerplate across scripts.
 - Resend duplicate-resource predicates must be specific; never treat every `400` or generic `exist` text as success because validation and missing-resource failures can otherwise be hidden.
 - When a workflow polls production URLs, follow redirects or use the exact canonical host; `curl` without `-L` can fail against apex-to-www redirects even when the page is live.
+- Do not reuse "boring on purpose" as a default blog-post thesis; choose wording specific to the project and delete repeated stock phrases.

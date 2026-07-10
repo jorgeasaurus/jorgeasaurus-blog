@@ -1,0 +1,29 @@
+DMARC setup for jorgeasaur.us
+
+Current state:
+- No TXT record exists at _dmarc.jorgeasaur.us.
+- DNS appears to be hosted by GoDaddy / DomainControl.
+
+Add this DNS record:
+
+Type: TXT
+Name / Host: _dmarc
+Value: v=DMARC1; p=none
+TTL: default
+
+Optional reporting version:
+
+v=DMARC1; p=none; rua=mailto:dmarc@jorgeasaur.us; adkim=s; aspf=s
+
+Use the optional version only if dmarc@jorgeasaur.us exists or points to a DMARC reporting service.
+
+Notes:
+- Only one DMARC TXT record should exist for _dmarc.jorgeasaur.us.
+- p=none is a safe starter policy. It monitors mail without quarantining or rejecting messages.
+- After SPF and DKIM are stable, the policy can move to quarantine or reject.
+
+Verify after saving DNS:
+
+dig +short TXT _dmarc.jorgeasaur.us
+
+Then re-check the domain in Resend. DNS propagation can take a few minutes.

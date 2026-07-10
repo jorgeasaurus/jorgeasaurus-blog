@@ -113,13 +113,13 @@ The mobile view has the same bias.
 
 I care about that because job hunting already has enough friction. A niche board should reduce the number of tabs, not add a new ceremony.
 
-## The Data Refresh Is Boring On Purpose
+## Keep The Visitor Path Small
 
 Endpoint Jobs is a static Next.js app backed by `src/data/jobs.json`.
 
 There is no database in the visitor path. No runtime job API that has to be warm. No queue that has to be explained to the page.
 
-The refresh flow is intentionally boring:
+The refresh flow is deliberately plain:
 
 ```text
 GitHub Action or local command
