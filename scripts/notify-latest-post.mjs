@@ -56,10 +56,12 @@ if (!post) {
 const url = `${siteUrl}/${post.slug}`
 const subject = `${post.title} | ${siteName}`
 const email = buildNewsletterEmail(post, url)
+// Resend limits broadcast `name` (internal dashboard label) to 70 characters.
+const broadcastName = `${siteName}: ${post.title}`.slice(0, 70)
 const payload = {
   segmentId: process.env.NEWSLETTER_SEGMENT_ID ?? 'resend-segment-id',
   from: process.env.NEWSLETTER_FROM ?? `${siteName} <updates@example.com>`,
-  name: `${siteName}: ${post.title}`,
+  name: broadcastName,
   subject,
   html: email.html,
   text: email.text,
