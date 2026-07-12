@@ -6,7 +6,19 @@
     <atom:link href="https://jorgeasaur.us/rss.xml" rel="self" type="application/rss+xml" />
     <description>Field notes on PowerShell, endpoint management, Microsoft Graph, and automation.</description>
     <language>en-us</language>
-    <lastBuildDate>Wed, 01 Jul 2026 12:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Fri, 10 Jul 2026 12:00:00 GMT</lastBuildDate>
+    <item>
+      <title>Minimize Provisioning Time with Autopilot Device Preparation</title>
+      <link>https://jorgeasaur.us/minimize-autopilot-device-preparation-provisioning-time</link>
+      <guid isPermaLink="true">https://jorgeasaur.us/minimize-autopilot-device-preparation-provisioning-time</guid>
+      <pubDate>Fri, 10 Jul 2026 12:00:00 GMT</pubDate>
+      <description>Reduce Windows Autopilot device preparation time by shrinking the OOBE critical path, removing slow blockers, and measuring the work that remains.</description>
+      <category>intune</category>
+      <category>windows</category>
+      <category>autopilot</category>
+      <category>endpoint-management</category>
+      <category>device-provisioning</category>
+    </item>
     <item>
       <title>Why I Built Endpoint Jobs</title>
       <link>https://jorgeasaur.us/why-i-built-endpoint-jobs</link>

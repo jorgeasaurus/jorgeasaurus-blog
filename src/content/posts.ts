@@ -2,6 +2,20 @@ import { type PostMeta } from '../lib/posts'
 
 const posts: PostMeta[] = [
   {
+    slug: 'minimize-autopilot-device-preparation-provisioning-time',
+    title: 'Minimize Provisioning Time with Autopilot Device Preparation',
+    date: '2026-07-10',
+    description:
+      'Reduce Windows Autopilot device preparation time by shrinking the OOBE critical path, removing slow blockers, and measuring the work that remains.',
+    tags: ['intune', 'windows', 'autopilot', 'endpoint-management', 'device-provisioning'],
+    socialImage: {
+      src: '/images/posts/minimize-autopilot-device-preparation-provisioning-time/socialcard.png',
+      width: 1200,
+      height: 630,
+      type: 'image/png',
+    },
+  },
+  {
     slug: 'why-i-built-endpoint-jobs',
     title: 'Why I Built Endpoint Jobs',
     date: '2026-07-01',

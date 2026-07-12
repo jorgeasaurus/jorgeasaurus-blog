@@ -1,0 +1,245 @@
+---
+title: "Minimize Provisioning Time with Autopilot Device Preparation"
+date: "2026-07-10"
+description: "Reduce Windows Autopilot device preparation time by shrinking the OOBE critical path, removing slow blockers, and measuring the work that remains."
+tags: ["intune", "windows", "autopilot", "endpoint-management", "device-provisioning"]
+---
+
+Windows Autopilot device preparation is often called Autopilot v2.
+
+The nickname makes it sound like the faster edition of classic Autopilot. That is not quite what Microsoft built.
+
+Device preparation does not make a 4 GB application download faster. It does not make a bad installer good. It does not turn a reboot into free time.
+
+What it gives you is a cleaner way to decide which work must finish before the user reaches the desktop.
+
+That is the lever.
+
+## Optimize The Critical Path
+
+Provisioning has three useful clocks:
+
+- **Time to desktop:** OOBE completes and the desktop becomes available.
+- **Time to ready:** The device has every application, policy, update, and security control your organization considers operationally ready.
+- **Time to first critical task:** The user can complete the work the device was issued for without waiting through another installation, prompt, or restart.
+
+Those are not the same measurement.
+
+If you move ten applications out of OOBE, time to desktop improves. If the user then waits 40 minutes for their VPN client and browser extensions, time to ready did not.
+
+Start by defining the minimum installed payload a device needs at first sign-in. That wording matters. Device preparation can gate selected applications and scripts, but it cannot prove that every policy or security control is active when the desktop appears.
+
+For most environments, the OOBE list should contain only payloads that meet at least one of these tests:
+
+- The payload is a prerequisite for the intended secure state.
+- The user cannot complete first-day work without it.
+- Installing it later would break access to the device or required services.
+- It is a dependency for another item that genuinely belongs in OOBE.
+
+Everything else is a candidate for installation after the desktop. It is only safe to defer when the remaining deployment has an owner, a deadline, failure telemetry, retry or remediation behavior, and an access or support fallback.
+
+Otherwise you have not removed a provisioning failure. You have hidden it after OOBE.
+
+## Enrollment Time Grouping Removes A Waiting Game
+
+The architectural improvement in device preparation is [enrollment time grouping](https://learn.microsoft.com/en-us/intune/device-enrollment/setup-time-grouping).
+
+During enrollment, Intune adds the device directly to the assigned Microsoft Entra security group specified in the device preparation policy. Intune already knows the group membership, so it does not have to wait for a dynamic group rule to discover the device before delivering configuration.
+
+That removes the dynamic-group evaluation dependency and makes the initial targeting path more deterministic. It does not remove service propagation, group-add failures, assignment evaluation, filters, device check-in, or content-delivery latency.
+
+The group must be an assigned security group, and the Intune Provisioning Client must be an owner. Use a separate group for each device preparation policy unless you have a deliberate reason to share one.
+
+The targeting model is easy to mix up:
+
+- Assign the device preparation policy to a **user group**.
+- Select an assigned **device group** in that policy.
+- Assign each required app and platform script to that device group.
+- Select the apps and scripts that should be tracked during OOBE inside the device preparation policy.
+
+Selecting an app in the policy does not assign it. If the required device-group assignment is missing, the deployment report can show it as skipped.
+
+Policy priority matters too. If a user receives more than one device preparation policy, the policy with the highest priority wins. Separate device groups do not protect you from assigning the wrong policy to the user.
+
+## Block Less Than The Limit
+
+Current device preparation policies support up to [25 managed applications and 10 PowerShell scripts](https://learn.microsoft.com/en-us/autopilot/device-preparation/compare) during OOBE.
+
+That is a platform limit, not a target.
+
+Microsoft says the cap exists to improve stability and time to productivity. Its telemetry found that almost 90% of traditional Autopilot deployments used ten or fewer apps.
+
+That telemetry does not prove ten is the correct number. A single large installer can cost more than ten small ones. The useful lesson is simply to make every blocker defend its place.
+
+A practical first-pass list might look like this:
+
+| Keep in OOBE | Usually defer |
+| --- | --- |
+| Endpoint security agent | Optional productivity tools |
+| Required VPN or zero-trust client | Large creative or engineering suites |
+| Privilege-management agent | Plug-ins and browser extensions |
+| One required browser, if the built-in browser is not acceptable | Department-specific applications |
+| Small script that establishes a hard prerequisite | Applications available through Company Portal |
+
+The exact list depends on your user persona, threat model, and first-session access path. A remote user who needs a VPN to reach anything has a different minimum payload than a cloud-only user.
+
+An installed security agent is not automatically a healthy security control. Detection might pass before the agent registers with its tenant, receives policy, updates definitions, activates a driver, or reports healthy. If the control cannot assert readiness during OOBE, document the exposure window and use compensating access controls such as Conditional Access where appropriate.
+
+## Remove Reboots From OOBE
+
+Reboots are expensive because the device preparation workflow has to recover its state and resume.
+
+In a controlled comparison, Michael Niehaus found that enrollment time grouping saved roughly 45 seconds during initial processing, while an application that returned reboot code `3010` added about five minutes to the device preparation run. His conclusion was appropriately unexciting: with the same applications and no reboot, the two approaches should finish at roughly the same time.
+
+Review every blocking package for:
+
+- Installer-initiated restarts.
+- Exit codes that Intune interprets as a soft reboot.
+- Dependencies that restart services or the device.
+- Install commands that always return a reboot code even when no restart is required.
+
+If an app can install safely after the desktop, defer it. If it must run during OOBE, remove unnecessary or incorrectly reported restarts and let Intune handle the supported restart behavior.
+
+Do not suppress a vendor-required restart just to improve the number. Drivers, filter agents, VPN stacks, and servicing operations may not become functional until Windows restarts. Preserve required state transitions and validate control health after the restart.
+
+## Make Every Blocking App Cheap
+
+Device preparation delivers configuration and applications serially. The cumulative cost of the selected payload owns the user experience.
+
+Ten two-minute installations are worse than one ten-minute installation. Dependencies, retries, and restarts extend that serialized critical path further.
+
+For each blocking app, measure four separate costs:
+
+1. Content download.
+2. Installer execution.
+3. Detection.
+4. Restart and recovery.
+
+Then reduce the actual bottleneck.
+
+- Remove unused files from Win32 packages.
+- Flatten accidental dependency chains, but keep independently serviced applications independent.
+- Keep detection rules local, deterministic, and fast.
+- Use system install context because Device Preparation delivers device-based configuration during OOBE. Validate the installer under SYSTEM and keep user-specific configuration out of the blocking payload.
+- Do not run an online update inside the installer unless the update is required immediately.
+- Use Delivery Optimization for supported Windows, Store, Microsoft 365, and Intune Win32 content on shared networks.
+- Validate the same proxy, firewall, DNS, NTP, and Wi-Fi path users will have.
+
+Do not turn the baseline into one giant package to avoid dependencies. Monolithic packages make caching, rollback, servicing, retries, and failure isolation worse. Consolidate only tightly coupled, versioned components when testing proves the complete critical path gets shorter.
+
+A generous timeout does not optimize any of this. It only waits longer before admitting the deployment is slow.
+
+## Keep Scripts Short And Boring
+
+Device preparation can track up to ten Intune platform scripts during OOBE.
+
+Treat that allowance carefully. A script can hide network calls, package downloads, retries, service waits, and other work that is difficult to see from the progress screen.
+
+An OOBE script should be:
+
+- Device-scoped and safe under SYSTEM.
+- Noninteractive.
+- Idempotent.
+- Explicit about success and failure exit codes.
+- Independent of mapped drives, user profiles, and `HKCU`.
+- Fast enough that you are willing to add its duration to every deployment.
+
+If a script installs software, consider making it a Win32 app instead. You get content delivery, requirements, dependencies, detection, retries, and clearer reporting without rebuilding an application deployment system inside PowerShell.
+
+## Do Not Count Policies As Complete
+
+Device preparation syncs policies assigned to the enrollment-time device group, but it does not track whether those policies finish applying during the deployment.
+
+That distinction matters.
+
+A successful device preparation result reports the workflow outcome for the selected applications and scripts. Inspect every item. Applications and scripts can be skipped, and a script marked installed proves that it ran without reporting failure, not that it produced the intended endpoint state.
+
+The result also does not prove that every Settings Catalog profile, security baseline, compliance policy, certificate, or update finished before the desktop appeared.
+
+If a policy or control is part of your minimum secure state, test its endpoint state directly. Do not infer it from a green deployment record.
+
+That test does not make Device Preparation a security gate. If users must not access resources until the state is verified, enforce that requirement with an access control that evaluates the state, or use a deployment design that can complete and verify the work before handoff.
+
+## Use The Timeout As A Guardrail
+
+For a user-driven policy, **Minutes allowed before showing installation error** accepts a value from 15 through 720 minutes. The value covers the whole deployment, not each app or script.
+
+Set it from evidence and pair it with a recovery path:
+
+1. Run repeated deployments on representative hardware and networks.
+2. Find the normal high-water mark, not only the fastest result.
+3. Add enough room for ordinary service and network variance.
+4. Investigate anything that approaches the limit.
+5. Define what the user and support team should do after a deterministic failure, a transient failure, or repeated retries.
+
+Do not solve a 55-minute baseline by changing the timeout from 60 to 120 minutes. First find the work consuming the 55 minutes.
+
+Enabling the diagnostics link and a useful custom error message gives the user and support team somewhere to go when the guardrail is hit.
+
+## Measure The Right Percentiles
+
+The [device preparation deployment report](https://learn.microsoft.com/en-us/autopilot/device-preparation/reporting-monitoring) shows near-real-time deployment status, phase, total deployment time, and individual app and script results.
+
+It does not calculate percentiles, measure time to ready, record network type, or show a documented duration for every app and script. Deployment records are also automatically cleaned up after 28 days. The report is an input to the measurement system, not the complete system.
+
+Track at least:
+
+- Median, P75, and P95 time to desktop.
+- Success, failure, and timeout rate within the deployment SLO.
+- Time to ready and time to first critical task after OOBE.
+- Failure and skip rate by app and script.
+- Deployment time by hardware model, network type, and policy version.
+- Post-desktop convergence rate, forced restarts, and user disruption.
+
+Those measurements require more than the built-in report. Export or retain deployment data before it expires, correlate it with device inventory and network context, and use controlled tests or Intune Management Extension logs to isolate application and script duration.
+
+Include failed and timed-out runs. Otherwise the P95 can improve simply because the slowest devices failed and disappeared from the successful population.
+
+An average hides the branch office where P95 provisioning takes twice as long. A single successful lab VM hides weak Wi-Fi, old storage, OEM software, and a security installer that behaves differently on physical hardware.
+
+One small published lab test found device preparation with three tracked apps took 13:07, compared with 10:15 for classic Autopilot with the same number of blocking apps. Another field report found a much larger improvement in the other direction. These are illustrative observations, not portable performance estimates. Different payloads, hardware, networks, cache state, and test methods produce different winners.
+
+That is why the useful benchmark is your device, your network, and your critical-path payload.
+
+## Know When Classic Autopilot Still Fits
+
+For physical devices, device preparation supports user-driven deployment with Microsoft Entra join. Automatic mode is also available in preview for supported Windows 365 scenarios.
+
+Device preparation does not provide classic Autopilot pre-provisioning, self-deploying mode, Microsoft Entra hybrid join, or Autopilot Reset.
+
+Pre-provisioning can still produce a shorter wait for the end user because a technician or OEM completes work before handoff. That can beat a faster total workflow if the metric that matters is employee time.
+
+Also confirm that test devices are not registered for classic Windows Autopilot. A classic Autopilot profile takes precedence over a device preparation policy. If you see the Enrollment Status Page instead of the **Setting up for work or school** experience, check registration and profile assignment before tuning anything else.
+
+## Provisioning Time Checklist
+
+- Define time to desktop, time to ready, and time to first critical task separately.
+- Use enrollment time grouping with an assigned device security group.
+- Keep only the minimum required installed payload in OOBE.
+- Do not treat installed as healthy or secure without a readiness assertion.
+- Give every deferred item an owner, SLO, telemetry, retry path, and fallback.
+- Require and select each tracked app or script in the correct places.
+- Use system context for OOBE applications.
+- Remove unnecessary reboots and dependency chains without suppressing required state transitions.
+- Keep scripts local, noninteractive, idempotent, and fast.
+- Treat the timeout as a failure boundary, not a performance setting.
+- Measure success within SLO plus P50, P75, and P95 on real hardware and real networks.
+- Include failed and timed-out deployments in performance reviews.
+- Review cumulative payload cost after every policy change.
+- Verify critical policy state separately from the deployment result.
+- Check Microsoft's known-issues page before blaming your packaging.
+
+Autopilot device preparation can get users to the desktop faster.
+
+But only if you stop asking OOBE to finish work that did not need to be there.
+
+## References
+
+- [Overview of Windows Autopilot device preparation](https://learn.microsoft.com/en-us/autopilot/device-preparation/overview)
+- [Compare Windows Autopilot device preparation and Windows Autopilot](https://learn.microsoft.com/en-us/autopilot/device-preparation/compare)
+- [Create a user-driven device preparation policy](https://learn.microsoft.com/en-us/autopilot/device-preparation/tutorial/user-driven/entra-join-autopilot-policy)
+- [Windows Autopilot device preparation FAQ](https://learn.microsoft.com/en-us/autopilot/device-preparation/faq)
+- [Windows Autopilot device preparation known issues](https://learn.microsoft.com/en-us/autopilot/device-preparation/known-issues)
+- [Use Autopilot device preparation with Windows 365](https://learn.microsoft.com/en-us/windows-365/enterprise/autopilot-device-preparation)
+- [Windows Autopilot v2: Is it faster? It depends](https://oofhours.com/2025/02/10/windows-autopilot-v2-is-it-faster-it-depends/)
+- [Autopilot timings](https://airdesk.com/2025/01/autopilot-timings/)

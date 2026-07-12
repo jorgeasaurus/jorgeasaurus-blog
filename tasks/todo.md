@@ -1,3 +1,37 @@
+# Apply Adversarial Review Edits
+
+- [x] Revise the critical-path, security, and convergence model.
+- [x] Correct targeting, reboot, packaging, reporting, and scenario claims.
+- [x] Run a focused adversarial verification pass.
+- [x] Run lint, build, metadata, and browser checks.
+
+## Review
+
+Revised the post to distinguish installed payload from verified readiness, model cumulative serialized cost, require post-OOBE convergence controls, document reporting limits, and correct scenario/context claims. Adversarial re-review found no material gaps; links, lint, build, metadata, and browser checks passed.
+
+# Adversarial Review: Autopilot Device Preparation Post
+
+- [x] Classify the post's core claims.
+- [x] Verify current technical claims against primary sources.
+- [x] Stress-test the recommendations against operational counterexamples.
+- [x] Report ranked findings with line references and proposed corrections.
+
+## Review
+
+The critical-path thesis holds, but the post overstates secure-at-desktop guarantees, models serialized work as a single slowest item, and asks readers to derive measurements the built-in report does not expose. No post edits were made.
+
+# Write Autopilot Device Preparation Provisioning Post
+
+- [x] Inspect repository post conventions and relevant lessons.
+- [x] Research current Microsoft guidance and credible field evidence.
+- [x] Draft and register the MDX post.
+- [x] Create and register a 1200x630 social card.
+- [x] Verify claims, links, lint, build, metadata, and rendered route.
+
+## Review
+
+Added the Autopilot device preparation performance post, metadata, RSS/sitemap entries, and social card. Verified all cited links, lint, production build, generated social metadata, and the rendered route in Chrome.
+
 # Publish Dev Changes
 
 - [x] Inspect local diff and branch state.
