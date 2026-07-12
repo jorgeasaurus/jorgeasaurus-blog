@@ -4,7 +4,6 @@ import {
   use,
   useCallback,
   useEffect,
-  useRef,
   useState,
 } from 'react'
 import Topbar from '../components/Topbar'
@@ -14,6 +13,7 @@ import { formatDate, sortPostsByDate } from '../lib/posts'
 import postImages from '../content/postImages'
 import posts from '../content/posts'
 import useLiquidGlassSurface from '../hooks/useLiquidGlassSurface'
+import useModalDialog from '../hooks/useModalDialog'
 
 type MdxImageProps = React.ComponentPropsWithoutRef<'img'>
 
@@ -67,49 +67,16 @@ const mdxComponents: MdxComponents = {
 }
 
 function LightboxDialog({ image, onClose }: LightboxDialogProps) {
-  const dialogRef = useRef<HTMLDialogElement>(null)
-
-  useEffect(() => {
-    const dialog = dialogRef.current
-
-    if (!dialog) {
-      return
-    }
-
-    const previousOverflow = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-
-    function closeFromBackdrop(event: globalThis.MouseEvent) {
-      if (event.target === dialog) {
-        onClose()
-      }
-    }
-
-    dialog.addEventListener('click', closeFromBackdrop)
-
-    if (!dialog.open) {
-      dialog.showModal()
-    }
-
-    return () => {
-      document.body.style.overflow = previousOverflow
-      dialog.removeEventListener('click', closeFromBackdrop)
-
-      if (dialog.open) {
-        dialog.close()
-      }
-    }
-  }, [onClose])
+  const dialogRef = useModalDialog(onClose)
 
   return (
     <dialog
       ref={dialogRef}
-      className="image-lightbox"
+      className="glass-dialog image-lightbox"
       aria-label="Expanded image preview"
-      onCancel={onClose}
     >
       <button
-        className="image-lightbox__close"
+        className="glass-dialog__close image-lightbox__close"
         type="button"
         onClick={onClose}
         aria-label="Close expanded image"

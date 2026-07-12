@@ -1,23 +1,25 @@
 import { useId, useState, type FormEvent } from 'react'
 import useLiquidGlassSurface from '../hooks/useLiquidGlassSurface'
 
-type NewsletterSurface = 'panel' | 'inline'
+type NewsletterSurface = 'panel' | 'inline' | 'popup'
 type SubmitStatus = 'idle' | 'submitting' | 'success' | 'error'
 
 interface NewsletterSignupProps {
   surface?: NewsletterSurface
+  onSuccess?: () => void
 }
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export default function NewsletterSignup({
   surface = 'panel',
+  onSuccess,
 }: NewsletterSignupProps) {
   const emailId = useId()
   const messageId = useId()
   const honeypotId = useId()
   const panelRef = useLiquidGlassSurface<HTMLElement>({
-    borderRadius: surface === 'panel' ? 30 : 22,
+    borderRadius: 30,
     type: 'rounded',
   })
   const [email, setEmail] = useState('')
@@ -66,6 +68,7 @@ export default function NewsletterSignup({
       setEmail('')
       setStatus('success')
       setMessage(responseMessage)
+      onSuccess?.()
     } catch (error) {
       setStatus('error')
       setMessage(
