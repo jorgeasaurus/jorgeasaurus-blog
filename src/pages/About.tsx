@@ -85,9 +85,8 @@ export default function About() {
               target="_blank"
               rel="noopener noreferrer"
             >
-              building the PowerShell tools you wish existed
+              building the PowerShell tools you wish existed.
             </a>
-            .
           </p>
           <div className="profile-links" aria-label="Profile links">
             <a href="https://github.com/jorgeasaurus" target="_blank" rel="noopener noreferrer">
