@@ -78,6 +78,17 @@ export default function About() {
             endpoint and automation work. The blog itself is built with React,
             Vite, and MDX, and deployed on Vercel.
           </p>
+          <p>
+            I joined The PowerShell Podcast to talk about{' '}
+            <a
+              href="https://youtu.be/NEDX_3kDhZQ"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              building the PowerShell tools you wish existed
+            </a>
+            .
+          </p>
           <div className="profile-links" aria-label="Profile links">
             <a href="https://github.com/jorgeasaurus" target="_blank" rel="noopener noreferrer">
               <SocialIcon name="github" />
