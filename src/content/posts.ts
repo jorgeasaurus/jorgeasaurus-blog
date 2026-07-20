@@ -7,7 +7,7 @@ const posts: PostMeta[] = [
     date: '2026-07-19',
     description:
       'cpm is a one-command model switcher for the GitHub Copilot CLI BYOK mode. Point it at OpenRouter to flip between Claude, Gemini, Llama, and more without leaving your terminal.',
-    tags: ['GitHub Copilot', 'CLI', 'cpm', 'OpenRouter', 'BYOK', 'LLM'],
+    tags: ['github-copilot', 'cli', 'cpm', 'openrouter', 'byok', 'llm'],
     socialImage: {
       src: '/images/posts/use-cpm-with-openrouter-models/socialcard.png',
       width: 1200,
