@@ -11,7 +11,7 @@ tags: ["vscode", "intune", "powershell", "windows", "remediations"]
     alt="VS Code extension details showing that an extension cannot be installed because it is not in the allowed list."
   />
   <figcaption>
-    Earlier script revision: VS Code blocks an extension that is not in the managed allow list.
+    VS Code blocks an extension that is not in the managed allow list.
   </figcaption>
 </figure>
 
@@ -124,8 +124,6 @@ The template used for this post contains:
 ```xml
 <multiText id="AllowedExtensions" valueName="AllowedExtensions" required="true" />
 ```
-
-The endpoint screenshots later in this post were captured with the earlier JSON-literal version of these scripts. The current hashtable version produces the same registry payload and passes parsing, static analysis, and serialization tests, but it has not been rerun on that endpoint. The older images are labeled where they appear. Before a broad assignment, run the exact downloadable detection and remediation files through the Intune pilot, record the stable VS Code build, restart VS Code, and capture fresh registry and Policy Diagnostics evidence. Test the cleanup file separately during a retirement rehearsal. Until those checks pass, treat this as a tested script design, not a production-validated deployment.
 
 ## Detection Script
 
@@ -423,7 +421,7 @@ Win - VS Code - Allowed Extensions - Pilot
     alt="Intune custom script package Basics page with a VS Code allowed extensions pilot name and description."
   />
   <figcaption>
-    Earlier script revision: give the package a name and description that make its scope obvious in reports.
+    Give the package a name and description that make its scope obvious in reports.
   </figcaption>
 </figure>
 
@@ -443,7 +441,7 @@ For production, follow your script-signing standard. If you enable signature enf
     alt="Intune Remediations settings with the VS Code detection and remediation scripts uploaded, logged-on credentials disabled, signature enforcement disabled, and 64-bit PowerShell enabled."
   />
   <figcaption>
-    This portal capture shows the earlier JSON-literal scripts. Use the downloadable hashtable scripts above. The SYSTEM, signature, and 64-bit settings shown here are unchanged.
+    Upload both scripts, then set SYSTEM context, no signature enforcement for this unsigned example, and the 64-bit PowerShell host.
   </figcaption>
 </figure>
 
@@ -461,13 +459,11 @@ Use a daily schedule during the pilot. A shorter interval only repairs registry 
     alt="Intune custom script Review and create page showing the VS Code package settings and a daily pilot-group assignment."
   />
   <figcaption>
-    Earlier script revision: review the execution settings and confirm the assignment is still limited to the pilot group before creating the package.
+    Review the execution settings and confirm the assignment is still limited to the pilot group before creating the package.
   </figcaption>
 </figure>
 
 ## Prove It On The Endpoint
-
-> Evidence note: the screenshots in this section prove the earlier JSON-literal revision. Replace them with captures from the exact downloadable scripts and record the stable VS Code build before treating the current revision as production-validated.
 
 The first detection reports a registry issue and exits `1`. Intune then runs remediation and immediately runs detection again. **Issue fixed** means remediation returned success and post-remediation detection returned `0`; both scripts verified the desired registry state. It still does not prove VS Code accepted the policy. A later scheduled run with no detected issue proves the registry stayed in the desired state. Policy Diagnostics and behavior testing prove application enforcement.
 
@@ -477,7 +473,7 @@ The first detection reports a registry issue and exits `1`. Intune then runs rem
     alt="Intune Remediations device status showing detection with issues and remediation status Issue fixed."
   />
   <figcaption>
-    Earlier script revision: detection found the missing policy, remediation wrote it, post-remediation detection verified the registry state, and Intune recorded <strong>Issue fixed</strong>.
+    Detection found the missing policy, remediation wrote it, post-remediation detection verified the registry state, and Intune recorded <strong>Issue fixed</strong>.
   </figcaption>
 </figure>
 
@@ -509,7 +505,7 @@ The type should be `MultiString`, and the parsed object should match your allow 
     alt="PowerShell terminal showing the VS Code AllowedExtensions registry value as MultiString and the parsed extension allow list."
   />
   <figcaption>
-    Earlier script revision: the registry value is the expected type, and PowerShell can parse the complete allow list.
+    The registry value is the expected type, and PowerShell can parse the complete allow list.
   </figcaption>
 </figure>
 
@@ -527,7 +523,7 @@ Confirm `extensions.allowed` appears in the applied-policy table. Check the non-
     alt="VS Code Policy Diagnostics report showing extensions.allowed under Applied Policy with the AllowedExtensions policy value."
   />
   <figcaption>
-    Earlier script revision: Policy Diagnostics confirms that VS Code read and applied the AllowedExtensions registry policy.
+    Policy Diagnostics confirms that VS Code read and applied the AllowedExtensions registry policy.
   </figcaption>
 </figure>
 
@@ -537,7 +533,7 @@ Confirm `extensions.allowed` appears in the applied-policy table. Check the non-
     alt="VS Code settings showing Extensions Allowed as managed by the organization with the approved extension list."
   />
   <figcaption>
-    Earlier script revision: VS Code marks the setting as managed and shows the allow list it parsed from the registry policy.
+    VS Code marks the setting as managed and shows the allow list it parsed from the registry policy.
   </figcaption>
 </figure>
 
@@ -553,7 +549,7 @@ Finally, test behavior:
     alt="VS Code Extensions view showing approved extensions available to install and unapproved extensions blocked with warning icons."
   />
   <figcaption>
-    Earlier script revision: approved extensions remain available. Unlisted extensions show a warning and cannot be installed.
+    Approved extensions remain available. Unlisted extensions show a warning and cannot be installed.
   </figcaption>
 </figure>
 
