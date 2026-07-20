@@ -1,0 +1,661 @@
+---
+title: "Manage VS Code Extensions with Intune Remediations"
+date: "2026-07-17"
+description: "Maintain a device-wide extension allow list for stable VS Code on Windows with Intune Remediations and verify enforcement in the editor."
+tags: ["vscode", "intune", "powershell", "windows", "remediations"]
+---
+
+<figure className="post-inline-figure">
+  <img
+    src="/images/posts/manage-vs-code-extensions-with-intune-remediations/unallowed-extension-banner.png"
+    alt="VS Code extension details showing that an extension cannot be installed because it is not in the allowed list."
+  />
+  <figcaption>
+    Earlier script revision: VS Code blocks an extension that is not in the managed allow list.
+  </figcaption>
+</figure>
+
+VS Code extensions run inside a tool that already has access to source code, terminals, credentials, and whatever else the developer can reach.
+
+Sending "please only install approved extensions" in Teams is not a control.
+
+VS Code gives us a real one: the `AllowedExtensions` enterprise policy. Intune Remediations give us a practical way to maintain it across managed Windows devices.
+
+> Why Remediations instead of imported ADMX templates? [VS Code writes its Windows policies](https://code.visualstudio.com/docs/enterprise/policies#_windows-group-policies) under `Software\Policies\Microsoft\VSCode`, but as of July 2026, [Windows blocks custom ADMX policies](https://learn.microsoft.com/en-us/windows/client-management/win32-and-centennial-app-policy-configuration#overview) from writing under `Software\Policies\Microsoft` unless the path is on its exception list. The same import-succeeds-but-device-application-fails behavior is documented in [this report on microsoft/vscode#229861](https://github.com/microsoft/vscode/issues/229861#issuecomment-3015268437). On my test device, it surfaced as `0x80070005` and a blocked-registry-key event; Remediations use Microsoft's documented fallback and write the registry value directly.
+
+The detection script checks the policy. The remediation script writes the expected value when it is missing or has drifted. VS Code reads the same registry policy it would have received through Group Policy.
+
+This tutorial writes the machine policy under HKLM. It applies to every VS Code user on the device, so assign it to device groups and treat the allow list as a device-wide decision.
+
+I am sticking to the stable Windows desktop client here. [VS Code Insiders ships a separate `VSCodeInsiders` policy template](https://github.com/microsoft/vscode/issues/235002), so this script does not manage it. If you manage Insiders, build and test a separate package from its shipped template. macOS and Linux use different policy formats, and extensions running on remote VS Code Server hosts need separate testing.
+
+## Know What The Policy Does
+
+The enterprise policy is named `AllowedExtensions`. VS Code exposes the result as `extensions.allowed`.
+
+Once the policy applies, it overrides the same setting at the default, user, and workspace levels. Editing `settings.json` does not bypass it.
+
+`AllowedExtensions` first appeared in VS Code 1.96, but [Windows multi-line policy support arrived in 1.98](https://code.visualstudio.com/updates/v1_98#_multi-line-support-for-allowed-extensions) after reports that the policy did not enforce in 1.96 and 1.97. Use a current supported stable release and validate the exact build in your pilot. With a valid allow list:
+
+- Listed extensions are allowed.
+- Unlisted extensions are blocked unless `"*": true` is present.
+- An installed extension that becomes blocked is disabled, not uninstalled.
+- The most specific selector wins: extension ID, then publisher, then `"*"`.
+- `true` allows stable and pre-release versions.
+- `"stable"` allows stable versions only.
+- An array allows only the exact versions listed. Version ranges are not supported.
+
+This controls permission, not installation. If an extension is mandatory, deploy it separately and use this policy to decide what is allowed to run.
+
+## Build The Allow List
+
+Inventory a representative set of developer devices first. Run the commands as each affected user; running them from an administrator account inventories the administrator, not everybody who uses the device.
+
+Start with the user's default profile:
+
+```powershell
+code --version
+code --list-extensions --show-versions
+```
+
+Then repeat the extension command for every named profile shown under **Profiles** > **Manage Profiles**:
+
+```powershell
+code --profile "Profile Name" --list-extensions --show-versions
+```
+
+The [`--profile` option](https://code.visualstudio.com/docs/configure/command-line#_working-with-extensions) is what makes the inventory profile-specific. Repeat the inventory across the users, roles, and projects in your pilot. One developer's default profile is not enough evidence for a device-wide deny-by-default policy.
+
+An extension ID uses `publisher.extension` format. You can also find it under **Marketplace Info** on the extension details page.
+
+This example blocks everything except the listed stable extensions:
+
+```json
+{
+  "*": false,
+  "ms-vscode.powershell": "stable",
+  "ms-python.python": "stable",
+  "dbaeumer.vscode-eslint": "stable",
+  "esbenp.prettier-vscode": "stable",
+  "github.copilot": "stable",
+  "github.copilot-chat": "stable"
+}
+```
+
+The `"*": false` entry is redundant once the setting exists, but I keep it because the intent is obvious.
+
+You can allow an entire publisher instead:
+
+```json
+{
+  "*": false,
+  "microsoft": "stable",
+  "github": "stable"
+}
+```
+
+Publisher rules are easier to maintain but trust more extensions. Individual IDs are tighter but create an approval queue. Pick that tradeoff deliberately.
+
+`"microsoft"` is a special publisher selector. It includes Microsoft-published extensions even when their extension IDs use prefixes such as `ms-python` or `ms-vscode`, so it is broader than the name first suggests.
+
+Also inspect extension dependencies and extension-pack members. Allowing a pack while blocking everything it installs is a reliable way to create a ticket that only says "VS Code broken."
+
+## Confirm Remediations Requirements
+
+Before copying scripts, confirm the current [Remediations prerequisites](https://learn.microsoft.com/en-us/intune/device-management/tools/deploy-remediations#prerequisites):
+
+- Devices are Microsoft Entra joined or hybrid joined.
+- Devices are Intune MDM-enrolled on Windows Professional, Enterprise, or Education, or are co-managed.
+- Devices are not running Windows in S mode.
+- The Intune Management Extension is version 1.58.103.0 or later.
+- Users of the devices have Windows Enterprise E3/E5, Education A3/A5, or VDA per-user licensing.
+- Your admin role has the required Device configurations permissions. An Intune Service Administrator must confirm licensing before Remediations are used for the first time.
+
+The Intune Management Extension installs and updates automatically when a qualifying Remediation is assigned, but confirm its version on the pilot instead of assuming the update already arrived.
+
+These scripts check the registry, not the VS Code installation or its version. Scope the package to a device group running a current supported VS Code release, record the exact build in your pilot evidence, and test policy behavior in that build. Do not use 1.96 or 1.97 as the minimum: [Microsoft confirmed that their Windows policy handling predated the multi-text fix](https://github.com/microsoft/vscode/issues/240834#issuecomment-2696661780). A device can have a matching registry value without enforcing anything.
+
+The script shape is inspired by [this workaround from kseyoss](https://github.com/microsoft/vscode/issues/242922#issuecomment-3928062264): define the allow list as a PowerShell hashtable, convert it to JSON, create the policy key, and write the value. I added matching detection and read-back verification so Intune can decide whether the registry needs repair and confirm that the write succeeded.
+
+The linked sample writes a regular string. I use `REG_MULTI_SZ` because the shipped VS Code ADMX defines `AllowedExtensions` as `multiText`, and that is the type the endpoint reports after applying the policy.
+
+The template used for this post contains:
+
+```xml
+<multiText id="AllowedExtensions" valueName="AllowedExtensions" required="true" />
+```
+
+The endpoint screenshots later in this post were captured with the earlier JSON-literal version of these scripts. The current hashtable version produces the same registry payload and passes parsing, static analysis, and serialization tests, but it has not been rerun on that endpoint. The older images are labeled where they appear. Before a broad assignment, run the exact downloadable detection and remediation files through the Intune pilot, record the stable VS Code build, restart VS Code, and capture fresh registry and Policy Diagnostics evidence. Test the cleanup file separately during a retirement rehearsal. Until those checks pass, treat this as a tested script design, not a production-validated deployment.
+
+## Detection Script
+
+Download [`Detect-VSCodeAllowedExtensions.ps1`](/scripts/vscode-allowed-extensions/Detect-VSCodeAllowedExtensions.ps1), or copy the script below.
+
+Replace the example `$AllowedExtensions` hashtable with your approved list. Detection validates the rule types, then exits `0` when the registry value has the correct type and content. It exits `1` when remediation needs to run.
+
+```powershell
+#Requires -Version 5.1
+
+[CmdletBinding()]
+param()
+
+function ConvertTo-VSCodeAllowedExtensionsJson {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [System.Collections.IDictionary]$AllowedExtensions
+    )
+
+    $VersionPattern = '^\d+\.\d+\.\d+(-.*)?(@.+)?$'
+
+    foreach ($Entry in $AllowedExtensions.GetEnumerator()) {
+        $Selector = [string]$Entry.Key
+        $Rule = $Entry.Value
+
+        if ([string]::IsNullOrWhiteSpace($Selector)) {
+            throw 'Extension selectors cannot be empty.'
+        }
+
+        if ($Selector -ne '*' -and $Selector.Contains('*')) {
+            throw "Selector '$Selector' contains an unsupported wildcard."
+        }
+
+        if ($Selector -eq '*' -and $Rule -isnot [bool]) {
+            throw "Selector '*' must use a Boolean rule."
+        }
+
+        if ($Rule -is [bool]) {
+            continue
+        }
+
+        if ($Rule -is [string]) {
+            if ($Rule -ceq 'stable') {
+                continue
+            }
+
+            throw "Selector '$Selector' must use the exact string 'stable', not '$Rule'."
+        }
+
+        if ($Rule -is [System.Array]) {
+            if (-not $Selector.Contains('.')) {
+                throw "Exact-version arrays require a full extension ID, not publisher '$Selector'."
+            }
+
+            $Versions = @($Rule)
+            if ($Versions.Count -eq 0) {
+                throw "Selector '$Selector' has an empty version array."
+            }
+
+            foreach ($Version in $Versions) {
+                if ($Version -isnot [string] -or $Version -cnotmatch $VersionPattern) {
+                    throw "Selector '$Selector' contains an invalid exact version."
+                }
+            }
+
+            continue
+        }
+
+        throw "Selector '$Selector' must use a Boolean, 'stable', or an exact-version array."
+    }
+
+    return ($AllowedExtensions | ConvertTo-Json -Compress -Depth 10)
+}
+
+$PolicyPath = 'HKLM:\SOFTWARE\Policies\Microsoft\VSCode'
+$PolicyName = 'AllowedExtensions'
+$AllowedExtensions = [ordered]@{
+    '*'                       = $false
+    'ms-vscode.powershell'    = 'stable'
+    'ms-python.python'        = 'stable'
+    'dbaeumer.vscode-eslint'  = 'stable'
+    'esbenp.prettier-vscode'  = 'stable'
+    'github.copilot'          = 'stable'
+    'github.copilot-chat'     = 'stable'
+}
+
+try {
+    $AllowedExtensionsJson = ConvertTo-VSCodeAllowedExtensionsJson -AllowedExtensions $AllowedExtensions
+}
+catch {
+    Write-Output "Desired VS Code extension configuration is invalid: $($_.Exception.Message)"
+    exit 1
+}
+
+try {
+    if (-not (Test-Path -LiteralPath $PolicyPath)) {
+        Write-Output 'VS Code extension policy is missing.'
+        exit 1
+    }
+
+    $RegistryKey = Get-Item -LiteralPath $PolicyPath -ErrorAction Stop
+    $ValueKind = $RegistryKey.GetValueKind($PolicyName)
+
+    if ($ValueKind -ne [Microsoft.Win32.RegistryValueKind]::MultiString) {
+        Write-Output "VS Code extension policy has the wrong registry type: $ValueKind."
+        exit 1
+    }
+
+    $GetValue = @{
+        LiteralPath = $PolicyPath
+        Name        = $PolicyName
+        ErrorAction = 'Stop'
+    }
+    $Value = Get-ItemPropertyValue @GetValue
+
+    $CurrentJson = [string]::Join(
+        [Environment]::NewLine,
+        [string[]]$Value
+    )
+    $CurrentJson = ($CurrentJson | ConvertFrom-Json -ErrorAction Stop) |
+        ConvertTo-Json -Compress -Depth 10
+
+    if ($CurrentJson -ceq $AllowedExtensionsJson) {
+        Write-Output 'VS Code extension policy registry value matches the desired configuration.'
+        exit 0
+    }
+
+    Write-Output 'VS Code extension policy has drifted.'
+    exit 1
+}
+catch {
+    Write-Output "VS Code extension policy is missing or invalid: $($_.Exception.Message)"
+    exit 1
+}
+```
+
+## Remediation Script
+
+Download [`Remediate-VSCodeAllowedExtensions.ps1`](/scripts/vscode-allowed-extensions/Remediate-VSCodeAllowedExtensions.ps1), or copy the script below.
+
+Keep `$AllowedExtensions` identical in both scripts. The remediation converts the hashtable to compressed JSON, writes it as `REG_MULTI_SZ`, and reads it back before reporting success.
+
+```powershell
+#Requires -Version 5.1
+
+[CmdletBinding()]
+param()
+
+function ConvertTo-VSCodeAllowedExtensionsJson {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [System.Collections.IDictionary]$AllowedExtensions
+    )
+
+    $VersionPattern = '^\d+\.\d+\.\d+(-.*)?(@.+)?$'
+
+    foreach ($Entry in $AllowedExtensions.GetEnumerator()) {
+        $Selector = [string]$Entry.Key
+        $Rule = $Entry.Value
+
+        if ([string]::IsNullOrWhiteSpace($Selector)) {
+            throw 'Extension selectors cannot be empty.'
+        }
+
+        if ($Selector -ne '*' -and $Selector.Contains('*')) {
+            throw "Selector '$Selector' contains an unsupported wildcard."
+        }
+
+        if ($Selector -eq '*' -and $Rule -isnot [bool]) {
+            throw "Selector '*' must use a Boolean rule."
+        }
+
+        if ($Rule -is [bool]) {
+            continue
+        }
+
+        if ($Rule -is [string]) {
+            if ($Rule -ceq 'stable') {
+                continue
+            }
+
+            throw "Selector '$Selector' must use the exact string 'stable', not '$Rule'."
+        }
+
+        if ($Rule -is [System.Array]) {
+            if (-not $Selector.Contains('.')) {
+                throw "Exact-version arrays require a full extension ID, not publisher '$Selector'."
+            }
+
+            $Versions = @($Rule)
+            if ($Versions.Count -eq 0) {
+                throw "Selector '$Selector' has an empty version array."
+            }
+
+            foreach ($Version in $Versions) {
+                if ($Version -isnot [string] -or $Version -cnotmatch $VersionPattern) {
+                    throw "Selector '$Selector' contains an invalid exact version."
+                }
+            }
+
+            continue
+        }
+
+        throw "Selector '$Selector' must use a Boolean, 'stable', or an exact-version array."
+    }
+
+    return ($AllowedExtensions | ConvertTo-Json -Compress -Depth 10)
+}
+
+$PolicyPath = 'HKLM:\SOFTWARE\Policies\Microsoft\VSCode'
+$PolicyName = 'AllowedExtensions'
+$AllowedExtensions = [ordered]@{
+    '*'                       = $false
+    'ms-vscode.powershell'    = 'stable'
+    'ms-python.python'        = 'stable'
+    'dbaeumer.vscode-eslint'  = 'stable'
+    'esbenp.prettier-vscode'  = 'stable'
+    'github.copilot'          = 'stable'
+    'github.copilot-chat'     = 'stable'
+}
+
+try {
+    $AllowedExtensionsJson = ConvertTo-VSCodeAllowedExtensionsJson -AllowedExtensions $AllowedExtensions
+
+    if (-not (Test-Path -LiteralPath $PolicyPath)) {
+        $null = New-Item -Path $PolicyPath -Force -ErrorAction Stop
+    }
+
+    $Property = @{
+        LiteralPath  = $PolicyPath
+        Name         = $PolicyName
+        PropertyType = 'MultiString'
+        Value        = [string[]]$AllowedExtensionsJson
+        Force        = $true
+        ErrorAction  = 'Stop'
+    }
+    $null = New-ItemProperty @Property
+
+    $RegistryKey = Get-Item -LiteralPath $PolicyPath -ErrorAction Stop
+    $ValueKind = $RegistryKey.GetValueKind($PolicyName)
+    if ($ValueKind -ne [Microsoft.Win32.RegistryValueKind]::MultiString) {
+        throw "Read-back returned registry type '$ValueKind'."
+    }
+
+    $GetValue = @{
+        LiteralPath = $PolicyPath
+        Name        = $PolicyName
+        ErrorAction = 'Stop'
+    }
+    $Value = Get-ItemPropertyValue @GetValue
+
+    $CurrentJson = [string]::Join(
+        [Environment]::NewLine,
+        [string[]]$Value
+    )
+    $CurrentJson = ($CurrentJson | ConvertFrom-Json -ErrorAction Stop) |
+        ConvertTo-Json -Compress -Depth 10
+
+    if ($CurrentJson -cne $AllowedExtensionsJson) {
+        throw 'Registry read-back does not match the requested policy.'
+    }
+
+    Write-Output 'VS Code extension policy registry value was updated and verified.'
+    exit 0
+}
+catch {
+    Write-Error "Failed to update VS Code extension policy: $($_.Exception.Message)"
+    exit 1
+}
+```
+
+The scripts compare compressed JSON strings. The same rules in a different property order count as drift, and remediation rewrites them into the expected order. That is fine here because these scripts own the value.
+
+The validation is not decoration. VS Code documents Booleans, the exact lowercase string `"stable"`, and arrays of exact versions. Its current policy evaluation can treat an unrecognized scalar as allowed, so a typo such as `"Stable"` can weaken the control while the registry still looks healthy. The scripts reject that before writing anything. See the [documented value formats](https://code.visualstudio.com/docs/enterprise/extensions#_configure-allowed-extensions) and [current evaluation logic](https://github.com/microsoft/vscode/blob/main/src/vs/platform/extensionManagement/common/allowedExtensionsService.ts#L98-L135).
+
+`"stable"` is a release-channel decision, not approval of one reviewed package. VS Code automatically updates enabled extensions by default, so this sample allows future stable releases of every listed extension ID. If each extension version needs approval, use exact-version arrays. You can also govern `ExtensionsAutoUpdate` or `ExtensionsAutoUpdateDelay` through a separately tested policy mechanism. This tutorial manages `AllowedExtensions` only.
+
+## Create The Script Package
+
+Save both scripts as UTF-8, then go to:
+
+**Devices** > **Manage devices** > **Scripts and remediations** > **Create script package**
+
+Use a clear name:
+
+```text
+Win - VS Code - Allowed Extensions - Pilot
+```
+
+<figure className="post-inline-figure">
+  <img
+    src="/images/posts/manage-vs-code-extensions-with-intune-remediations/intune-remediation-basics.png"
+    alt="Intune custom script package Basics page with a VS Code allowed extensions pilot name and description."
+  />
+  <figcaption>
+    Earlier script revision: give the package a name and description that make its scope obvious in reports.
+  </figcaption>
+</figure>
+
+Upload the detection and remediation scripts, then configure:
+
+- **Run this script using the logged-on credentials**: No
+- **Enforce script signature check**: No for this unsigned example
+- **Run script in 64-bit PowerShell**: Yes
+
+SYSTEM context gives the remediation permission to write the machine policy. I use the 64-bit host to keep this package consistent with my other endpoint scripts, but it is optional here: `HKLM\SOFTWARE\Policies` is [shared across the 32-bit and 64-bit registry views](https://learn.microsoft.com/en-us/windows/win32/winprog64/shared-registry-keys).
+
+For production, follow your script-signing standard. If you enable signature enforcement, sign both scripts, trust the publisher certificate on the device, and save them as UTF-8 without a byte-order mark.
+
+<figure className="post-inline-figure">
+  <img
+    src="/images/posts/manage-vs-code-extensions-with-intune-remediations/intune-remediation-settings.png"
+    alt="Intune Remediations settings with the VS Code detection and remediation scripts uploaded, logged-on credentials disabled, signature enforcement disabled, and 64-bit PowerShell enabled."
+  />
+  <figcaption>
+    This portal capture shows the earlier JSON-literal scripts. Use the downloadable hashtable scripts above. The SYSTEM, signature, and 64-bit settings shown here are unchanged.
+  </figcaption>
+</figure>
+
+Make sure no other configuration owns the same registry value. Check imported administrative-template policies, domain Group Policy, Configuration Manager baselines, platform scripts, and other Remediations. Remove competing assignments before the pilot. One owner is enough.
+
+Assign the package to a small device group. Do not start with **All devices** just because the script is short.
+
+Use a daily schedule during the pilot. A shorter interval only repairs registry drift sooner; it does not make a running VS Code process reload the policy.
+
+[VS Code applies Windows policy the next time it starts](https://code.visualstudio.com/docs/enterprise/policies#_windows-group-policies). These scripts deliberately do not close a user's editor, so policy changes and repairs require every VS Code process to restart before enforcement changes. Remediations are eventual enforcement, not an immediate or tamper-proof boundary against a local administrator.
+
+<figure className="post-inline-figure">
+  <img
+    src="/images/posts/manage-vs-code-extensions-with-intune-remediations/intune-remediation-review.png"
+    alt="Intune custom script Review and create page showing the VS Code package settings and a daily pilot-group assignment."
+  />
+  <figcaption>
+    Earlier script revision: review the execution settings and confirm the assignment is still limited to the pilot group before creating the package.
+  </figcaption>
+</figure>
+
+## Prove It On The Endpoint
+
+> Evidence note: the screenshots in this section prove the earlier JSON-literal revision. Replace them with captures from the exact downloadable scripts and record the stable VS Code build before treating the current revision as production-validated.
+
+The first detection reports a registry issue and exits `1`. Intune then runs remediation and immediately runs detection again. **Issue fixed** means remediation returned success and post-remediation detection returned `0`; both scripts verified the desired registry state. It still does not prove VS Code accepted the policy. A later scheduled run with no detected issue proves the registry stayed in the desired state. Policy Diagnostics and behavior testing prove application enforcement.
+
+<figure className="post-inline-figure">
+  <img
+    src="/images/posts/manage-vs-code-extensions-with-intune-remediations/remediation-device-status.png"
+    alt="Intune Remediations device status showing detection with issues and remediation status Issue fixed."
+  />
+  <figcaption>
+    Earlier script revision: detection found the missing policy, remediation wrote it, post-remediation detection verified the registry state, and Intune recorded <strong>Issue fixed</strong>.
+  </figcaption>
+</figure>
+
+Check the registry value directly:
+
+```powershell
+$PolicyPath = 'HKLM:\SOFTWARE\Policies\Microsoft\VSCode'
+$PolicyName = 'AllowedExtensions'
+
+$RegistryKey = Get-Item -LiteralPath $PolicyPath -ErrorAction Stop
+$RegistryKey.GetValueKind($PolicyName)
+
+$GetValue = @{
+    LiteralPath = $PolicyPath
+    Name        = $PolicyName
+    ErrorAction = 'Stop'
+}
+$Value = Get-ItemPropertyValue @GetValue
+
+$Json = [string]::Join([Environment]::NewLine, [string[]]$Value)
+$Json | ConvertFrom-Json
+```
+
+The type should be `MultiString`, and the parsed object should match your allow list.
+
+<figure className="post-inline-figure">
+  <img
+    src="/images/posts/manage-vs-code-extensions-with-intune-remediations/terminal-output.png"
+    alt="PowerShell terminal showing the VS Code AllowedExtensions registry value as MultiString and the parsed extension allow list."
+  />
+  <figcaption>
+    Earlier script revision: the registry value is the expected type, and PowerShell can parse the complete allow list.
+  </figcaption>
+</figure>
+
+Close every VS Code process and open it again. Then run this command from the Command Palette:
+
+```text
+Developer: Policy Diagnostics
+```
+
+Confirm `extensions.allowed` appears in the applied-policy table. Check the non-applied table if it does not. Review the report before sharing it because it can include account, session, and extension-access details.
+
+<figure className="post-inline-figure">
+  <img
+    src="/images/posts/manage-vs-code-extensions-with-intune-remediations/policy-diagnostics.png"
+    alt="VS Code Policy Diagnostics report showing extensions.allowed under Applied Policy with the AllowedExtensions policy value."
+  />
+  <figcaption>
+    Earlier script revision: Policy Diagnostics confirms that VS Code read and applied the AllowedExtensions registry policy.
+  </figcaption>
+</figure>
+
+<figure className="post-inline-figure">
+  <img
+    src="/images/posts/manage-vs-code-extensions-with-intune-remediations/extensions-allowed-managed-setting.png"
+    alt="VS Code settings showing Extensions Allowed as managed by the organization with the approved extension list."
+  />
+  <figcaption>
+    Earlier script revision: VS Code marks the setting as managed and shows the allow list it parsed from the registry policy.
+  </figcaption>
+</figure>
+
+Finally, test behavior:
+
+1. Install or enable an approved extension.
+2. Attempt to install an unlisted extension.
+3. Confirm a previously installed but newly blocked extension becomes disabled.
+
+<figure className="post-inline-figure">
+  <img
+    src="/images/posts/manage-vs-code-extensions-with-intune-remediations/unallowed-extensions-list.png"
+    alt="VS Code Extensions view showing approved extensions available to install and unapproved extensions blocked with warning icons."
+  />
+  <figcaption>
+    Earlier script revision: approved extensions remain available. Unlisted extensions show a warning and cannot be installed.
+  </figcaption>
+</figure>
+
+If the registry value exists but VS Code does not apply it, run **Show Window Log** and look for policy parsing errors.
+
+If the script package fails, inspect its portal output and start with `C:\ProgramData\Microsoft\IntuneManagementExtension\Logs\HealthScripts.log`. Use `IntuneManagementExtension.log` for policy retrieval and reporting, and `AgentExecutor.log` for general PowerShell execution details. Microsoft documents the purpose of each file in the [Intune Management Extension log reference](https://learn.microsoft.com/en-us/intune/device-management/tools/management-extension-windows#intune-management-extension-logs).
+
+## Keep Changes Boring
+
+Every operational allow-list change has two copies: one in detection and one in remediation. Copy the complete `$AllowedExtensions` block between them and diff the scripts before upload. If the two blocks disagree, detection and remediation can loop forever.
+
+Exact version pins create a maintenance queue. If you allow only `3.0.0`, version `3.0.1` stays blocked until somebody approves it. That may be the right control, but it still needs an owner.
+
+Publisher rules reduce maintenance and widen trust. Extension-ID rules narrow trust and increase approvals. Neither choice manages itself.
+
+## Remove The Policy Later
+
+Do not run cleanup while the enforcement package can still execute. Detection will see the missing value and put it back.
+
+Retire the control in this order:
+
+1. Exclude the retirement devices or remove the enforcement assignment.
+2. Trigger an IME check-in from **Company Portal** > **Settings** > **Sync**, or restart the `IntuneManagementExtension` service. The **Sync** action in the Intune admin center only triggers MDM check-in, not IME check-in.
+3. Search `IntuneManagementExtension.log` by package ID and confirm the assignment removal was processed. A policy request by itself is not proof. If you cannot find an explicit removal, keep the device online through the package's next former run time and confirm `HealthScripts.log` shows no execution before continuing.
+4. Run the cleanup script once as SYSTEM through an Intune platform script or another approved device-management channel.
+5. Confirm the value is absent immediately after cleanup:
+
+```powershell
+$PolicyPath = 'HKLM:\SOFTWARE\Policies\Microsoft\VSCode'
+$RegistryKey = Get-Item -LiteralPath $PolicyPath -ErrorAction SilentlyContinue
+$null -eq $RegistryKey -or $RegistryKey.GetValueNames() -notcontains 'AllowedExtensions'
+```
+
+6. Before declaring retirement complete, recheck after the package's next former run opportunity, unless the log showed an explicit removal by package ID. The command must still return `True`, and `HealthScripts.log` must not show another execution. If the value returns, the old assignment is still active somewhere.
+7. Close every VS Code process and reopen it.
+
+Removing the assignment alone does not remove the registry value. Download [`Remove-VSCodeAllowedExtensions.ps1`](/scripts/vscode-allowed-extensions/Remove-VSCodeAllowedExtensions.ps1), or copy the idempotent script below.
+
+```powershell
+#Requires -Version 5.1
+
+[CmdletBinding()]
+param()
+
+$PolicyPath = 'HKLM:\SOFTWARE\Policies\Microsoft\VSCode'
+$PolicyName = 'AllowedExtensions'
+
+try {
+    if (Test-Path -LiteralPath $PolicyPath) {
+        $RegistryKey = Get-Item -LiteralPath $PolicyPath -ErrorAction Stop
+
+        if ($RegistryKey.GetValueNames() -contains $PolicyName) {
+            $RemoveValue = @{
+                LiteralPath = $PolicyPath
+                Name        = $PolicyName
+                ErrorAction = 'Stop'
+            }
+            Remove-ItemProperty @RemoveValue
+        }
+    }
+
+    Write-Output 'VS Code extension policy registry value is absent.'
+    exit 0
+}
+catch {
+    Write-Error "Failed to remove VS Code extension policy: $($_.Exception.Message)"
+    exit 1
+}
+```
+
+## Rollout Checklist
+
+- Use a current supported stable VS Code release and record the exact build tested. Do not use 1.96 or 1.97 as the Windows baseline. Handle Insiders separately.
+- Scope the package to confirmed VS Code devices and remember that HKLM affects every user.
+- Inventory each affected user and every named profile, plus dependencies and extension-pack members.
+- Confirm the device is not in S mode and IME is version 1.58.103.0 or later.
+- Keep the `$AllowedExtensions` hashtable identical in both scripts.
+- Run the scripts as SYSTEM. The 64-bit host is optional for this shared registry path.
+- Start with a pilot device group, not **All devices**.
+- Confirm the registry value is `REG_MULTI_SZ`.
+- Run the exact downloaded scripts through Intune, then run **Developer: Policy Diagnostics**.
+- Test one allowed and one blocked extension.
+- Restart every VS Code process after policy changes.
+- Manage required extension installation separately.
+- Decide whether future stable extension updates are trusted or whether exact versions and an auto-update policy are required.
+- Give publisher and version approvals an owner.
+- Stop the enforcement assignment before running cleanup.
+- Confirm the registry value stays absent through the retirement gate.
+
+After the exact scripts pass your endpoint pilot, Remediations provide a practical way to keep the VS Code extension policy where the application expects it. Intune registry status alone is not proof that VS Code enforced the rule.
+
+## References
+
+- [VS Code: Centrally manage settings with policies](https://code.visualstudio.com/docs/enterprise/policies)
+- [VS Code: Manage extensions in enterprise environments](https://code.visualstudio.com/docs/enterprise/extensions)
+- [Windows: Win32 app ADMX policy ingestion restrictions](https://learn.microsoft.com/en-us/windows/client-management/win32-and-centennial-app-policy-configuration#overview)
+- [Microsoft Intune: Use Remediations](https://learn.microsoft.com/en-us/intune/device-management/tools/deploy-remediations)
+- [Microsoft Intune: Management Extension logs](https://learn.microsoft.com/en-us/intune/device-management/tools/management-extension-windows#intune-management-extension-logs)
+- [VS Code: Command-line extension inventory by profile](https://code.visualstudio.com/docs/configure/command-line#_working-with-extensions)
+- [VS Code: Extension auto-update behavior](https://code.visualstudio.com/docs/configure/extensions/extension-marketplace#_extension-auto-update)
+- [VS Code 1.98: Windows multi-line AllowedExtensions support](https://code.visualstudio.com/updates/v1_98#_multi-line-support-for-allowed-extensions)
+- [VS Code issue: Intune ADMX application failure](https://github.com/microsoft/vscode/issues/229861#issuecomment-3015268437)
+- [VS Code issue: Windows AllowedExtensions multi-text fix](https://github.com/microsoft/vscode/issues/240834#issuecomment-2696661780)
+- [VS Code issue: Insiders uses separate policy templates](https://github.com/microsoft/vscode/issues/235002)
+- [VS Code issue: PowerShell workaround that inspired these scripts](https://github.com/microsoft/vscode/issues/242922#issuecomment-3928062264)

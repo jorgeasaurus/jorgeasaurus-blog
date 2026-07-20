@@ -222,6 +222,80 @@ const postImages: Record<string, PostImageSet> = {
       alt: '',
     },
   ],
+  'use-cpm-with-openrouter-models': [
+    {
+      src: '/images/posts/use-cpm-with-openrouter-models/cpm-repo.png',
+      alt: 'The cpm repository on GitHub showing the one-command installer for bash, zsh, and PowerShell.',
+      caption: 'cpm ships a one-command installer and lives as a sourced shell function.',
+    },
+    {
+      src: '/images/posts/use-cpm-with-openrouter-models/openrouter-models.png',
+      alt: "OpenRouter model catalog listing hundreds of models with context windows and provider badges.",
+      caption: 'OpenRouter exposes a huge model catalog through one OpenAI-compatible endpoint.',
+    },
+    {
+      src: '/images/posts/use-cpm-with-openrouter-models/openrouter-keys.png',
+      alt: 'The OpenRouter API Keys page where you create and copy a new key.',
+      caption: 'Create and copy an OpenRouter API key here.',
+    },
+    {
+      src: '/images/posts/use-cpm-with-openrouter-models/copilotterminal.png',
+      alt: 'The GitHub Copilot CLI running against a BYOK model selected through cpm.',
+      caption: 'After cpm selects a model, copilot runs against that BYOK model in the same shell.',
+    },
+  ],
+  'manage-vs-code-extensions-with-intune-remediations': [
+    {
+      src: '/images/posts/manage-vs-code-extensions-with-intune-remediations/extensions-allowed-managed-setting.png',
+      alt: 'PLACEHOLDER: VS Code extension allow-list managed setting. Replace with your own screenshot.',
+      caption: 'PLACEHOLDER — replace with your own screenshot.',
+    },
+    {
+      src: '/images/posts/manage-vs-code-extensions-with-intune-remediations/intune-remediation-basics.png',
+      alt: 'PLACEHOLDER: Intune remediation basics. Replace with your own screenshot.',
+      caption: 'PLACEHOLDER — replace with your own screenshot.',
+    },
+    {
+      src: '/images/posts/manage-vs-code-extensions-with-intune-remediations/intune-remediation-review.png',
+      alt: 'PLACEHOLDER: Intune remediation review. Replace with your own screenshot.',
+      caption: 'PLACEHOLDER — replace with your own screenshot.',
+    },
+    {
+      src: '/images/posts/manage-vs-code-extensions-with-intune-remediations/intune-remediation-settings.png',
+      alt: 'PLACEHOLDER: Intune remediation settings. Replace with your own screenshot.',
+      caption: 'PLACEHOLDER — replace with your own screenshot.',
+    },
+    {
+      src: '/images/posts/manage-vs-code-extensions-with-intune-remediations/policy-diagnostics.png',
+      alt: 'PLACEHOLDER: VS Code policy diagnostics. Replace with your own screenshot.',
+      caption: 'PLACEHOLDER — replace with your own screenshot.',
+    },
+    {
+      src: '/images/posts/manage-vs-code-extensions-with-intune-remediations/remediation-device-status.png',
+      alt: 'PLACEHOLDER: Remediation device status. Replace with your own screenshot.',
+      caption: 'PLACEHOLDER — replace with your own screenshot.',
+    },
+    {
+      src: '/images/posts/manage-vs-code-extensions-with-intune-remediations/terminal-output.png',
+      alt: 'Terminal output showing the detection and remediation scripts running on a managed Windows device.',
+      caption: 'Detection and remediation output from a managed Windows device.',
+    },
+    {
+      src: '/images/posts/manage-vs-code-extensions-with-intune-remediations/unallowed-extension-banner.png',
+      alt: 'PLACEHOLDER: VS Code unallowed extension banner. Replace with your own screenshot.',
+      caption: 'PLACEHOLDER — replace with your own screenshot.',
+    },
+    {
+      src: '/images/posts/manage-vs-code-extensions-with-intune-remediations/unallowed-extensions-list.png',
+      alt: 'PLACEHOLDER: VS Code unallowed extensions list. Replace with your own screenshot.',
+      caption: 'PLACEHOLDER — replace with your own screenshot.',
+    },
+    {
+      src: '/images/posts/manage-vs-code-extensions-with-intune-remediations/socialcard.png',
+      alt: 'Social card for the VS Code extensions with Intune Remediations post.',
+      caption: 'Social card for the VS Code extensions post.',
+    },
+  ],
 }
 
 export default postImages
