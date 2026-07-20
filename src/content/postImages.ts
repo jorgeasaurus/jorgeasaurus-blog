@@ -247,33 +247,33 @@ const postImages: Record<string, PostImageSet> = {
   'manage-vs-code-extensions-with-intune-remediations': [
     {
       src: '/images/posts/manage-vs-code-extensions-with-intune-remediations/extensions-allowed-managed-setting.png',
-      alt: 'PLACEHOLDER: VS Code extension allow-list managed setting. Replace with your own screenshot.',
-      caption: 'PLACEHOLDER — replace with your own screenshot.',
+      alt: 'VS Code settings showing Extensions Allowed as managed by the organization with the approved extension list.',
+      caption: 'VS Code marks the setting as managed and shows the allow list it parsed from the registry policy.',
     },
     {
       src: '/images/posts/manage-vs-code-extensions-with-intune-remediations/intune-remediation-basics.png',
-      alt: 'PLACEHOLDER: Intune remediation basics. Replace with your own screenshot.',
-      caption: 'PLACEHOLDER — replace with your own screenshot.',
+      alt: 'Intune custom script package Basics page with a VS Code allowed extensions pilot name and description.',
+      caption: 'Give the package a name and description that make its scope obvious in reports.',
     },
     {
       src: '/images/posts/manage-vs-code-extensions-with-intune-remediations/intune-remediation-review.png',
-      alt: 'PLACEHOLDER: Intune remediation review. Replace with your own screenshot.',
-      caption: 'PLACEHOLDER — replace with your own screenshot.',
+      alt: 'Intune custom script Review and create page showing the VS Code package settings and a daily pilot-group assignment.',
+      caption: 'Review the execution settings and confirm the assignment is still limited to the pilot group before creating the package.',
     },
     {
       src: '/images/posts/manage-vs-code-extensions-with-intune-remediations/intune-remediation-settings.png',
-      alt: 'PLACEHOLDER: Intune remediation settings. Replace with your own screenshot.',
-      caption: 'PLACEHOLDER — replace with your own screenshot.',
+      alt: 'Intune Remediations settings with the VS Code detection and remediation scripts uploaded, logged-on credentials disabled, signature enforcement disabled, and 64-bit PowerShell enabled.',
+      caption: 'Upload the detection and remediation scripts, then configure the execution settings.',
     },
     {
       src: '/images/posts/manage-vs-code-extensions-with-intune-remediations/policy-diagnostics.png',
-      alt: 'PLACEHOLDER: VS Code policy diagnostics. Replace with your own screenshot.',
-      caption: 'PLACEHOLDER — replace with your own screenshot.',
+      alt: 'VS Code Policy Diagnostics report showing extensions.allowed under Applied Policy with the AllowedExtensions policy value.',
+      caption: 'Policy Diagnostics confirms that VS Code read and applied the AllowedExtensions registry policy.',
     },
     {
       src: '/images/posts/manage-vs-code-extensions-with-intune-remediations/remediation-device-status.png',
-      alt: 'PLACEHOLDER: Remediation device status. Replace with your own screenshot.',
-      caption: 'PLACEHOLDER — replace with your own screenshot.',
+      alt: 'Intune Remediations device status showing detection with issues and remediation status Issue fixed.',
+      caption: 'Detection found the missing policy, remediation wrote it, and Intune recorded Issue fixed.',
     },
     {
       src: '/images/posts/manage-vs-code-extensions-with-intune-remediations/terminal-output.png',
@@ -282,13 +282,13 @@ const postImages: Record<string, PostImageSet> = {
     },
     {
       src: '/images/posts/manage-vs-code-extensions-with-intune-remediations/unallowed-extension-banner.png',
-      alt: 'PLACEHOLDER: VS Code unallowed extension banner. Replace with your own screenshot.',
-      caption: 'PLACEHOLDER — replace with your own screenshot.',
+      alt: 'VS Code extension details showing that an extension cannot be installed because it is not in the allowed list.',
+      caption: 'VS Code blocks an extension that is not in the managed allow list.',
     },
     {
       src: '/images/posts/manage-vs-code-extensions-with-intune-remediations/unallowed-extensions-list.png',
-      alt: 'PLACEHOLDER: VS Code unallowed extensions list. Replace with your own screenshot.',
-      caption: 'PLACEHOLDER — replace with your own screenshot.',
+      alt: 'VS Code Extensions view showing approved extensions available to install and unapproved extensions blocked with warning icons.',
+      caption: 'Approved extensions remain available. Unlisted extensions show a warning and cannot be installed.',
     },
     {
       src: '/images/posts/manage-vs-code-extensions-with-intune-remediations/socialcard.png',
