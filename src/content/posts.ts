@@ -2,6 +2,34 @@ import { type PostMeta } from '../lib/posts'
 
 const posts: PostMeta[] = [
   {
+    slug: 'use-cpm-with-openrouter-models',
+    title: 'Use GitHub Copilot with Third-Party LLM Models',
+    date: '2026-07-19',
+    description:
+      'cpm is a one-command model switcher for the GitHub Copilot CLI BYOK mode. Point it at OpenRouter to flip between Claude, Gemini, Llama, and more without leaving your terminal.',
+    tags: ['github-copilot', 'cli', 'cpm', 'openrouter', 'byok', 'llm'],
+    socialImage: {
+      src: '/images/posts/use-cpm-with-openrouter-models/socialcard.png',
+      width: 1200,
+      height: 630,
+      type: 'image/png',
+    },
+  },
+  {
+    slug: 'manage-vs-code-extensions-with-intune-remediations',
+    title: 'Manage VS Code Extensions with Intune Remediations',
+    date: '2026-07-17',
+    description:
+      'Maintain a device-wide extension allow list for stable VS Code on Windows with Intune Remediations and verify enforcement in the editor.',
+    tags: ['vscode', 'intune', 'powershell', 'windows', 'remediations'],
+    socialImage: {
+      src: '/images/posts/manage-vs-code-extensions-with-intune-remediations/socialcard.png',
+      width: 1200,
+      height: 630,
+      type: 'image/png',
+    },
+  },
+  {
     slug: 'minimize-autopilot-device-preparation-provisioning-time',
     title: 'Minimize Provisioning Time with Autopilot Device Preparation',
     date: '2026-07-10',

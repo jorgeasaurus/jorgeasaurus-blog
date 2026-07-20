@@ -1,0 +1,155 @@
+---
+title: "Use GitHub Copilot with Third-Party LLM Models"
+date: "2026-07-19"
+description: "cpm is a one-command model switcher for the GitHub Copilot CLI's BYOK mode. Here's how to point it at OpenRouter so you can hop between Claude, Gemini, Llama, and more without leaving your terminal."
+tags: ["github-copilot", "cli", "cpm", "openrouter", "byok", "llm"]
+---
+
+If you live in the [GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/use-byok-models), you already know the BYOK (Bring Your Own Key) feature lets you swap the default model for one you pay for directly. The catch is that it's driven by environment variables — `COPILOT_PROVIDER_BASE_URL`, `COPILOT_MODEL`, `COPILOT_PROVIDER_API_KEY`, and friends — and editing those by hand every time you want to try a different model gets old fast.
+
+Enter [`cpm`](https://github.com/burkeholland/cpm): a tiny shell function that gives you an interactive picker for your configured models and exports the right env vars into your current shell. It's built by Burke Holland ([GitHub](https://github.com/burkeholland) · [X/Twitter](https://x.com/burkeholland) · [YouTube](https://youtube.com/@burkeholland)), and it's exactly the kind of small quality-of-life tool that removes friction from a workflow you run dozens of times a day.
+
+This post walks through installing `cpm`, wiring it to [OpenRouter](https://openrouter.ai), and flipping between models on the fly.
+
+![The cpm repo on GitHub, which ships a one-command installer for bash, zsh, and PowerShell.](/images/posts/use-cpm-with-openrouter-models/cpm-repo.png)
+
+## Why OpenRouter?
+
+OpenRouter is an OpenAI-compatible gateway. You point one base URL at it (`https://openrouter.ai/api/v1`), hand it a single API key, and you get access to a huge catalog of models — Anthropic's Claude, Google's Gemini, Meta's Llama, DeepSeek, Qwen, and many more — all through the same chat completions API.
+
+That matters for `cpm` because the Copilot CLI's BYOK mode treats any OpenAI-compatible endpoint the same way. One provider entry in `cpm`, one API key, and you can switch between a dozen models with a couple of keystrokes.
+
+![OpenRouter's model catalog lists hundreds of models with context windows, pricing, and provider badges.](/images/posts/use-cpm-with-openrouter-models/openrouter-models.png)
+
+## Step 1: Install cpm
+
+`cpm` installs as a shell function (not a script) because it needs to set environment variables in *your* current shell session. That's why it gets `source`d rather than executed.
+
+**Bash / Zsh (macOS, Linux):**
+
+```bash
+git clone https://github.com/burkeholland/cpm.git && cd cpm && bash install.sh
+```
+
+**PowerShell (Windows, macOS, Linux):**
+
+```powershell
+git clone https://github.com/burkeholland/cpm.git; cd cpm; .\install.ps1
+```
+
+On bash/zsh, `cpm` depends on [`jq`](https://jqlang.github.io/jq/) for JSON parsing. Install it first if you don't have it:
+
+```bash
+# macOS
+brew install jq
+
+# Ubuntu / Debian
+sudo apt install jq
+
+# Fedora
+sudo dnf install jq
+```
+
+The installer copies the function to `~/.config/cpm/`, creates a default `models.json`, optionally imports any BYOK models you've already configured in VS Code, and adds a `source` line to your shell rc file. Restart your shell (or `source ~/.zshrc`) and you're ready.
+
+## Step 2: Get an OpenRouter API key
+
+Head to [openrouter.ai/keys](https://openrouter.ai/keys) and create a key. Copy it somewhere safe — you'll either paste it when `cpm` prompts you or set it as the `OPENROUTER_API_KEY` env var in your shell profile.
+
+Before you can call any model you also need to [add credits](https://openrouter.ai/credits) to your OpenRouter account. That's a feature, not a chore: OpenRouter only spends what you've prepaid, so a fixed balance is a hard spending guardrail — you can't accidentally blow past a budget the way you can on a card-on-file API. Top up what you're comfortable losing and the worst case is a 401 when the balance hits zero.
+
+![The OpenRouter API Keys page where you create and copy a new key.](/images/posts/use-cpm-with-openrouter-models/openrouter-keys.png)
+
+## Step 3: Add OpenRouter to models.json
+
+Open the config with `cpm edit`, or just edit `~/.config/cpm/models.json` directly. Add a provider block like this:
+
+```json
+{
+  "name": "OpenRouter",
+  "base_url": "https://openrouter.ai/api/v1",
+  "provider_type": "openai",
+  "api_key_env": "OPENROUTER_API_KEY",
+  "models": [
+    { "id": "anthropic/claude-3.5-sonnet", "max_prompt_tokens": 200000, "max_output_tokens": 8192 },
+    { "id": "google/gemini-2.0-pro-exp-02-05", "max_prompt_tokens": 2000000, "max_output_tokens": 8192 },
+    { "id": "meta-llama/llama-3.3-70b-instruct", "max_prompt_tokens": 128000, "max_output_tokens": 4096 },
+    { "id": "deepseek/deepseek-chat", "max_prompt_tokens": 128000, "max_output_tokens": 4096 }
+  ]
+}
+```
+
+A few notes on the fields:
+
+- `provider_type` is `openai` — OpenRouter speaks the OpenAI Chat Completions API, so this is the right type for any OpenAI-compatible endpoint.
+- `api_key_env` names the env var `cpm` reads the key from. `cpm` **never** stores the key in the config file; it only reads it from the environment.
+- `models[].id` is the exact model string OpenRouter expects. Copy these straight from [openrouter.ai/models](https://openrouter.ai/models) — the slugs change as providers release new versions, so don't trust the ones below to stay current.
+- `max_prompt_tokens` / `max_output_tokens` map to `COPILOT_PROVIDER_MAX_PROMPT_TOKENS` and `COPILOT_PROVIDER_MAX_OUTPUT_TOKENS`.
+
+Save the file. `cpm` reads it fresh on every invocation, so no restart needed.
+
+## Step 4: Switch models
+
+Run `cpm` with no arguments for the interactive picker:
+
+```bash
+cpm
+```
+
+```text
+Pick a model:
+
+  1) OpenRouter > anthropic/claude-3.5-sonnet
+  2) OpenRouter > google/gemini-2.0-pro-exp-02-05
+  3) OpenRouter > meta-llama/llama-3.3-70b-instruct
+  4) OpenRouter > deepseek/deepseek-chat
+
+Enter number (1-4): 2
+
+✓ Switched to OpenRouter > google/gemini-2.0-pro-exp-02-05
+```
+
+That single pick exports `COPILOT_PROVIDER_BASE_URL`, `COPILOT_PROVIDER_TYPE`, `COPILOT_PROVIDER_API_KEY`, `COPILOT_MODEL`, and the token limits into your current shell. The next `copilot` command you run uses that model.
+
+If the key isn't set yet, `cpm` will prompt you to paste it right there — and it saves it to your shell profile so you're not asked again.
+
+## Useful subcommands
+
+| Command      | What it does                                                                 |
+| ------------ | ---------------------------------------------------------------------------- |
+| `cpm`        | Interactive model picker                                                     |
+| `cpm status` | Show the active model and the env vars currently set                         |
+| `cpm list`   | List every configured model                                                 |
+| `cpm keys`   | Show API key status and set any missing keys                                 |
+| `cpm edit`   | Open `models.json` in `$EDITOR`                                              |
+| `cpm import` | Import BYOK models you configured in VS Code's `chatLanguageModels.json`     |
+| `cpm clear`  | Unset all Copilot provider env vars (back to the default GitHub-hosted model)|
+| `cpm help`   | Show help                                                                    |
+
+`cpm status` is the one I reach for most — it tells you at a glance whether the key env var is set and which model is live before you kick off a long-running agent task.
+
+## Step 5: Use the selected model
+
+Picking a model with `cpm` only sets the environment variables in your *current* shell — it doesn't launch anything. To actually use that model, switch first, then start the Copilot CLI in the same shell:
+
+```bash
+cpm          # pick OpenRouter > anthropic/claude-3.5-sonnet
+copilot      # now runs against the model cpm just selected
+```
+
+Running `copilot` on its own loads the default GitHub-hosted model; the `cpm` selection only takes effect because you exported those env vars into this shell session. Want to compare how Claude vs. Gemini handle the same refactor? Run `cpm` again to switch, then re-run `copilot` — no env-var editing, no shell restarts.
+
+![The GitHub Copilot CLI running against a BYOK model selected through cpm.](/images/posts/use-cpm-with-openrouter-models/copilotterminal.png)
+
+## Troubleshooting
+
+- **`cpm: command not found`** — your shell rc wasn't re-sourced. Run `source ~/.zshrc` (or `~/.bashrc`), or open a fresh terminal.
+- **Key warning when you pick a model** — the env var in `api_key_env` isn't set. Run `cpm keys` to paste it, or export it in your profile.
+- **jq errors on bash/zsh** — install `jq` (see Step 1). PowerShell needs no extra dependency.
+- **Wrong model id** — double-check the exact string on openrouter.ai/models. The id is what gets passed straight to the API.
+
+## Wrapping up
+
+`cpm` turns "I want to try a different model" from a copy-paste-env-var chore into a two-keystroke picker, and OpenRouter means one provider entry unlocks a whole catalog. If you're already in the Copilot CLI daily, this combo is a cheap, high-leverage upgrade to your setup.
+
+Hat tip to [Burke Holland](https://github.com/burkeholland) for building `cpm` — find him on [X/Twitter](https://x.com/burkeholland) and [YouTube](https://youtube.com/@burkeholland) for more Copilot and dev-tooling tips.
