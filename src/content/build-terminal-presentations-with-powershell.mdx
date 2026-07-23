@@ -1,0 +1,157 @@
+---
+title: "Build Terminal Presentations with PowerShell"
+date: "2026-07-23"
+description: "TerminalSlides lets you build a versionable presentation in PowerShell, deliver it from a terminal, and export the same deck for docs or CI."
+tags: ["powershell", "terminal", "automation", "scripting", "presentation"]
+---
+
+Most technical presentations begin life in a terminal and then get copied into a slide editor. The code changes. The screenshots go stale. The speaker notes disappear into a different file. By the time you present, the deck is a polite approximation of the thing you actually built.
+
+[TerminalSlides](https://github.com/jorgeasaurus/TerminalSlides) takes a different route: the presentation is a PowerShell object. You build it in code, keep it with the project, present it in a terminal, and export it when a static artifact is useful.
+
+It is not a replacement for every PowerPoint deck. It is a good fit for demos, architecture walkthroughs, release notes, incident reviews, and any talk where the code is the source of truth anyway.
+
+## Start With a Deck, Not a Slide Editor
+
+TerminalSlides is a cross-platform PowerShell module that renders ANSI slide decks directly in the terminal. Install it from the PowerShell Gallery:
+
+```powershell
+Install-Module TerminalSlides
+```
+
+It requires PowerShell 7.4 or later. The quickest way to see what it can do is the built-in feature tour:
+
+```powershell
+Start-TerminalSlidesDemo
+```
+
+For a real deck, create a presentation object and pipe it into slide definitions. The object is the important part. It lets you build a deck incrementally, inspect it, test it, export it, or show it without maintaining parallel copies.
+
+```powershell
+$deck = New-TerminalPresentation `
+    -Title 'Shipping the endpoint baseline' `
+    -Theme PowerShell `
+    -Author 'Jorge'
+
+$deck |
+    Add-TerminalSlide -Title 'What changed' -Content {
+        Add-SlideTitle 'The baseline is smaller'
+        Add-SlideBullet 'Removed five legacy Win32 apps'
+        Add-SlideBullet 'Moved browser policy to Settings Catalog' -RevealStep 1
+        Add-SlideBullet 'Cut OOBE blocking work to two apps' -RevealStep 2
+        Add-SlideNotes 'Pause here and explain why the old apps were removed.'
+    } |
+    Out-Null
+```
+
+That is enough for a useful first deck. `Add-TerminalSlide` owns the slide, and `-RevealStep` gives a bullet a later reveal without making animation state another thing to manage.
+
+## Add Structured Content When It Earns Its Space
+
+Charts and code work well when they support the point you are making, not when they are decoration:
+
+```powershell
+$deck | Add-TerminalSlide -Title 'What we measured' -Layout TwoColumn -Content {
+    Add-SlideChart -ChartType HorizontalBar -Data @(
+        @{ Label = 'App installs'; Value = 96 }
+        @{ Label = 'Policy success'; Value = 99 }
+        @{ Label = 'Device readiness'; Value = 91 }
+    ) -Region Left
+
+    Add-SlideCode -Language powershell -Code @'
+Get-MgDeviceManagementManagedDevice |
+    Where-Object ComplianceState -eq 'compliant'
+'@ -Region Right
+} | Out-Null
+```
+
+`Add-SlideChart`, `Add-SlideCode`, tables, quotes, boxes, subtitles, images, and speaker notes cover most technical decks without turning every slide into a terminal-art exercise.
+
+## Validate, Then Present the Same Object
+
+Validate the deck before a live session:
+
+```powershell
+Test-TerminalPresentation -Presentation $deck
+```
+
+When the deck is ready, show it:
+
+```powershell
+Show-TerminalPresentation -Presentation $deck
+```
+
+Interactive mode gives you normal presenter controls: arrow keys or <kbd>Space</kbd> to advance, <kbd>S</kbd> for notes, <kbd>O</kbd> for overview, <kbd>T</kbd> for a timer, and <kbd>Q</kbd> or <kbd>Escape</kbd> to quit. It also uses the alternate screen buffer when the terminal supports it, so a live demo does not leave a presentation-sized pile of ANSI output in your shell history.
+
+## Use Layouts for the Shape of the Story
+
+The useful abstraction is not “draw text at row 12.” It is “this is a code-focused slide” or “this is a two-column comparison.” TerminalSlides has layouts for title slides, content, sections, two and three columns, code, images, quotes, and blank canvas work.
+
+That keeps the presentation source intent-first:
+
+```powershell
+$deck | Add-TerminalSlide -Title 'Release flow' -Content {
+    Add-SlideDiagram -Content {
+        Add-SlideDiagramNode -Id Build -Label 'Build'
+        Add-SlideDiagramNode -Id Test -Label 'Validate'
+        Add-SlideDiagramNode -Id Deploy -Label 'Deploy'
+        Add-SlideDiagramEdge -From Build -To Test
+        Add-SlideDiagramEdge -From Test -To Deploy -Label 'Approved'
+    }
+} | Out-Null
+```
+
+## Export Is a First-Class Path
+
+Interactive presentation is only one output. The same deck can be exported to HTML, Markdown, plain text, ANSI, JSON, or PSD1.
+
+```powershell
+Export-TerminalPresentation `
+    -Presentation $deck `
+    -Format Html `
+    -Path ./shipping-baseline.html
+```
+
+An HTML export can go into release documentation. Markdown can become a pull-request artifact. PSD1 or JSON can preserve a deck for a later revision. A non-interactive session renders the slides sequentially instead of trying to take over an unavailable terminal.
+
+The workflow is simple: write the deck next to the project, run it locally, then export the artifact the audience needs.
+
+## Treat the Terminal as Part of the Environment
+
+Interactive mode requires a TTY and keyboard input. Use a terminal with ANSI truecolor support for the best result: Windows Terminal, iTerm2, modern Linux and macOS terminals, or the VS Code integrated terminal are sensible choices.
+
+Check the environment before a recording or live session:
+
+```powershell
+Get-TerminalPresentationCapability | Format-List
+```
+
+Images render as terminal cells by default. If your terminal supports [Sixel graphics](https://jorgeasaurus.github.io/TerminalSlides/guides/media/), you can opt into it:
+
+```powershell
+Show-TerminalPresentation -Presentation $deck -ImageRenderer Sixel
+```
+
+Do not discover a missing capability in front of an audience. Run the deck at the same approximate viewport and in the same terminal you plan to use. It is a presentation tool, but it is still a terminal tool.
+
+## Keep the Deck Near the Change
+
+The best use case is a deck that would otherwise be assembled from stale screenshots and memory:
+
+- A release walkthrough generated from the same script that produced the release.
+- An incident review whose charts and timeline are derived from the incident data.
+- An architecture demo that shows the real commands, not screenshots of commands.
+- A team update that needs speaker notes but does not need a heavy slide editor.
+
+## A Practical Checklist
+
+- Install [TerminalSlides from the PowerShell Gallery](https://www.powershellgallery.com/packages/TerminalSlides) on PowerShell 7.4+.
+- Start with `Start-TerminalSlidesDemo` before authoring a deck.
+- Keep the deck source in the repository with the feature, release, or runbook it explains.
+- Use layouts and semantic slide commands instead of positioning terminal text manually.
+- Add speaker notes where the explanation should not become slide content.
+- Run `Test-TerminalPresentation` before the live session.
+- Test the real terminal, viewport, and image mode before a live presentation.
+- Export HTML or Markdown when the audience needs an artifact instead of an interactive session.
+
+Build the explanation next to the work. Then present it in a terminal or export the artifact the audience needs.
