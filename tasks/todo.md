@@ -837,3 +837,13 @@ One code-looking Graph example should use the published Get-MgDeviceManagementMa
 ## Review
 
 All 10 PowerShell blocks parse. The revised representative deck validates at 80×24, 120×35, and 160×45 terminal viewports. Lint, production build, diff whitespace, and the rendered desktop route pass; the route includes the new structured-content and validation sections without horizontal overflow.
+
+# Add TerminalSlides Demo Video
+
+- [x] Add the existing module demo to the post's public assets.
+- [x] Embed the MP4 using the shared responsive video treatment.
+- [x] Verify the video source and rendered post route.
+
+## Review
+
+The copied H.264 MP4 matches the module asset by SHA-256. All 10 PowerShell blocks still parse, lint and production build pass, and the browser loads the video as video/mp4 with playback controls and a rendered 1280×720 frame.
