@@ -71,6 +71,15 @@ const featuredProjects: Project[] = [
 
 const repositoryProjects: Project[] = [
   {
+    name: 'TerminalSlides',
+    href: 'https://jorgeasaurus.github.io/TerminalSlides/',
+    kind: 'Presentation module',
+    description:
+      'Build, deliver, and export ANSI-rendered terminal slide decks with a cross-platform PowerShell module.',
+    tags: ['PowerShell', 'Terminal', 'ANSI'],
+    cta: 'Visit docs',
+  },
+  {
     name: 'InTUI',
     href: 'https://github.com/jorgeasaurus/InTUI',
     kind: 'Terminal UI',

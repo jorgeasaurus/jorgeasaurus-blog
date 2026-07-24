@@ -6,7 +6,19 @@
     <atom:link href="https://jorgeasaur.us/rss.xml" rel="self" type="application/rss+xml" />
     <description>Field notes on PowerShell, endpoint management, Microsoft Graph, and automation.</description>
     <language>en-us</language>
-    <lastBuildDate>Sun, 19 Jul 2026 12:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 23 Jul 2026 12:00:00 GMT</lastBuildDate>
+    <item>
+      <title>Build Terminal Presentations with PowerShell</title>
+      <link>https://jorgeasaur.us/build-terminal-presentations-with-powershell</link>
+      <guid isPermaLink="true">https://jorgeasaur.us/build-terminal-presentations-with-powershell</guid>
+      <pubDate>Thu, 23 Jul 2026 12:00:00 GMT</pubDate>
+      <description>TerminalSlides lets you build a versionable presentation in PowerShell, deliver it from a terminal, and export the same deck for docs or CI.</description>
+      <category>powershell</category>
+      <category>terminal</category>
+      <category>automation</category>
+      <category>scripting</category>
+      <category>presentation</category>
+    </item>
     <item>
       <title>Use GitHub Copilot with Third-Party LLM Models</title>
       <link>https://jorgeasaur.us/use-cpm-with-openrouter-models</link>

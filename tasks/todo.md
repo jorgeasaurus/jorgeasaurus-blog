@@ -807,3 +807,53 @@ Removed `entra-backup-and-recovery-is-not-a-tenant-strategy` from blog metadata,
 ## Review
 
 Removed the retired Intune Graph post from content, metadata, images, support script files, local Graph context files, feed, sitemap, and prior stale task notes. Verified `npm run lint`, `npm run build`, exact stale-reference search, and `git diff --check`.
+# Write TerminalSlides Module Post
+
+- [x] Inspect blog conventions, project guidance, and TerminalSlides source.
+- [x] Draft and register the TerminalSlides MDX post.
+- [x] Create the required social card.
+- [x] Validate code samples, metadata, lint, build, and rendered route.
+
+## Review
+
+Added the TerminalSlides post, registered its metadata and 1200×630 social card, and regenerated RSS and sitemap output. Verified all eight PowerShell code blocks parse, the representative deck validates and exports against TerminalSlides 0.3.1, lint and production build pass, the generated static page has correct Open Graph and Twitter image metadata, and the desktop route renders without horizontal overflow.
+
+# Editorial Review: TerminalSlides Post
+
+- [x] Review voice, structure, code examples, and claims.
+- [x] Rank issues and prepare specific revision guidance.
+
+## Review
+
+One code-looking Graph example should use the published Get-MgDeviceManagementManagedDevice cmdlet. The remaining recommendations are editorial: make the validate-before-present workflow explicit, split the overloaded first example, and remove a few generic claims.
+
+# Address TerminalSlides Editorial Review
+
+- [x] Correct the Graph cmdlet and split the first example.
+- [x] Add an explicit validate-before-present flow.
+- [x] Tighten generic language and improve the media reference.
+- [x] Re-parse code blocks and run site verification.
+
+## Review
+
+All 10 PowerShell blocks parse. The revised representative deck validates at 80×24, 120×35, and 160×45 terminal viewports. Lint, production build, diff whitespace, and the rendered desktop route pass; the route includes the new structured-content and validation sections without horizontal overflow.
+
+# Add TerminalSlides Demo Video
+
+- [x] Add the existing module demo to the post's public assets.
+- [x] Embed the MP4 using the shared responsive video treatment.
+- [x] Verify the video source and rendered post route.
+
+## Review
+
+The copied H.264 MP4 matches the module asset by SHA-256. All 10 PowerShell blocks still parse, lint and production build pass, and the browser loads the video as video/mp4 with playback controls and a rendered 1280×720 frame.
+
+# Add TerminalSlides Project Card
+
+- [x] Add TerminalSlides to the open-source project directory.
+- [x] Verify the rendered desktop and mobile project cards.
+- [x] Push the update to the existing pull request.
+
+## Review
+
+The TerminalSlides card renders on desktop and mobile with the expected documentation URL, project type, description, tags, and CTA. No horizontal overflow was detected. Lint, production build, and diff whitespace checks passed before the PR update.

@@ -2,6 +2,20 @@ import { type PostMeta } from '../lib/posts'
 
 const posts: PostMeta[] = [
   {
+    slug: 'build-terminal-presentations-with-powershell',
+    title: 'Build Terminal Presentations with PowerShell',
+    date: '2026-07-23',
+    description:
+      'TerminalSlides lets you build a versionable presentation in PowerShell, deliver it from a terminal, and export the same deck for docs or CI.',
+    tags: ['powershell', 'terminal', 'automation', 'scripting', 'presentation'],
+    socialImage: {
+      src: '/images/posts/build-terminal-presentations-with-powershell/socialcard.png',
+      width: 1200,
+      height: 630,
+      type: 'image/png',
+    },
+  },
+  {
     slug: 'use-cpm-with-openrouter-models',
     title: 'Use GitHub Copilot with Third-Party LLM Models',
     date: '2026-07-19',
