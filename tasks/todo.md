@@ -847,3 +847,13 @@ All 10 PowerShell blocks parse. The revised representative deck validates at 80Ã
 ## Review
 
 The copied H.264 MP4 matches the module asset by SHA-256. All 10 PowerShell blocks still parse, lint and production build pass, and the browser loads the video as video/mp4 with playback controls and a rendered 1280Ã—720 frame.
+
+# Add TerminalSlides Project Card
+
+- [x] Add TerminalSlides to the open-source project directory.
+- [x] Verify the rendered desktop and mobile project cards.
+- [x] Push the update to the existing pull request.
+
+## Review
+
+The TerminalSlides card renders on desktop and mobile with the expected documentation URL, project type, description, tags, and CTA. No horizontal overflow was detected. Lint, production build, and diff whitespace checks passed before the PR update.
