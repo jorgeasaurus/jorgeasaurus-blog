@@ -97,6 +97,9 @@ export default function About() {
               <SocialIcon name="linkedin" />
               LinkedIn
             </a>
+            <a href="https://buymeacoffee.com/jorgeasaurus" target="_blank" rel="noopener noreferrer">
+              Buy Me a Coffee
+            </a>
             <a href="/rss.xml" type="application/rss+xml">
               <SocialIcon name="rss" />
               RSS Feed
