@@ -2,12 +2,12 @@
 title: "26H1 Is Build 28000. 26H2 Is 26300. Stop Writing Or Newer Against the Build Number."
 date: "2026-08-19"
 description: "A greater-than-or-equal filter for Windows 11 26H1 and newer drops 26H2 at 26300 and can keep 26H1 Snapdragon X2 boxes you never meant to target."
-tags: ["intune", "windows", "endpoint-management", "device-management"]
+tags: ["intune", "windows", "endpoint-management", "device-management", "powershell"]
 ---
 
 26H1 is build 28000. 26H2 is 26300.
 
-A higher Windows build number is no longer a newer release. Any assignment filter that treats the build as a monotonic "or newer" line is wrong the moment 26H2 lands.
+A higher Windows build number is no longer a newer release. Any assignment filter that treats the build as an "or newer" line is wrong the moment 26H2 lands.
 
 ## The Later Release Has The Lower Build
 
@@ -19,9 +19,7 @@ A higher Windows build number is no longer a newer release. Any assignment filte
 | 26H2 | 26300 | Same branch. eKB from 24H2 or 25H2. Not GA as of 2026-08-19. |
 | 26H1 | 28000 | Different Windows core. Ships on new silicon. Cannot eKB to 26H2. |
 
-26H1 released 2026-02-10. 26H2 is still an Insider Experimental enablement package on 26300. It is not in the [GA release table](https://learn.microsoft.com/en-us/windows/release-health/windows11-release-information) yet. [Learn's Experimental notes](https://learn.microsoft.com/en-us/windows-insider/release-notes/experimental/preview-build-26300-9032) are explicit: those flights are 26H2 via an enablement package. Treat 26300 as the 26H2 build. The marketing name will not show up as a filter property.
-
-24H2, 25H2, and 26H2 share a servicing branch. The version change is which features are enabled. [Microsoft's 26H2 IT Pro post](https://techcommunity.microsoft.com/blog/windows-itpro-blog/get-ready-for-windows-11-version-26h2/4529367) is the source of record. 26H1 sits on a different core. No eKB. No hop to 26H2. [Microsoft is direct](https://learn.microsoft.com/en-us/windows/whats-new/windows-11-version-26h1): first devices are Snapdragon X2. It is not an in-place update from 24H2 or 25H2. 24H2 and 25H2 remain the enterprise targets. 26H1 is a hardware exception, not the next ring.
+26H1 released 2026-02-10. 26H2 is still Insider Experimental on 26300. It is not in the [GA release table](https://learn.microsoft.com/en-us/windows/release-health/windows11-release-information) yet. [Learn's Experimental notes](https://learn.microsoft.com/en-us/windows-insider/release-notes/experimental/preview-build-26300-9032) call those flights 26H2 via an enablement package. Treat 26300 as the 26H2 build. [Microsoft's 26H2 IT Pro post](https://techcommunity.microsoft.com/blog/windows-itpro-blog/get-ready-for-windows-11-version-26h2/4529367) is the source of record for the shared branch. [26H1](https://learn.microsoft.com/en-us/windows/whats-new/windows-11-version-26h1) is a hardware exception, first on Snapdragon X2. It does not eKB to 26H2.
 
 ## `-ge 10.0.28000` Is Not 26H1 And Newer
 
@@ -80,7 +78,13 @@ A three-part value such as `10.0.26300` is `10.0.26300.0`. That is the right flo
 **26H1 or 26H2.** There is no one `-ge` for this. OR two bounded ranges:
 
 ```powershell
-((device.operatingSystemVersion -ge 10.0.26300) and (device.operatingSystemVersion -lt 10.0.26301)) or ((device.operatingSystemVersion -ge 10.0.28000) and (device.operatingSystemVersion -lt 10.0.28001))
+(
+  (device.operatingSystemVersion -ge 10.0.26300) and
+  (device.operatingSystemVersion -lt 10.0.26301)
+) or (
+  (device.operatingSystemVersion -ge 10.0.28000) and
+  (device.operatingSystemVersion -lt 10.0.28001)
+)
 ```
 
 Do not use `arm64` as a synonym for 26H1. Plenty of 24H2 and 25H2 Arm devices exist, and they eKB to 26H2.
@@ -94,11 +98,20 @@ Connect-MgGraph -Scopes "DeviceManagementConfiguration.Read.All" -NoWelcome
 
 $uri = "https://graph.microsoft.com/beta/deviceManagement/assignmentFilters"
 $filters = [System.Collections.Generic.List[object]]::new()
-do {
-    $page = Invoke-MgGraphRequest -Method GET -Uri $uri -OutputType PSObject
-    foreach ($filter in $page.value) { $filters.Add($filter) }
-    $uri = $page.'@odata.nextLink'
-} while ($uri)
+try {
+    do {
+        $page = Invoke-MgGraphRequest -Method GET -Uri $uri -OutputType PSObject
+        foreach ($filter in $page.value) { $filters.Add($filter) }
+        $uri = $page.'@odata.nextLink'
+    } while ($uri)
+}
+catch {
+    throw "Filter list failed. Check DeviceManagementConfiguration.Read.All and that you are on the beta endpoint. $($_.Exception.Message)"
+}
+
+if ($filters.Count -eq 0) {
+    Write-Warning "No assignment filters returned. Empty tenant, or the app cannot read them."
+}
 
 $filters |
     Where-Object { $_.rule -match 'osVersion|operatingSystemVersion' } |
@@ -113,15 +126,9 @@ Flag any rule that:
 - Uses `operatingSystemVersion -ge 10.0.26300` with no upper bound. That includes 26H1.
 - Pins the fourth version part unless the assignment is deliberately quality-revision specific.
 
-Platform and management type are immutable. If the filter was created as managed apps when you needed devices, delete and recreate. You cannot PATCH your way out of that, and you cannot delete a filter that is still attached to an assignment.
+Platform and management type are immutable. Wrong type means detach, delete, and recreate.
 
-## Build Number Is An Identifier
-
-It is not a timeline.
-
-26H1 is 28000 because it is a different core for new silicon. 26H2 is 26300 because it is an enablement package on the 24H2/25H2 branch. Intune will compare those numbers exactly as written.
-
-Write the builds you intend to match. Bound the ones you do not. Stop asking `-ge` to invent a future that the numbering no longer describes.
+Build number is an identifier. It is not a timeline.
 
 ## Check The Filters Before 26H2 Lands
 
@@ -129,4 +136,4 @@ Write the builds you intend to match. Bound the ones you do not. Stop asking `-g
 - Unbounded `-ge` below 28000 keeps 26H1 Snapdragon X2 boxes.
 - Missing upper bounds turn a build floor into every later build number, including 26H1.
 - Do not pin the fourth version part unless the assignment is quality-revision specific.
-- `operatingSystemVersion` is public preview. Preview the filter on a preview property before you trust a green badge.
+- `operatingSystemVersion` is public preview. Check a few known devices before you trust a green badge.

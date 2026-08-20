@@ -7,7 +7,7 @@ const posts: PostMeta[] = [
     date: '2026-08-19',
     description:
       'A greater-than-or-equal filter for Windows 11 26H1 and newer drops 26H2 at 26300 and can keep 26H1 Snapdragon X2 boxes you never meant to target.',
-    tags: ['intune', 'windows', 'endpoint-management', 'device-management'],
+    tags: ['intune', 'windows', 'endpoint-management', 'device-management', 'powershell'],
     socialImage: {
       src: '/images/posts/26h2-filter-math/socialcard.png',
       width: 1200,
