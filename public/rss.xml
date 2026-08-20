@@ -6,7 +6,19 @@
     <atom:link href="https://jorgeasaur.us/rss.xml" rel="self" type="application/rss+xml" />
     <description>Field notes on PowerShell, endpoint management, Microsoft Graph, and automation.</description>
     <language>en-us</language>
-    <lastBuildDate>Thu, 23 Jul 2026 12:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Wed, 19 Aug 2026 12:00:00 GMT</lastBuildDate>
+    <item>
+      <title>26H1 Is Build 28000. 26H2 Is 26300. Stop Writing Or Newer Against the Build Number.</title>
+      <link>https://jorgeasaur.us/26h2-filter-math</link>
+      <guid isPermaLink="true">https://jorgeasaur.us/26h2-filter-math</guid>
+      <pubDate>Wed, 19 Aug 2026 12:00:00 GMT</pubDate>
+      <description>A greater-than-or-equal filter for Windows 11 26H1 and newer drops 26H2 at 26300 and can keep 26H1 Snapdragon X2 boxes you never meant to target.</description>
+      <category>intune</category>
+      <category>windows</category>
+      <category>endpoint-management</category>
+      <category>device-management</category>
+      <category>powershell</category>
+    </item>
     <item>
       <title>Build Terminal Presentations with PowerShell</title>
       <link>https://jorgeasaur.us/build-terminal-presentations-with-powershell</link>
