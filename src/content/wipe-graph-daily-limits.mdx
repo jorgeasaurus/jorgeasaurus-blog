@@ -43,7 +43,13 @@ POST   /deviceManagement/managedDevices/{managedDeviceId}/retire
 DELETE /deviceManagement/managedDevices/{managedDeviceId}
 ```
 
-[wipe](https://learn.microsoft.com/en-us/graph/api/intune-devices-manageddevice-wipe?view=graph-rest-1.0) and [retire](https://learn.microsoft.com/en-us/graph/api/intune-devices-manageddevice-retire?view=graph-rest-1.0) need `DeviceManagementManagedDevices.PrivilegedOperations.All`. [delete](https://learn.microsoft.com/en-us/graph/api/intune-devices-manageddevice-delete?view=graph-rest-1.0) needs `DeviceManagementManagedDevices.ReadWrite.All`.
+[wipe](https://learn.microsoft.com/en-us/graph/api/intune-devices-manageddevice-wipe?view=graph-rest-1.0) and [retire](https://learn.microsoft.com/en-us/graph/api/intune-devices-manageddevice-retire?view=graph-rest-1.0) need
+
+`DeviceManagementManagedDevices.PrivilegedOperations.All`
+
+[delete](https://learn.microsoft.com/en-us/graph/api/intune-devices-manageddevice-delete?view=graph-rest-1.0) needs
+
+`DeviceManagementManagedDevices.ReadWrite.All`
 
 There is no documented Graph API or header for remaining daily quota. Preflight is the size of the list you are about to submit. [Devices > Device actions](https://learn.microsoft.com/en-us/intune/device-management/actions/#check-the-status-of-the-action) is status, not remaining quota.
 
