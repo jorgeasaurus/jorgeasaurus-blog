@@ -1,0 +1,117 @@
+---
+title: "Graph Cleanup Can Exhaust Today's Wipe Quota"
+date: "2026-08-27"
+description: "Portal, bulk, and Graph share one daily counter per action. A stale-device wipe job can spend the 500. Android Delete that triggers Wipe still counts toward Delete."
+tags: ["powershell", "intune", "microsoft-graph", "automation", "endpoint-management"]
+---
+
+A Graph cleanup that "worked yesterday" can stop at midday and take the rest of the day's wipes with it.
+
+Portal clicks, [bulk device actions](https://learn.microsoft.com/en-us/intune/device-management/actions/), and Microsoft Graph share one tenant counter per action. Graph is not a side channel.
+
+## One Counter Per Action. Three Ways To Spend It.
+
+[Daily tenant limits](https://learn.microsoft.com/en-us/intune/device-management/actions/#daily-tenant-limits):
+
+| Action | Per tenant per day |
+| --- | --- |
+| [Wipe](https://learn.microsoft.com/en-us/intune/device-management/actions/wipe) | 500 |
+| [Retire](https://learn.microsoft.com/en-us/intune/device-management/actions/retire) | 1,000 |
+| [Delete](https://learn.microsoft.com/en-us/intune/device-management/actions/delete) | 1,000 |
+
+Each count is cumulative across single-device actions, bulk (up to 100 devices per request), and Graph. Raise a limit through [Microsoft support](https://learn.microsoft.com/en-us/intune/fundamentals/it-pro-support/get-support-admin-center). Learn does not document when the day resets.
+
+Help desk wipes, a school-year bulk reset, and a stale-device script all spend the same 500.
+
+## Android Delete Is A Wipe. It Still Counts.
+
+[Delete](https://learn.microsoft.com/en-us/intune/device-management/actions/delete) is not inventory-only.
+
+Windows, Apple, macOS, Android Device Administrator, and personally owned work profile Delete trigger Retire.
+
+Android corporate-owned fully managed (COBO), dedicated (COSU), corporate-owned work profile (COPE), and AOSP Delete trigger **Wipe**. That is a device command, not a record cleanup. On most of those platforms Wipe is a factory reset. [Learn's Wipe page](https://learn.microsoft.com/en-us/intune/device-management/actions/wipe) calls out Zebra: Wipe removes corporate data and does not factory-reset.
+
+The Delete daily limit still applies when Delete triggers Retire or Wipe. A Graph `DELETE` against those Android types spends Delete quota and wipes the device. Learn does not say the triggered Wipe also increments the 500 Wipe counter. Budget the Delete. Treat the device as wiped.
+
+## Graph Calls The Same Actions
+
+Success is `204 No Content` on all three.
+
+```http
+POST   /deviceManagement/managedDevices/{managedDeviceId}/wipe
+POST   /deviceManagement/managedDevices/{managedDeviceId}/retire
+DELETE /deviceManagement/managedDevices/{managedDeviceId}
+```
+
+[wipe](https://learn.microsoft.com/en-us/graph/api/intune-devices-manageddevice-wipe?view=graph-rest-1.0) and [retire](https://learn.microsoft.com/en-us/graph/api/intune-devices-manageddevice-retire?view=graph-rest-1.0) need `DeviceManagementManagedDevices.PrivilegedOperations.All`. [delete](https://learn.microsoft.com/en-us/graph/api/intune-devices-manageddevice-delete?view=graph-rest-1.0) needs `DeviceManagementManagedDevices.ReadWrite.All`.
+
+There is no documented Graph API or header for remaining daily quota. Preflight is the size of the list you are about to submit. [Devices > Device actions](https://learn.microsoft.com/en-us/intune/device-management/actions/#check-the-status-of-the-action) is status, not remaining quota.
+
+Graph [throttling](https://learn.microsoft.com/en-us/graph/throttling) is a different limit: HTTP `429`, `TooManyRequests`, often `Retry-After`. The daily action-limit failure shape is not documented. Do not assume 429, 400, or 403 means the 500 is gone. Log it and stop.
+
+## Do Not Unbounded Foreach Wipe
+
+```powershell
+$requiredScopes = @(
+    'DeviceManagementManagedDevices.ReadWrite.All',
+    'DeviceManagementManagedDevices.PrivilegedOperations.All'
+)
+Connect-MgGraph -Scopes $requiredScopes -NoWelcome
+
+$wipeDailyCap = 500
+$runCap = 50
+$spent = 0
+$results = [System.Collections.Generic.List[pscustomobject]]::new()
+
+foreach ($device in $targets) {
+    if ($spent -ge $runCap) {
+        break
+    }
+
+    $uri = "https://graph.microsoft.com/v1.0/deviceManagement/managedDevices/$($device.id)/wipe"
+    $row = [pscustomobject]@{
+        DeviceId   = $device.id
+        DeviceName = $device.deviceName
+        Action     = 'wipe'
+        StatusCode = $null
+        Outcome    = $null
+        Detail     = $null
+    }
+
+    try {
+        $null = Invoke-MgGraphRequest -Method POST -Uri $uri -Body @{ keepUserData = $false } -ContentType 'application/json'
+        $row.StatusCode = 204
+        $row.Outcome = 'submitted'
+        $spent++
+    }
+    catch {
+        $statusCode = $null
+        if ($_.Exception.Response) {
+            $statusCode = [int]$_.Exception.Response.StatusCode
+        }
+        $row.StatusCode = $statusCode
+        $row.Detail = $_.Exception.Message
+        $row.Outcome = if ($statusCode -eq 429) { 'graph-throttled' } else { 'failed' }
+        $results.Add($row)
+        break
+    }
+
+    $results.Add($row)
+}
+
+$results
+Write-Output "Wipe actions submitted this run: $spent of $runCap. Tenant daily cap is $wipeDailyCap."
+```
+
+`$targets` is a list you built and reviewed. Retire is `POST .../retire` with no body. Delete is `DELETE .../managedDevices/{id}`. Same cap-and-stop. Same log.
+
+If the catch is not a documented `429` throttle, do not retry it as one. You will not get a remaining-quota integer back.
+
+## Checklist
+
+- Count planned Wipe, Retire, and Delete before the run. Cap under 500 / 1,000 / 1,000. There is no remaining-quota API.
+- Do not `foreach` wipe or delete an unbounded stale-device query.
+- Split Android corporate Delete from Windows/Apple Delete. COBO, COPE, COSU, and AOSP Delete trigger Wipe and still spend Delete quota.
+- Log every submit. You cannot query remaining quota later.
+- On `429`, treat it as Graph throttling. On any other failure, stop. Do not guess the daily-limit status code.
+- Need more than the published caps? Support request.

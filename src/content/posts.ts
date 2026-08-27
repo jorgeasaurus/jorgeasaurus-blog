@@ -2,6 +2,20 @@ import { type PostMeta } from '../lib/posts'
 
 const posts: PostMeta[] = [
   {
+    slug: 'wipe-graph-daily-limits',
+    title: 'Graph Cleanup Can Exhaust Today\'s Wipe Quota',
+    date: '2026-08-27',
+    description:
+      'Portal, bulk, and Graph share one daily counter per action. A stale-device wipe job can spend the 500. Android Delete that triggers Wipe still counts toward Delete.',
+    tags: ['powershell', 'intune', 'microsoft-graph', 'automation', 'endpoint-management'],
+    socialImage: {
+      src: '/images/posts/wipe-graph-daily-limits/socialcard.png',
+      width: 1200,
+      height: 630,
+      type: 'image/png',
+    },
+  },
+  {
     slug: 'build-terminal-presentations-with-powershell',
     title: 'Build Terminal Presentations with PowerShell',
     date: '2026-07-23',
