@@ -49,7 +49,7 @@ There is no documented Graph API or header for remaining daily quota. Preflight 
 
 Graph [throttling](https://learn.microsoft.com/en-us/graph/throttling) is a different limit: HTTP `429`, `TooManyRequests`, often `Retry-After`. The daily action-limit failure shape is not documented. Do not assume 429, 400, or 403 means the 500 is gone. Log it and stop.
 
-## Do Not Unbounded Foreach Wipe
+## Don't Run Unbounded Foreach Wipes
 
 ```powershell
 $requiredScopes = @(
