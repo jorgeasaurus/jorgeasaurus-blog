@@ -33,6 +33,18 @@ The counter is tenant-wide on purpose. A portal click, a bulk of 100, and a Grap
 
 This next part is ours, not Microsoft's. A compromised admin, a bad `foreach`, and a school-year reset job compete for the same 500. The cap is the last brake after RBAC already let the call through. It is not Graph [throttling](https://learn.microsoft.com/en-us/graph/throttling). No `429`. No `Retry-After`.
 
+## Eighty Thousand Wipes In One Morning
+
+[Stryker, March 11, 2026](https://www.bleepingcomputer.com/news/security/stryker-attack-wiped-tens-of-thousands-of-devices-no-malware-needed/): a compromised admin, a new Global Administrator, and the Intune wipe command. A source familiar with the attack put it at nearly 80,000 devices between 05:00 and 08:00 UTC. Investigators found no indication of exfiltration. Stryker said no malware, medical products unaffected, internal Microsoft environment only.
+
+Today's published cap is 500 Wipes per tenant per day. If that cap had been enforcing that morning, the run stops at 500, not 80,000. That is arithmetic, not a leak.
+
+[CISA's public answer](https://www.cisa.gov/news-events/alerts/2026/03/18/cisa-urges-endpoint-management-system-hardening-after-cyberattack-against-us-organization), with Microsoft and Stryker contributing, was least-privilege RBAC, phishing-resistant MFA, and Multi Admin Approval for high-impact actions such as device wiping. Not a quota. MAA is a second human. A quota is a platform brake after the call is already authorized. CISA does not mention a daily wipe limit.
+
+A July 7, 2026 Wayback capture of Learn's device-actions page still had the precedence note and the bulk-of-100. It did not have the 500 / 1,000 / 1,000 table. Learn published those tenant-wide daily caps in August 2026. That is when the docs became public. It is not a Microsoft admission of when enforcement started.
+
+This is speculation, not a Microsoft statement. Microsoft has not said the cap is a Stryker patch. The sequence and the math are why it is a reasonable operator guess that a tenant-wide daily wipe brake showed up after someone used Intune as a fleet kill switch.
+
 ## Android Delete Is A Wipe. It Still Counts.
 
 [Delete](https://learn.microsoft.com/en-us/intune/device-management/actions/delete) is not inventory-only.
