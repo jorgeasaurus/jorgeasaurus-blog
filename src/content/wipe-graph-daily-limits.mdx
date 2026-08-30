@@ -23,6 +23,16 @@ Each count is cumulative across single-device actions, bulk (up to 100 devices p
 
 Help desk wipes, a school-year bulk reset, and a stale-device script all spend the same 500.
 
+## The Cap Is A Blast Radius. Not Graph Throttling.
+
+Learn publishes the numbers. It does not publish a motive.
+
+It does publish the class of command. [Retire, Wipe, and Delete take precedence](https://learn.microsoft.com/en-us/intune/device-management/actions/) over every other pending action. Queue one of those and the rest are ignored. [Wipe](https://learn.microsoft.com/en-us/intune/device-management/actions/wipe) factory-resets. You do not want that unbounded.
+
+The counter is tenant-wide on purpose. A portal click, a bulk of 100, and a Graph call all spend it. Graph is not a side channel. [Support can raise a limit](https://learn.microsoft.com/en-us/intune/fundamentals/it-pro-support/get-support-admin-center). That is a tenant rail you can petition, not a hard architecture ceiling.
+
+This next part is ours, not Microsoft's. A compromised admin, a bad `foreach`, and a school-year reset job compete for the same 500. The cap is the last brake after RBAC already let the call through. It is not Graph [throttling](https://learn.microsoft.com/en-us/graph/throttling). No `429`. No `Retry-After`.
+
 ## Android Delete Is A Wipe. It Still Counts.
 
 [Delete](https://learn.microsoft.com/en-us/intune/device-management/actions/delete) is not inventory-only.
