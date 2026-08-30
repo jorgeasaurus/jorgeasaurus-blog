@@ -6,7 +6,19 @@
     <atom:link href="https://jorgeasaur.us/rss.xml" rel="self" type="application/rss+xml" />
     <description>Field notes on PowerShell, endpoint management, Microsoft Graph, and automation.</description>
     <language>en-us</language>
-    <lastBuildDate>Thu, 23 Jul 2026 12:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 27 Aug 2026 12:00:00 GMT</lastBuildDate>
+    <item>
+      <title>Graph Cleanup Can Exhaust Today&apos;s Wipe Quota</title>
+      <link>https://jorgeasaur.us/wipe-graph-daily-limits</link>
+      <guid isPermaLink="true">https://jorgeasaur.us/wipe-graph-daily-limits</guid>
+      <pubDate>Thu, 27 Aug 2026 12:00:00 GMT</pubDate>
+      <description>Portal, bulk, and Graph share one daily counter per action. A stale-device wipe job can spend the 500. Android Delete that triggers Wipe still counts toward Delete.</description>
+      <category>powershell</category>
+      <category>intune</category>
+      <category>microsoft-graph</category>
+      <category>automation</category>
+      <category>endpoint-management</category>
+    </item>
     <item>
       <title>Build Terminal Presentations with PowerShell</title>
       <link>https://jorgeasaur.us/build-terminal-presentations-with-powershell</link>
