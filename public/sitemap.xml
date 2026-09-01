@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap-0.9">
   <url>
     <loc>https://jorgeasaur.us/</loc>
-    <lastmod>2026-07-23</lastmod>
+    <lastmod>2026-09-01</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
@@ -15,6 +15,12 @@
     <loc>https://jorgeasaur.us/projects</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://jorgeasaur.us/device-association-is-a-uefi-stamp</loc>
+    <lastmod>2026-09-01</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://jorgeasaur.us/build-terminal-presentations-with-powershell</loc>

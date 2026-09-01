@@ -1,0 +1,156 @@
+---
+title: "Device Association Is A UEFI Stamp. Not A Hardware Hash."
+date: "2026-09-01"
+description: "Autopilot device preparation finally gets tenant context before sign-in. The marker lives in firmware. Deleting the Intune row does not clear it."
+tags: ["intune", "windows", "endpoint-management", "powershell", "automation"]
+---
+
+Autopilot device preparation could not name the device or skip OOBE pages until someone signed in. Windows had no tenant yet.
+
+Device association is the missing bind. It is not a 4K hardware hash. It is not Autopilot assigned user. It is not Entra "device association." It writes tenant affinity into UEFI, then device preparation can run before the user exists.
+
+The *feature* is generally available. The *client bits* shipped in the optional 2026-08-27 preview, [KB5120998](https://support.microsoft.com/en-us/servicing/os/windows-11/2026/08/kb5120998-windows-11-24h2-25h2-update) (2026-08 D, OS builds 26100.9278 and 26200.9278). Intune can show the Device association blade today. The OOBE Autopilot menu only exists on physical 24H2/25H2 with that CU or later. Enterprises that skip optional updates will not see Win-key ×5 until a later cumulative that includes KB5120998. As of 2026-09-01 Microsoft has not published the September B-release notes, so do not treat a Patch Tuesday date as a documented ship vehicle.
+
+## This Is Device Preparation. Classic Autopilot Still Wins Until You Stamp.
+
+Learn puts this under [Windows Autopilot device preparation](https://learn.microsoft.com/en-us/autopilot/device-preparation/device-association/overview), not the Autopilot devices blade.
+
+If the box is also registered as a classic Autopilot device, association state picks the flow:
+
+- Not associated: the Autopilot profile runs. You get ESP.
+- Associated: device preparation runs.
+
+Want device preparation on a registered device *without* associating it? Deregister first. Dual-homing is how you get the wrong OOBE.
+
+The other conversion path is the interesting one. You can leave the classic Autopilot object in place and associate. Association takes the flow. GroupTag, OrderID, assigned user, and the Autopilot device identity are leftovers from a different product. They do not target Device Association.
+
+Join is Entra join only. Hybrid is not in this product. Physical shared/kiosk, self-deploying, and pre-provisioning are not this product either. Windows 365 is a different story: device preparation has an automatic Cloud PC mode, and [device association does not apply to Windows 365](https://learn.microsoft.com/en-us/autopilot/device-preparation/device-association/overview#limitations). Do not mix the two.
+
+Device preparation does not use ESP. If ESP appears, you are not in a device preparation deployment. Classic Autopilot won — the device is registered, a profile is assigned, or both.
+
+## The Intune Row Does Not Own The Marker.
+
+Three operations. Only one of them writes firmware.
+
+| Operation | Where it lives | What it does |
+| --- | --- | --- |
+| Pre-associate | Intune. State: Pre-associated | Service-only intent. Delete the row and it is gone immediately. |
+| Associate | OOBE on network, or technician **Next** after pre-associate | TPM attestation, then a UEFI stamp. State: Associated. |
+| Remove | Script on the device, then delete the Intune row | Clear UEFI first. Then the row goes Pending removal and disappears. |
+
+Microsoft's announcement: tenant affinity [persists across a Windows reset, operating system reinstallation, or removal of enrollment](https://techcommunity.microsoft.com/blog/intunecustomersuccess/introducing-device-association-for-windows-autopilot-device-preparation/4550603).
+
+Delete from Intune does not clear firmware on Associated. Learn is blunt: [removing a device from the Device association list does not clear tenant affinity stored on an already associated device](https://learn.microsoft.com/en-us/autopilot/device-preparation/device-association/remove-association). Pre-associated is service-only. Associated lives in Device Link UEFI variables:
+
+```powershell
+# Namespace {B3DE75DA-819C-4FD5-9F01-C3D49E8CBBD7}
+# Variables: DeviceLinkId, DeviceLinkBlob, DeviceLinkUtc
+Install-Module UEFI -Force
+```
+
+Query does not need elevation. Clearing does. Gallery module, elevated session.
+
+If the device is still enrolled, Intune tries to write the association back on the next check-in. Unenroll, clear UEFI, then delete the row.
+
+Learn does not name Wipe, Autopilot Reset, or Fresh Start. Documented persistence is reset, reinstall, unenroll. Treat the Intune remote actions as untested until Microsoft says otherwise.
+
+Hardware identity change is what invalidates a DeviceLink, not a re-export. The [FAQ examples](https://learn.microsoft.com/en-us/autopilot/device-preparation/device-association/faq) are the remove script, a BIOS/UEFI reset, or a Secure Boot change. Motherboard or TPM swap is the obvious field case. Learn does not name it. Expect a new DeviceLink. Do not assume the old CSV still matches.
+
+## One CSV. One Device. Not Get-WindowsAutopilotInfo.
+
+Export during OOBE: stop on region, Windows key five times quickly, **Export device information**, NTFS USB. [One device per file](https://learn.microsoft.com/en-us/autopilot/device-preparation/tutorial/user-driven/entra-join-device-association).
+
+FAT32, or a dual-partition stick with FAT32 and NTFS, fails with the exact string:
+
+`Export of device link information timed out. Please try again.`
+
+Single-partition NTFS. Not the Autopilot hash USB habits.
+
+QR is a custom app calling Graph. Intune will only ingest the CSV today. There is no public Graph Device Association entity in v1.0 or beta metadata as of 2026-09-01. `microsoft.graph.networkaccess.deviceLink` is Global Secure Access. `windowsAutopilotDeviceIdentities` is classic Autopilot. Do not post a fake import function.
+
+Past OOBE: Settings > Accounts > Access work or school > Export your management logs, or `MdmDiagnosticsTool.exe -area Autopilot`, or Intune **Collect diagnostics**. Pull the DeviceLink CSV out of the cab.
+
+Re-export timestamps do not invalidate a pre-association. Invalidation is a hardware identity change.
+
+OEM, reseller, and partner upload is [not yet](https://learn.microsoft.com/en-us/autopilot/device-preparation/device-association/faq). Intune CSV only.
+
+## Corporate Identifiers Are The Other Door. You Do Not Need Both.
+
+Association sets corporate-owned. Identifiers are the other path. [FAQ: you do not need both](https://learn.microsoft.com/en-us/autopilot/device-preparation/device-association/faq).
+
+Identifiers do not lock tenant affinity and they do not unlock the extra OOBE controls. Name template on identifier-only does not apply. The box keeps the Windows default name.
+
+Those extra OOBE settings exist only on associated devices:
+
+- Language / region
+- Auto keyboard (Wi-Fi still shows language and keyboard)
+- Hide EULA
+- Hide privacy (location services off by default)
+- Hide change-account (needs Entra company branding)
+- Device name template: `%SERIAL%` or `%RAND:x%`, up to 63 characters, letters/numbers/hyphens, not digits-only
+
+Device-targeted policy beats user-targeted. Skip the policy on CSV import and you fall back to the signing-in user's assignment. No user policy means [no device preparation policy is applied](https://learn.microsoft.com/en-us/autopilot/device-preparation/tutorial/user-driven/entra-join-device-association). Learn does not promise an error. The failure mode is silence.
+
+On Windows Pro, the Personal / Work or school account page is [hidden by default](https://learn.microsoft.com/en-us/autopilot/device-preparation/device-association/overview) for associated devices.
+
+## No GroupTag. Enrollment Time Grouping Still Owns Apps.
+
+No OrderID. Dynamic groups on `[OrderID]:` do not apply. Association does not drop the device into an Entra group.
+
+Three targeting layers:
+
+1. Policy assigned on CSV import (device-targeted; this is the one you want)
+2. Policy assigned to the user group (fallback)
+3. ETG security group on the policy for apps and scripts, Required, system context
+
+Apps showing **Skipped**? Check the ETG group plus the Intune Provisioning Client owner. App ID `f1346770-5b25-470b-88bd-d5744ab7952c`. Some tenants label it Intune Autopilot ConfidentialClient. Same GUID.
+
+`enrollmentProfileName` is the policy name after enrollment. Useful for Filters. Not first-boot targeting.
+
+## The Bar Is Higher Than Device Preparation.
+
+Device preparation: 24H2 or later, or 22H2/23H2 with KB5035942. Entra join. VMs are fine for the parent product.
+
+Association: physical 24H2 or 25H2 with KB5120998 or later. TPM 2.0, enabled, not Reduced Functionality Mode. No VMs. Requirements name those two Windows versions. Do not invent 26H1 coverage.
+
+First-week ticket: the Intune blade exists, the OOBE menu does not. The box is missing the CU.
+
+Extra allowlist on top of device preparation networking:
+
+- `https://ztd.dds.microsoft.com`
+- Discrete `peapdamaa*.attest.azure.net` hosts (Learn enumerates specific names; there is no peapdamaa4 in the published list)
+
+RBAC is two piles.
+
+Configuring the device preparation policy:
+
+- Device configurations: Read, Delete, Create, Update
+- Enrollment programs: Enrollment time device membership assignment
+- Managed apps: Read
+- Mobile apps: Read
+- Organization: Read
+
+Managing associated devices:
+
+- Enrollment programs: Read device, Create device, Delete device
+- Device configurations: Assign
+
+## Names People Will Mix Up
+
+**Device association** is this feature. **Entra device association** is a different product sentence. **DeviceLink** here is three UEFI variables. **`graph.deviceLink`** is Global Secure Access. **`windowsAutopilotDeviceIdentities`** is the 4K hash. Corporate identifiers mark ownership. They do not stamp firmware and they do not unlock OOBE customizations.
+
+## Checklist
+
+- Confirm the physical box is 24H2/25H2 with KB5120998 or later. The Intune blade is not the OOBE menu.
+- Single-partition NTFS USB. FAT32 times out with the Device Link export error.
+- One DeviceLink CSV per file. Not Get-WindowsAutopilotInfo.
+- Assign the device preparation policy on CSV import. Skipping it is a silent fallback.
+- Do not dual-home unless you mean to. Not associated + Autopilot registration = ESP.
+- Want device preparation without association on a registered device? Deregister first.
+- Pick association *or* corporate identifiers. Identifiers will not name the device.
+- ETG group owner is App ID `f1346770-5b25-470b-88bd-d5744ab7952c`. Apps Skipped starts there.
+- Allow `ztd.dds.microsoft.com` and the published attest hosts.
+- Decommission: unenroll, clear DeviceLink UEFI vars elevated, then delete the Intune row.
+- Do not expect Intune delete to wipe firmware. Do not expect Wipe/Autopilot Reset/Fresh Start to be documented as persistence tests.
+- No GroupTag. No OrderID. No hybrid. No VMs. No W365 association. No OEM upload yet.
+- No public Graph resource for this. CSV only.
