@@ -2,6 +2,20 @@ import { type PostMeta } from '../lib/posts'
 
 const posts: PostMeta[] = [
   {
+    slug: 'device-association-is-a-uefi-stamp',
+    title: 'Device Association Is A UEFI Stamp. Not A Hardware Hash.',
+    date: '2026-09-01',
+    description:
+      'Autopilot device preparation finally gets tenant context before sign-in. The marker lives in firmware. Deleting the Intune row does not clear it.',
+    tags: ['intune', 'windows', 'endpoint-management', 'powershell', 'automation'],
+    socialImage: {
+      src: '/images/posts/device-association-is-a-uefi-stamp/socialcard.png',
+      width: 1200,
+      height: 630,
+      type: 'image/png',
+    },
+  },
+  {
     slug: 'build-terminal-presentations-with-powershell',
     title: 'Build Terminal Presentations with PowerShell',
     date: '2026-07-23',
