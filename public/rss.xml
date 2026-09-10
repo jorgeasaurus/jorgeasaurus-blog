@@ -6,7 +6,17 @@
     <atom:link href="https://jorgeasaur.us/rss.xml" rel="self" type="application/rss+xml" />
     <description>Field notes on PowerShell, endpoint management, Microsoft Graph, and automation.</description>
     <language>en-us</language>
-    <lastBuildDate>Thu, 23 Jul 2026 12:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Wed, 02 Sep 2026 12:00:00 GMT</lastBuildDate>
+    <item>
+      <title>AI Will Take The Repeatable Work, Not The Accountability.</title>
+      <link>https://jorgeasaur.us/ai-will-take-the-repeatable-work</link>
+      <guid isPermaLink="true">https://jorgeasaur.us/ai-will-take-the-repeatable-work</guid>
+      <pubDate>Wed, 02 Sep 2026 12:00:00 GMT</pubDate>
+      <description>Known tickets get cheaper. Accountability does not vanish. It concentrates. Five things that still matter.</description>
+      <category>career</category>
+      <category>automation</category>
+      <category>growth</category>
+    </item>
     <item>
       <title>Build Terminal Presentations with PowerShell</title>
       <link>https://jorgeasaur.us/build-terminal-presentations-with-powershell</link>
