@@ -8,6 +8,12 @@ const posts: PostMeta[] = [
     description:
       'AI will make repeatable IT work cheaper. Companies will need fewer people to do it, but someone will still own the failures.',
     tags: ['career', 'automation', 'growth'],
+    socialImage: {
+      src: '/images/posts/ai-will-take-the-repeatable-work/socialcard.png',
+      width: 1731,
+      height: 909,
+      type: 'image/png',
+    },
   },
   {
     slug: 'build-terminal-presentations-with-powershell',

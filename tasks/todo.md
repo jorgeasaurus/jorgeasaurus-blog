@@ -857,3 +857,23 @@ The copied H.264 MP4 matches the module asset by SHA-256. All 10 PowerShell bloc
 ## Review
 
 The TerminalSlides card renders on desktop and mobile with the expected documentation URL, project type, description, tags, and CTA. No horizontal overflow was detected. Lint, production build, and diff whitespace checks passed before the PR update.
+
+# AI Job Impact Social Card
+
+- [x] Generate and inspect a social card using the post's exact headline.
+- [x] Save the asset and connect the post's social metadata.
+- [x] Verify image dimensions and generated sharing metadata.
+
+## Review
+
+Created a 1730×909 social card with built-in image generation and saved its prompt alongside the asset. Headline, image dimensions, production build, generated Open Graph/Twitter metadata, and diff whitespace checks passed.
+
+# Match AI Social Card to Existing Cards
+
+- [x] Inspect existing post cards and select the career/automation reference.
+- [x] Regenerate with matching branding, panel, typography, and mint palette.
+- [x] Verify the image and sharing metadata.
+
+## Review
+
+Replaced the initial design using the existing career/automation card as the imagegen reference. Verified matching visual style, exact headline, 1731×909 dimensions, production build, sharing metadata, and diff whitespace.
