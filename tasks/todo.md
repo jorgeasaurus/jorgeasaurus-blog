@@ -877,3 +877,9 @@ Created a 1730×909 social card with built-in image generation and saved its pro
 ## Review
 
 Replaced the initial design using the existing career/automation card as the imagegen reference. Verified matching visual style, exact headline, 1731×909 dimensions, production build, sharing metadata, and diff whitespace.
+
+# Copilot Review Loop: PR 14
+
+- [x] Verify branch, remote head, existing feedback, lint, build, and registry tests.
+- [x] Refresh stale PR metadata to match the finalized article and social card.
+- [ ] Request Copilot review and address actionable feedback until the latest head has a clean cycle.
