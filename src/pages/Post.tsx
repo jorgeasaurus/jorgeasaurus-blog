@@ -97,7 +97,12 @@ type PostLoadState =
   | { status: 'loaded'; content: React.ComponentType<MdxContentProps> }
   | { status: 'failed' }
 
-const postModules = import.meta.glob<MdxModule>('../content/*.mdx')
+const postModules = Object.fromEntries(
+  Object.entries(import.meta.glob<MdxModule>('../content/*.mdx'))
+    .filter(([modulePath]) =>
+      posts.some((post) => modulePath.endsWith(`/${post.slug}.mdx`))
+    )
+)
 
 export default function Post() {
   const { slug } = useParams<{ slug: string }>()

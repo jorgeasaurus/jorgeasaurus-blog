@@ -2,6 +2,14 @@ import { type PostMeta } from '../lib/posts'
 
 const posts: PostMeta[] = [
   {
+    slug: 'ai-will-take-the-repeatable-work',
+    title: 'AI Does Not Need To Replace You To Take Your Job',
+    date: '2026-09-02',
+    description:
+      'AI will make repeatable IT work cheaper. Companies will need fewer people to do it, but someone will still own the failures.',
+    tags: ['career', 'automation', 'growth'],
+  },
+  {
     slug: 'build-terminal-presentations-with-powershell',
     title: 'Build Terminal Presentations with PowerShell',
     date: '2026-07-23',

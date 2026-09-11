@@ -1,62 +1,108 @@
 ---
-title: "AI Will Take The Repeatable Work, Not The Accountability."
+title: "AI Does Not Need To Replace You To Take Your Job"
 date: "2026-09-02"
-description: "Known tickets get cheaper. Accountability does not vanish. It concentrates. Five things that still matter."
+description: "AI will make repeatable IT work cheaper. Companies will need fewer people to do it, but someone will still own the failures."
 tags: ["career", "automation", "growth"]
 ---
 
-A lot of IT work is the same ticket again.
+A lot of IT work is repetitive.
 
-Password reset. Add to the group. Rerun last year's script. Follow the screenshots in the wiki. We got good at that. A lot of us built careers on it.
+Reset the password. Add the user to a group. Run the same script again. Follow the screenshots in the wiki.
 
-That slice is what a model can already draft. Not "IT." The known, inbound, copy-the-runbook slice. If that is most of your week, the job title is not going to save the mix.
+AI does not have to replace IT to remove IT jobs. It only has to make the repetitive work cheap enough that companies need fewer people to do it.
 
-Accountability does not save it either. Someone still signs. That someone can be one remaining senior, a manager who never opens the ticket, an MSP, or a vendor SLA. The signature can stay while the bench leaves.
+If most of your week is known requests with known fixes, your job title will not protect you.
 
-## Why it might happen
+Accountability is not job security. Someone still has to own the outcome when the automation gets it wrong. That might be one senior engineer, a manager, an MSP, or a vendor. The company can keep the accountability and cut the team.
+
+## Why Companies Will Do It
 
 Companies notice cost.
 
-One person with tools can clear an inbound queue that used to take a bench. Password resets and group adds are the obvious ones. A lot of helpdesk and desktop looks like that. Identity, cloud, network, and security have a version of it too, but they are not the same job. The shared part is: request comes in, the fix is known, close it.
+One person using AI can clear a queue that used to need several people. Password resets and group changes are obvious examples. Help desk and desktop support have plenty more. Identity, cloud, network, and security teams have their own versions.
 
-I do not think every role disappears. I think a lot of people will find out their week was mostly that queue. Some of those seats just go. There is no honest path that puts every L1 on the change board.
+The pattern is simple: the request is known, the fix is known, and the result is easy to check. AI does not have to be brilliant to handle that work. It has to be fast, cheap, and right often enough.
 
-Sitting out the tools does not protect you. The person still named will use them.
+I do not think every IT role disappears. I do think some people will lose their jobs. There is no honest version of this where every help desk technician becomes an architect or security engineer.
 
-## Why it might not
+**Refusing to use AI will not protect you. It will make you slower than the person who does.**
 
-The function does not vanish. Login, mail, backups, and identity still have to work. Someone still gets the ugly page.
+## What AI Does Not Remove
 
-That is not the same as headcount staying put. It means the org still needs a name on the outage.
+The systems still have to work.
 
-The other trap is treating "scary" as "safe." Restores, firewall changes, joiner-mover-leaver, prod deploys — those can hurt, and they are also runbooks. Shops will automate them *because* the blast radius is high. Change control will not save you if CAB is a rubber stamp. An AI-written RFC sails through the same meeting the human one did.
+Users still need access. Mail still has to flow. Backups still have to restore. Someone still has to explain why production is down.
 
-What is harder to replace is the hour the template does not fit. Vendor docs miss the failure. The model invents a flag that looks official. If you do not catch it, it ships. Local context. This tenant, this week, this leftover from 2019.
+That preserves responsibility. It does not preserve headcount.
 
-The last meter is still a person sometimes. A cable, a rack, a laptop that will not image, a site that never made the wiki. In a lot of SaaS shops that work already belongs to a contractor. Do not build a career on it.
+High-risk work is not automatically safe from automation either. Restores, firewall changes, account provisioning, and production deployments can all become runbooks. Companies will automate them because mistakes are expensive and consistency matters.
 
-## Five things I would actually do
+Change control is not protection. If the review process is a rubber stamp today, it will approve an AI-written change tomorrow.
 
-### Read the output before it ships
+The harder work starts when the runbook is wrong.
 
-Treat the model like a fast junior who does not know when it is wrong. If you cannot check the command, the permission, or the vendor doc, you are just pasting. Speed is cheap. Being able to tell is not.
+The vendor documentation misses the failure. The model invents a parameter that looks real. The tenant has a configuration nobody documented in 2019. The backup job says it succeeded, but the restore does not work.
 
-### Be the person still named
+Someone has to recognize that the expected answer is wrong. Someone has to stop the change, find the actual problem, and own the result.
 
-Identity, backups, DNS, firewalls, prod, privileged access — not because they cannot be templated, but because when the template fails somebody still has a name on the outage. Get closer to that. If you cannot, be honest: some seats are the queue, and the queue is getting cheaper.
+Physical work will remain too. Cables still fail. Laptops still refuse to image. Remote sites still have equipment nobody documented. A lot of companies already outsource that work. I would not bet my career on being the last person allowed to touch the hardware.
 
-### Use the tools. Cut what they add.
+## Six Ways To Stay Valuable As AI Takes The Repeatable Work
 
-Let it draft the script, the runbook, the email. You pick the problem and throw away the extra steps. The person who uses the model is easier to keep than the person who will not.
+### Verify Everything AI Produces
 
-### Leave something behind besides a closed ticket
+AI is confident when it is wrong.
 
-Friday's incident is gone on Monday. A runbook with the real error string, a small tool, a diagram, a postmortem someone else can follow — that travels with your name. It can also feed the next model. Write it anyway. Tickets empty. A name on work other people reuse does not.
+Read the command. Check the permissions. Open the vendor documentation. Test the rollback. If you cannot verify the answer, you should not put it into production.
 
-### Delete half of it
+Generating the answer is getting cheap. Knowing whether the answer is safe is still valuable.
 
-Left alone, the model adds a framework to a 40-line fix. The useful part is knowing what not to do *here*, this week. That is local context, not magic taste. You still have to bring it.
+### Own A System That Matters
 
-I do not always do this.
+Get closer to identity, backups, DNS, firewalls, production, or privileged access. Not because those systems cannot be automated. They can.
 
-The known work is going to get cheaper. Accountability will sit on fewer people. Try to be one of them.
+The value is knowing how the system should work, how it actually fails, and how to recover it. When the automation breaks, be the person who can tell the difference between a harmless warning and an outage.
+
+Do not confuse ownership with hoarding knowledge. If you are the only person who understands the system, you built another problem.
+
+### Use The Tools Now
+
+Let AI draft the script, the runbook, and the email. Then check the work and remove what does not belong.
+
+Refusing the tool does not make your work more valuable. It makes you slower. Blindly trusting it is not better. Use it for speed, not judgment.
+
+### Learn AI By Using It
+
+You did not learn PowerShell by reading every page of documentation before opening a terminal. You used it. You wrote bad scripts, broke things, fixed them, and learned where the tool helped. You probably learned most vendor tools the same way.
+
+AI is no different. Documentation and prompt guides will only get you so far. Use the models on real work. Ask one to research an error, draft a script, review a change, or explain a system you do not understand.
+
+Pay attention to where it saves time, where it lies, and what context it needs from you. The strategy that works for me may not work for you. You find your angle by using the tool, not reading about it.
+
+### Build Something People Can Reuse
+
+A closed ticket disappears into the queue. A useful runbook, tool, diagram, or postmortem keeps paying off.
+
+Write down the real error message. Document the recovery step that the vendor left out. Build the small tool that prevents the next person from repeating the same ten clicks.
+
+AI may use that documentation later. Good. The point was to stop solving the same problem by hand.
+
+### Delete The Extra Work
+
+AI will happily add a framework to a 40-line script. It will create options nobody asked for, catch errors it should expose, and explain code that should have been deleted.
+
+Your job is not to accept everything it generates. Your job is to know what the problem requires and cut everything else.
+
+That judgment comes from knowing your systems, your constraints, and the cost of getting it wrong.
+
+## Be Concerned, Not Helpless
+
+The threat is real. Some IT jobs will disappear. Some teams will shrink. Pretending otherwise will not help anyone.
+
+Panic is useless too. You still have time to learn the tools, understand where they fail, and move toward work that requires judgment and ownership.
+
+There is hope because this change is not happening without us. Companies still need people who understand the systems, can verify the output, and will take responsibility when the answer is wrong.
+
+Use the tools. Learn how they fit your work. Own the failures. Write down what you learn. Move toward problems where the answer is not already sitting in the ticket template.
+
+Be concerned about what is coming. Then do something useful with that concern.
