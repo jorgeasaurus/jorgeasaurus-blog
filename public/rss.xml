@@ -6,7 +6,17 @@
     <atom:link href="https://jorgeasaur.us/rss.xml" rel="self" type="application/rss+xml" />
     <description>Field notes on PowerShell, endpoint management, Microsoft Graph, and automation.</description>
     <language>en-us</language>
-    <lastBuildDate>Thu, 23 Jul 2026 12:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Wed, 02 Sep 2026 12:00:00 GMT</lastBuildDate>
+    <item>
+      <title>AI Does Not Need To Replace You To Take Your Job</title>
+      <link>https://jorgeasaur.us/ai-will-take-the-repeatable-work</link>
+      <guid isPermaLink="true">https://jorgeasaur.us/ai-will-take-the-repeatable-work</guid>
+      <pubDate>Wed, 02 Sep 2026 12:00:00 GMT</pubDate>
+      <description>AI will make repeatable IT work cheaper. Companies will need fewer people to do it, but someone will still own the failures.</description>
+      <category>career</category>
+      <category>automation</category>
+      <category>growth</category>
+    </item>
     <item>
       <title>Build Terminal Presentations with PowerShell</title>
       <link>https://jorgeasaur.us/build-terminal-presentations-with-powershell</link>

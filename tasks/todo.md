@@ -857,3 +857,35 @@ The copied H.264 MP4 matches the module asset by SHA-256. All 10 PowerShell bloc
 ## Review
 
 The TerminalSlides card renders on desktop and mobile with the expected documentation URL, project type, description, tags, and CTA. No horizontal overflow was detected. Lint, production build, and diff whitespace checks passed before the PR update.
+
+# AI Job Impact Social Card
+
+- [x] Generate and inspect a social card using the post's exact headline.
+- [x] Save the asset and connect the post's social metadata.
+- [x] Verify image dimensions and generated sharing metadata.
+
+## Review
+
+Created a 1730×909 social card with built-in image generation and saved its prompt alongside the asset. Headline, image dimensions, production build, generated Open Graph/Twitter metadata, and diff whitespace checks passed.
+
+# Match AI Social Card to Existing Cards
+
+- [x] Inspect existing post cards and select the career/automation reference.
+- [x] Regenerate with matching branding, panel, typography, and mint palette.
+- [x] Verify the image and sharing metadata.
+
+## Review
+
+Replaced the initial design using the existing career/automation card as the imagegen reference. Verified matching visual style, exact headline, 1731×909 dimensions, production build, sharing metadata, and diff whitespace.
+
+# Copilot Review Loop: PR 14
+
+- [x] Verify branch, remote head, existing feedback, lint, build, and registry tests.
+- [x] Refresh stale PR metadata to match the finalized article and social card.
+- [x] Request Copilot review and address actionable feedback until the latest head has a clean cycle.
+
+## Review
+
+Lint, build, both registry tests, and remote checks pass. The queued review of 223de7e raised two comments based on the superseded unpublished-draft description; both were explicitly dispositioned as non-actionable and left open. Request a fresh review of the current publication scope and require latest-head evidence before completion.
+
+Copilot approved ef2f207 on 2026-09-11 at 02:56:55Z with zero new comments and no unresolved threads. Local/remote checks pass; re-request review after committing this completion record to retain latest-head coverage.
