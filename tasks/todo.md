@@ -882,8 +882,10 @@ Replaced the initial design using the existing career/automation card as the ima
 
 - [x] Verify branch, remote head, existing feedback, lint, build, and registry tests.
 - [x] Refresh stale PR metadata to match the finalized article and social card.
-- [ ] Request Copilot review and address actionable feedback until the latest head has a clean cycle.
+- [x] Request Copilot review and address actionable feedback until the latest head has a clean cycle.
 
 ## Review
 
 Lint, build, both registry tests, and remote checks pass. The queued review of 223de7e raised two comments based on the superseded unpublished-draft description; both were explicitly dispositioned as non-actionable and left open. Request a fresh review of the current publication scope and require latest-head evidence before completion.
+
+Copilot approved ef2f207 on 2026-09-11 at 02:56:55Z with zero new comments and no unresolved threads. Local/remote checks pass; re-request review after committing this completion record to retain latest-head coverage.
