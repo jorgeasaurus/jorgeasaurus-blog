@@ -927,3 +927,5 @@ Design: one browser-safe metadata definition produces title, meta tags, canonica
 ## Review
 
 Shared metadata now drives static output and client navigation, including complete article/robots/canonical/schema cleanup. Post load state is scoped to the slug to prevent a failed post from temporarily marking the next post noindex. Six Playwright regressions, production build, lint, JavaScript syntax, all 32 built article metadata checks, and diff whitespace passed. Browser tests block external requests to avoid font/analytics timing dependencies.
+
+React Doctor reports a Post component complexity advisory also present on the baseline; article loading was extracted into a slug-scoped hook. The six browser regressions, build, lint, and syntax checks pass after extraction.
