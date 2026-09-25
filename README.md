@@ -51,7 +51,7 @@ vercel dev
 
 ## Production Domain
 
-Use `https://www.jorgeasaur.us` for canonical URLs. In Vercel → Project Settings → Domains, configure `jorgeasaur.us` to redirect to `www.jorgeasaur.us` with **308 Permanent Redirect**; this domain setting is managed outside Git.
+Use `https://www.jorgeasaur.us` for canonical URLs. Vercel → Project Settings → Domains is configured to redirect `jorgeasaur.us` to `www.jorgeasaur.us` with **308 Permanent Redirect**; preserve this setting, which is managed outside Git.
 
 After deploying, verify the apex redirects preserve paths/query strings and the final page canonical uses `www`.
 

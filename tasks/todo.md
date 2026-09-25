@@ -901,4 +901,15 @@ Copilot approved ef2f207 on 2026-09-11 at 02:56:55Z with zero new comments and n
 
 Build, lint, JavaScript checks, and diff whitespace checks passed. Verified 35 public page canonicals/OG URLs/JSON-LD, sitemap/robots, utility-page canonical exclusions, and 32 unchanged RSS GUIDs. Feed links use www; GUIDs retain their historical strings as opaque IDs.
 
-Production apex redirects preserve paths/query strings without loops but remain 307. After deployment, set the Vercel apex domain redirect to 308 and recheck live metadata before closing #15.
+Initial validation found a 307 apex redirect. The review follow-up below applies 308; live metadata still requires deployment before closing #15.
+
+# PR 27 Copilot Review Loop
+
+- [x] Inspect review threads and latest head.
+- [x] Apply and verify the permanent domain redirect.
+- [ ] Update rollout evidence, push, and resolve handled feedback.
+- [ ] Complete a clean Copilot review on the latest head.
+
+## Review Evidence
+
+Applied Vercel apex domain redirect target `www.jorgeasaur.us` and status 308. Live checks of `/`, `/about?seo-review=1`, `/sitemap.xml`, and `/post/hello-world?seo-review=1` returned 308 to www and reached 200 without loops or lost query strings. Preview About metadata uses www; production metadata remains on the old deployment until merge/deploy.
