@@ -2,7 +2,7 @@
 
 Personal field-notes site for PowerShell, endpoint management, Microsoft Graph, automation, and practical engineering notes.
 
-Live site: [Jorgeasaur.us](https://Jorgeasaur.us)
+Live site: [Jorgeasaur.us](https://www.jorgeasaur.us)
 
 ![Jorgeasaurus blog homepage](./WebPage.png)
 
@@ -49,6 +49,12 @@ Run the Vercel function locally:
 vercel dev
 ```
 
+## Production Domain
+
+Use `https://www.jorgeasaur.us` for canonical URLs. Vercel → Project Settings → Domains is configured to redirect `jorgeasaur.us` to `www.jorgeasaur.us` with **308 Permanent Redirect**; preserve this setting, which is managed outside Git.
+
+After deploying, verify the apex redirects preserve paths/query strings and the final page canonical uses `www`.
+
 ## Newsletter
 
 Required env vars in Vercel and GitHub Actions repository secrets:
@@ -80,7 +86,7 @@ npm run newsletter:template:adhoc -- --publish --yes
 
 The template alias is `newsletter-adhoc`. It includes `SUBJECT`, `PREHEADER`, `EYEBROW`, `TITLE`, `BODY_HTML`, `BODY_TEXT`, `CTA_LABEL`, and `CTA_URL` variables. Default mode is a dry run; `--yes` creates or updates the template, and `--publish` publishes it.
 
-GitHub Actions uses the same three values as repository secrets. On pushes to `main`, `.github/workflows/newsletter-draft.yml` uses `scripts/resolve-newsletter-draft.mjs` and creates a draft only when the diff adds exactly one post slug; edits or ambiguous pushes should use `workflow_dispatch` with a slug. It waits for `https://jorgeasaur.us/<slug>`, creates a Resend Broadcast draft, then tags `newsletter-draft/<slug>` to avoid duplicate drafts. Send the draft manually from Resend Broadcasts.
+GitHub Actions uses the same three values as repository secrets. On pushes to `main`, `.github/workflows/newsletter-draft.yml` uses `scripts/resolve-newsletter-draft.mjs` and creates a draft only when the diff adds exactly one post slug; edits or ambiguous pushes should use `workflow_dispatch` with a slug. It waits for `https://www.jorgeasaur.us/<slug>`, creates a Resend Broadcast draft, then tags `newsletter-draft/<slug>` to avoid duplicate drafts. Send the draft manually from Resend Broadcasts.
 
 ## Project Structure
 

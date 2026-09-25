@@ -7,6 +7,8 @@ import { escapeXml, loadPosts, siteUrl } from './lib/site.mjs'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const rootDir = resolve(__dirname, '..')
 const outputPath = resolve(rootDir, 'public/rss.xml')
+// Keep published item IDs stable when the canonical hostname changes.
+const itemIdPrefix = 'https://jorgeasaur.us'
 const feedTitle = 'Jorgeasaurus'
 const feedDescription =
   'Field notes on PowerShell, endpoint management, Microsoft Graph, and automation.'
@@ -28,7 +30,7 @@ function buildRss(posts) {
       return `    <item>
       <title>${escapeXml(post.title)}</title>
       <link>${escapeXml(url)}</link>
-      <guid isPermaLink="true">${escapeXml(url)}</guid>
+      <guid isPermaLink="false">${escapeXml(`${itemIdPrefix}/${post.slug}`)}</guid>
       <pubDate>${formatPostRssDate(post.date)}</pubDate>
       <description>${escapeXml(post.description)}</description>
 ${categories}

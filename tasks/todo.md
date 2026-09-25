@@ -889,3 +889,28 @@ Replaced the initial design using the existing career/automation card as the ima
 Lint, build, both registry tests, and remote checks pass. The queued review of 223de7e raised two comments based on the superseded unpublished-draft description; both were explicitly dispositioned as non-actionable and left open. Request a fresh review of the current publication scope and require latest-head evidence before completion.
 
 Copilot approved ef2f207 on 2026-09-11 at 02:56:55Z with zero new comments and no unresolved threads. Local/remote checks pass; re-request review after committing this completion record to retain latest-head coverage.
+
+# Issue 15: Canonical Hostname
+
+- [x] Confirm production hostname and Vercel domain redirect settings.
+- [x] Align source and generated URLs with https://www.jorgeasaur.us.
+- [x] Document the required permanent domain redirect setting.
+- [x] Verify build output, lint, and redirect behavior; prepare the PR.
+
+## Review
+
+Build, lint, JavaScript checks, and diff whitespace checks passed. Verified 35 public page canonicals/OG URLs/JSON-LD, sitemap/robots, utility-page canonical exclusions, and 32 unchanged RSS GUIDs. Feed links use www; GUIDs retain their historical strings as opaque IDs.
+
+Initial validation found a 307 apex redirect. The review follow-up below applies 308; live metadata still requires deployment before closing #15.
+
+# PR 27 Copilot Review Loop
+
+- [x] Inspect review threads and latest head.
+- [x] Apply and verify the permanent domain redirect.
+- [x] Update rollout evidence, push, and resolve handled feedback.
+
+The final clean-review gate is tracked in GitHub review state against the latest PR head.
+
+## Review Evidence
+
+Applied Vercel apex domain redirect target `www.jorgeasaur.us` and status 308. Live checks of `/`, `/about?seo-review=1`, `/sitemap.xml`, and `/post/hello-world?seo-review=1` returned 308 to www and reached 200 without loops or lost query strings. Preview About metadata uses www; production metadata remains on the old deployment until merge/deploy.

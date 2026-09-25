@@ -68,7 +68,7 @@ For the automated latest-post workflow, keep draft-only behavior:
 - Trigger on `main` changes to `src/content/posts.ts` or `src/content/**/*.mdx`.
 - Resolve slugs with `scripts/resolve-newsletter-draft.mjs`; do not put Node logic inline in YAML.
 - Create a draft only when a push adds exactly one post slug. Use `workflow_dispatch` with a slug for edits or ambiguous pushes.
-- Wait for `https://jorgeasaur.us/<slug>` before creating the draft.
+- Wait for `https://www.jorgeasaur.us/<slug>` before creating the draft.
 - Tag `newsletter-draft/<slug>` after creating the draft to avoid duplicate drafts.
 - Let the user send manually from the Resend dashboard.
 

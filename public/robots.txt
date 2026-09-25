@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://jorgeasaur.us/sitemap.xml
+Sitemap: https://www.jorgeasaur.us/sitemap.xml
