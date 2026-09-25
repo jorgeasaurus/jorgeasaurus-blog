@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { escapeXml, loadPosts } from './lib/site.mjs'
-import { getPageMetadata } from '../src/lib/pageMetadata.mjs'
+import { getPageMetadata, serializeJsonLd } from '../src/lib/pageMetadata.mjs'
 
 const rootDir = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const distDir = resolve(rootDir, 'dist')
@@ -22,7 +22,7 @@ function applyHead(template, metadata) {
   )
   if (metadata.canonical) tags.push(`<link rel="canonical" href="${escapeXml(metadata.canonical)}" />`)
   if (metadata.jsonLd) {
-    const json = JSON.stringify(metadata.jsonLd).replaceAll('<', '\\u003c')
+    const json = serializeJsonLd(metadata.jsonLd)
     tags.push(`<script type="application/ld+json" id="ld-graph">${json}</script>`)
   }
   return html.replace('</head>', () => `    ${tags.join('\n    ')}\n  </head>`)

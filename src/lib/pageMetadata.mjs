@@ -120,3 +120,8 @@ export function getPageMetadata(kind, { post, filtered = false } = {}) {
     jsonLd,
   }
 }
+
+// Preserve JSON values while keeping serialized script elements safe in HTML.
+export function serializeJsonLd(value) {
+  return JSON.stringify(value).replaceAll('<', '\\u003c')
+}

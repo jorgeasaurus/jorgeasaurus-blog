@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { getPageMetadata, type PageKind, type PageMetadataOptions } from '../lib/pageMetadata.mjs'
+import { getPageMetadata, serializeJsonLd, type PageKind, type PageMetadataOptions } from '../lib/pageMetadata.mjs'
 
 export default function usePageMetadata(kind: PageKind, { post, filtered }: PageMetadataOptions = {}) {
   useEffect(() => {
@@ -26,7 +26,7 @@ export default function usePageMetadata(kind: PageKind, { post, filtered }: Page
       const element = document.createElement('script')
       element.id = 'ld-graph'
       element.type = 'application/ld+json'
-      element.textContent = JSON.stringify(metadata.jsonLd)
+      element.textContent = serializeJsonLd(metadata.jsonLd)
       document.head.append(element)
     }
   }, [kind, post, filtered])

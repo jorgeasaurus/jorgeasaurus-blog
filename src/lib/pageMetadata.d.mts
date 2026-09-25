@@ -15,3 +15,4 @@ export interface PageMetadata {
   jsonLd: Record<string, unknown> | null
 }
 export function getPageMetadata(kind: PageKind, options?: PageMetadataOptions): PageMetadata
+export function serializeJsonLd(value: Record<string, unknown>): string

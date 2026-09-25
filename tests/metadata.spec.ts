@@ -1,3 +1,4 @@
+import { serializeJsonLd } from '../src/lib/pageMetadata.mjs'
 import { expect, test, type Page, type BrowserContext } from '@playwright/test'
 import posts from '../src/content/posts'
 
@@ -196,4 +197,16 @@ test('back navigation restores a loaded article after its adjacent article fails
   await expect(page.locator('head script[type="application/ld+json"]')).toHaveCount(0)
   await page.goBack({ waitUntil: 'domcontentloaded' })
   await postHead(page, firstPost)
+})
+
+
+test('JSON-LD survives HTML serialization without creating injected markup', async ({ page }) => {
+  const text = '</script><script>window.injected = true</script><img id="injected"> < & " Unicode: café'
+  const value = { '@context': 'https://schema.org', '@type': 'Article', headline: text, description: text, keywords: text }
+  const serialized = serializeJsonLd(value)
+  await page.setContent(`<script type="application/ld+json" id="ld-graph">${serialized}</script>`)
+  await expect(page.locator('script')).toHaveCount(1)
+  await expect(page.locator('#injected')).toHaveCount(0)
+  expect(await page.evaluate(() => Reflect.has(window, 'injected'))).toBe(false)
+  expect(await page.locator('#ld-graph').evaluate((node) => JSON.parse(node.textContent || '{}'))).toEqual(value)
 })

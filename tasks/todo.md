@@ -929,3 +929,13 @@ Design: one browser-safe metadata definition produces title, meta tags, canonica
 Shared metadata now drives static output and client navigation, including complete article/robots/canonical/schema cleanup. Post load state is scoped to the slug to prevent a failed post from temporarily marking the next post noindex. Six Playwright regressions, production build, lint, JavaScript syntax, all 32 built article metadata checks, and diff whitespace passed. Browser tests block external requests to avoid font/analytics timing dependencies.
 
 React Doctor reports a Post component complexity advisory also present on the baseline; article loading was extracted into a slug-scoped hook. The six browser regressions, build, lint, and syntax checks pass after extraction.
+
+# PR 28 Copilot Review
+
+- [x] Inspect the runtime JSON-LD escaping feedback.
+- [x] Share HTML-safe JSON-LD serialization and verify a hostile-content regression.
+- [x] Prepare verified changes and review-thread evidence.
+
+Runtime textContent does not parse HTML, but matching build-time escaping also protects later HTML serialization. Final clean-review status is tracked on the PR.
+
+Validation: seven Playwright regressions (including hostile closing-script content), production build, lint, syntax checks, and diff whitespace passed.
