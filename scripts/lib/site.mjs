@@ -8,7 +8,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const rootDir = resolve(__dirname, '..', '..')
 const postsPath = resolve(rootDir, 'src/content/posts.ts')
 
-export const siteUrl = 'https://jorgeasaur.us'
+export const siteUrl = 'https://www.jorgeasaur.us'
 export const siteName = 'Jorgeasaurus'
 export const authorName = 'Jorgeasaurus'
 

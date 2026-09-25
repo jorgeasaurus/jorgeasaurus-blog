@@ -889,3 +889,16 @@ Replaced the initial design using the existing career/automation card as the ima
 Lint, build, both registry tests, and remote checks pass. The queued review of 223de7e raised two comments based on the superseded unpublished-draft description; both were explicitly dispositioned as non-actionable and left open. Request a fresh review of the current publication scope and require latest-head evidence before completion.
 
 Copilot approved ef2f207 on 2026-09-11 at 02:56:55Z with zero new comments and no unresolved threads. Local/remote checks pass; re-request review after committing this completion record to retain latest-head coverage.
+
+# Issue 15: Canonical Hostname
+
+- [x] Confirm production hostname and Vercel domain redirect settings.
+- [x] Align source and generated URLs with https://www.jorgeasaur.us.
+- [x] Document the required permanent domain redirect setting.
+- [x] Verify build output, lint, and redirect behavior; prepare the PR.
+
+## Review
+
+Build, lint, JavaScript checks, and diff whitespace checks passed. Verified 35 public page canonicals/OG URLs/JSON-LD, sitemap/robots, utility-page canonical exclusions, and 32 unchanged RSS GUIDs. Feed links use www; GUIDs retain their historical strings as opaque IDs.
+
+Production apex redirects preserve paths/query strings without loops but remain 307. After deployment, set the Vercel apex domain redirect to 308 and recheck live metadata before closing #15.
