@@ -907,8 +907,9 @@ Initial validation found a 307 apex redirect. The review follow-up below applies
 
 - [x] Inspect review threads and latest head.
 - [x] Apply and verify the permanent domain redirect.
-- [ ] Update rollout evidence, push, and resolve handled feedback.
-- [ ] Complete a clean Copilot review on the latest head.
+- [x] Update rollout evidence, push, and resolve handled feedback.
+
+The final clean-review gate is tracked in GitHub review state against the latest PR head.
 
 ## Review Evidence
 
