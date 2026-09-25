@@ -8,9 +8,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const rootDir = resolve(__dirname, '..', '..')
 const postsPath = resolve(rootDir, 'src/content/posts.ts')
 
-export const siteUrl = 'https://www.jorgeasaur.us'
-export const siteName = 'Jorgeasaurus'
-export const authorName = 'Jorgeasaurus'
+export { siteUrl, siteName, authorName } from '../../src/lib/pageMetadata.mjs'
 
 export function escapeXml(value) {
   return String(value)

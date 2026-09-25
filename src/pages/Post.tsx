@@ -1,3 +1,4 @@
+import usePageMetadata from '../hooks/usePageMetadata'
 import { Link, useParams } from 'react-router-dom'
 import {
   createContext,
@@ -92,10 +93,11 @@ function LightboxDialog({ image, onClose }: LightboxDialogProps) {
   )
 }
 
-type PostLoadState =
+type PostLoadState = { slug: string | undefined } & (
   | { status: 'loading' }
   | { status: 'loaded'; content: React.ComponentType<MdxContentProps> }
   | { status: 'failed' }
+)
 
 const postModules = Object.fromEntries(
   Object.entries(import.meta.glob<MdxModule>('../content/*.mdx'))
@@ -115,17 +117,19 @@ export default function Post() {
       ? sortedPosts[postIndex + 1]
       : null
   const [postLoad, setPostLoad] = useState<PostLoadState>({
+    slug,
     status: 'loading',
   })
   const [readingProgress, setReadingProgress] = useState(0)
   const [expandedImage, setExpandedImage] = useState<ExpandedImage | null>(null)
-  const PostContent = postLoad.status === 'loaded' ? postLoad.content : null
+  const loadStatus = postLoad.slug === slug ? postLoad.status : 'loading'
+  const PostContent = postLoad.slug === slug && postLoad.status === 'loaded' ? postLoad.content : null
   const openExpandedImage = useCallback((image: ExpandedImage) => {
     setExpandedImage(image)
-  }, [])
+  }, [setExpandedImage])
   const closeExpandedImage = useCallback(() => {
     setExpandedImage(null)
-  }, [])
+  }, [setExpandedImage])
   const loadingGlassRef = useLiquidGlassSurface<HTMLDivElement>({
     borderRadius: 30,
     type: 'rounded',
@@ -143,17 +147,17 @@ export default function Post() {
     let canceled = false
 
     async function loadPost() {
-      setPostLoad({ status: 'loading' })
+      setPostLoad({ slug, status: 'loading' })
 
       if (!slug || !postMeta) {
-        setPostLoad({ status: 'failed' })
+        setPostLoad({ slug, status: 'failed' })
         return
       }
 
       const loadPostModule = postModules[`../content/${slug}.mdx`]
 
       if (!loadPostModule) {
-        setPostLoad({ status: 'failed' })
+        setPostLoad({ slug, status: 'failed' })
         return
       }
 
@@ -161,11 +165,11 @@ export default function Post() {
         const module = await loadPostModule()
 
         if (!canceled) {
-          setPostLoad({ status: 'loaded', content: module.default })
+          setPostLoad({ slug, status: 'loaded', content: module.default })
         }
       } catch {
         if (!canceled) {
-          setPostLoad({ status: 'failed' })
+          setPostLoad({ slug, status: 'failed' })
         }
       }
     }
@@ -177,9 +181,7 @@ export default function Post() {
     }
   }, [slug, postMeta])
 
-  useEffect(() => {
-    document.title = postMeta ? `${postMeta.title} | Jorgeasaurus` : 'Jorgeasaurus'
-  }, [postMeta])
+  usePageMetadata(!postMeta || loadStatus === 'failed' ? 'not-found' : 'post', { post: postMeta })
 
   useEffect(() => {
     function updateReadingProgress() {
@@ -209,7 +211,7 @@ export default function Post() {
     }
   }, [PostContent])
 
-  if (postLoad.status === 'loading') {
+  if (loadStatus === 'loading') {
     return (
       <main className="blog-shell">
         <WallpaperStage />
