@@ -10,11 +10,12 @@
     "newsletter:latest": "node scripts/notify-latest-post.mjs",
     "newsletter:template:adhoc": "node scripts/create-adhoc-template.mjs",
     "newsletter:count": "node scripts/count-newsletter-members.mjs",
-    "check:js": "node --check lib/resend.mjs && node --check src/lib/postDates.mjs && node --check api/subscribe.js && node --check scripts/lib/cli.mjs && node --check scripts/lib/site.mjs && node --check scripts/lib/newsletter-template.mjs && node --check scripts/generate-rss.mjs && node --check scripts/generate-sitemap.mjs && node --check scripts/resolve-newsletter-draft.mjs && node --check scripts/notify-latest-post.mjs && node --check scripts/create-adhoc-template.mjs && node --check scripts/count-newsletter-members.mjs",
+    "check:js": "node --check lib/resend.mjs && node --check src/lib/postDates.mjs && node --check api/subscribe.js && node --check scripts/lib/cli.mjs && node --check scripts/lib/site.mjs && node --check scripts/lib/newsletter-template.mjs && node --check scripts/generate-rss.mjs && node --check scripts/generate-sitemap.mjs && node --check scripts/resolve-newsletter-draft.mjs && node --check scripts/notify-latest-post.mjs && node --check scripts/create-adhoc-template.mjs && node --check scripts/count-newsletter-members.mjs && node --check src/lib/pageMetadata.mjs && node --check scripts/generate-post-html.mjs",
     "build": "npm run generate:rss && npm run generate:sitemap && tsc -b && vite build && node scripts/generate-post-html.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
-    "doctor": "npx -y react-doctor@0.2.14"
+    "doctor": "npx -y react-doctor@0.2.14",
+    "test:metadata": "playwright test"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",

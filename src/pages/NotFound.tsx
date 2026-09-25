@@ -1,5 +1,5 @@
+import usePageMetadata from '../hooks/usePageMetadata'
 import { Link } from 'react-router-dom'
-import { useEffect } from 'react'
 import Topbar from '../components/Topbar'
 import WallpaperStage from '../components/WallpaperStage'
 import useLiquidGlassSurface from '../hooks/useLiquidGlassSurface'
@@ -10,19 +10,7 @@ export default function NotFound() {
     type: 'rounded',
   })
 
-  useEffect(() => {
-    document.title = 'Page Not Found | Jorgeasaurus'
-  }, [])
-
-  useEffect(() => {
-    const meta = document.querySelector<HTMLMetaElement>('meta[name="robots"]')
-    if (!meta) return
-    const previous = meta.getAttribute('content') ?? 'index,follow'
-    meta.setAttribute('content', 'noindex,nofollow')
-    return () => {
-      meta.setAttribute('content', previous)
-    }
-  }, [])
+  usePageMetadata('not-found')
 
   return (
     <main className="blog-shell">

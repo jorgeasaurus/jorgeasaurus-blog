@@ -1,3 +1,4 @@
+import usePageMetadata from '../hooks/usePageMetadata'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useEffect } from 'react'
 import Topbar from '../components/Topbar'
@@ -26,10 +27,6 @@ export default function Home() {
     type: 'rounded',
   })
 
-  useEffect(() => {
-    document.title = 'Jorgeasaurus'
-  }, [])
-
   const activeTag = searchParams.get('tag')
   const sorted = sortPostsByDate(posts)
   const filtered = activeTag
@@ -45,20 +42,7 @@ export default function Home() {
   const pageStart = (currentPage - 1) * POSTS_PER_PAGE
   const visiblePosts = filtered.slice(pageStart, pageStart + POSTS_PER_PAGE)
 
-  useEffect(() => {
-    const meta = document.querySelector<HTMLMetaElement>('meta[name="robots"]')
-    if (!meta) return
-    const previous = meta.getAttribute('content') ?? 'index,follow'
-    return () => {
-      meta.setAttribute('content', previous)
-    }
-  }, [])
-
-  useEffect(() => {
-    document
-      .querySelector<HTMLMetaElement>('meta[name="robots"]')
-      ?.setAttribute('content', isFiltered ? 'noindex,follow' : 'index,follow')
-  }, [isFiltered])
+  usePageMetadata('home', { filtered: isFiltered })
 
   useEffect(() => {
     window.scrollTo(0, 0)

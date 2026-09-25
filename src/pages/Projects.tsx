@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import usePageMetadata from '../hooks/usePageMetadata'
 import Topbar from '../components/Topbar'
 import WallpaperStage from '../components/WallpaperStage'
 import useLiquidGlassSurface from '../hooks/useLiquidGlassSurface'
@@ -237,9 +237,7 @@ export default function Projects() {
     type: 'rounded',
   })
 
-  useEffect(() => {
-    document.title = 'Projects | Jorgeasaurus'
-  }, [])
+  usePageMetadata('projects')
 
   return (
     <main className="blog-shell blog-shell--projects">

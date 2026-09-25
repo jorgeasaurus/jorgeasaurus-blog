@@ -914,3 +914,28 @@ The final clean-review gate is tracked in GitHub review state against the latest
 ## Review Evidence
 
 Applied Vercel apex domain redirect target `www.jorgeasaur.us` and status 308. Live checks of `/`, `/about?seo-review=1`, `/sitemap.xml`, and `/post/hello-world?seo-review=1` returned 308 to www and reached 200 without loops or lost query strings. Preview About metadata uses www; production metadata remains on the old deployment until merge/deploy.
+
+# Issue 16: Navigation Metadata
+
+- [x] Share complete page metadata between static generation and runtime updates.
+- [x] Replace page-local title/robots effects with the shared metadata hook.
+- [x] Test direct loads, navigation/history, filtered pages, utility/error recovery, and duplicate cleanup.
+- [x] Run checks, review the diff, and prepare the PR.
+
+Design: one browser-safe metadata definition produces title, meta tags, canonical, and JSON-LD for each page. Both build output and the runtime hook replace managed head fields completely so article and noindex state cannot leak between routes.
+
+## Review
+
+Shared metadata now drives static output and client navigation, including complete article/robots/canonical/schema cleanup. Post load state is scoped to the slug to prevent a failed post from temporarily marking the next post noindex. Seven Playwright regressions, production build, lint, JavaScript syntax, all 32 built article metadata checks, and diff whitespace passed. Browser tests block external requests to avoid font/analytics timing dependencies.
+
+React Doctor reports a Post component complexity advisory also present on the baseline; article loading was extracted into a slug-scoped hook. The seven browser regressions, build, lint, and syntax checks pass after extraction.
+
+# PR 28 Copilot Review
+
+- [x] Inspect the runtime JSON-LD escaping feedback.
+- [x] Share HTML-safe JSON-LD serialization and verify a hostile-content regression.
+- [x] Prepare verified changes and review-thread evidence.
+
+Runtime textContent does not parse HTML, but matching build-time escaping also protects later HTML serialization. Final clean-review status is tracked on the PR.
+
+Validation: seven Playwright regressions (including hostile closing-script content), production build, lint, syntax checks, and diff whitespace passed.

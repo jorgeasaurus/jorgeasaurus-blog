@@ -1,10 +1,8 @@
-import { useEffect } from 'react'
+import usePageMetadata from '../hooks/usePageMetadata'
 import WallpaperStage from '../components/WallpaperStage'
 
 export default function SocialCard() {
-  useEffect(() => {
-    document.title = 'Jorgeasaurus Social Card'
-  }, [])
+  usePageMetadata('social-card')
 
   return (
     <main className="social-card-page" aria-label="Jorgeasaurus social preview">
