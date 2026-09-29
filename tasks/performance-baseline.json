@@ -108,23 +108,51 @@
     }
   ],
   "fieldData": {
-    "status": "No Data in PageSpeed Insights for all three sampled URLs",
+    "status": "All six sampled mobile and desktop PageSpeed Insights URL reports show No Data.",
     "reports": [
       {
         "page": "home",
-        "url": "https://pagespeed.web.dev/analysis/https-www-jorgeasaur-us/uqe4okf4jm?form_factor=mobile"
+        "url": "https://pagespeed.web.dev/analysis/https-www-jorgeasaur-us/uqe4okf4jm?form_factor=mobile",
+        "formFactor": "mobile",
+        "status": "No Data"
       },
       {
         "page": "deployments",
-        "url": "https://pagespeed.web.dev/analysis/https-www-jorgeasaur-us-intune-deployments-schedule-the-rollout/l2h48rkrdn?form_factor=mobile"
+        "url": "https://pagespeed.web.dev/analysis/https-www-jorgeasaur-us-intune-deployments-schedule-the-rollout/l2h48rkrdn?form_factor=mobile",
+        "formFactor": "mobile",
+        "status": "No Data"
       },
       {
         "page": "vscode",
-        "url": "https://pagespeed.web.dev/analysis/https-www-jorgeasaur-us-manage-vs-code-extensions-with-intune-remediations/9fypszbsl1?form_factor=mobile"
+        "url": "https://pagespeed.web.dev/analysis/https-www-jorgeasaur-us-manage-vs-code-extensions-with-intune-remediations/9fypszbsl1?form_factor=mobile",
+        "formFactor": "mobile",
+        "status": "No Data"
+      },
+      {
+        "page": "home",
+        "url": "https://pagespeed.web.dev/analysis/https-www-jorgeasaur-us/uqe4okf4jm?form_factor=desktop",
+        "formFactor": "desktop",
+        "checkedAt": "2026-09-29T21:02:39.531Z",
+        "status": "No Data"
+      },
+      {
+        "page": "deployments",
+        "url": "https://pagespeed.web.dev/analysis/https-www-jorgeasaur-us-intune-deployments-schedule-the-rollout/l2h48rkrdn?form_factor=desktop",
+        "formFactor": "desktop",
+        "checkedAt": "2026-09-29T21:02:51.201Z",
+        "status": "No Data"
+      },
+      {
+        "page": "vscode",
+        "url": "https://pagespeed.web.dev/analysis/https-www-jorgeasaur-us-manage-vs-code-extensions-with-intune-remediations/9fypszbsl1?form_factor=desktop",
+        "formFactor": "desktop",
+        "checkedAt": "2026-09-29T21:03:02.799Z",
+        "status": "No Data"
       }
     ],
     "api": "HTTP 429 quota exceeded; UI checked separately",
-    "searchConsole": "Not inspected; ownership and coverage tracked in issue 24"
+    "searchConsole": "Not inspected; ownership and coverage tracked in issue 24",
+    "scope": "URL-specific PSI reports; no origin fallback was displayed. Origin data was not independently queried."
   },
   "priorities": [
     {
@@ -138,7 +166,7 @@
   ],
   "limits": [
     "One production run per page/device is a baseline, not proof of a regression.",
-    "Lab TBT is not field INP; no field LCP, INP, or CLS values were available.",
+    "Lab TBT is not field INP; none of the six sampled PSI reports exposed field LCP, INP, or CLS values.",
     "Simulated local comparisons cannot prove production or field improvements."
   ],
   "fontDiscoveryComparison": {
