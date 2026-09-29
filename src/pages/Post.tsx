@@ -223,14 +223,14 @@ export default function Post() {
               onClick={() =>
                 setExpandedImage({
                   src: heroImage.src,
-                  alt: heroImage.alt || postMeta.title,
+                  alt: heroImage.alt,
                 })
               }
-              aria-label={`Open image: ${heroImage.alt || postMeta.title}`}
+              aria-label={`Open image: ${heroImage.alt || 'Article illustration'}`}
             >
               <img
                 src={heroImage.src}
-                alt={heroImage.alt || postMeta.title}
+                alt={heroImage.alt}
                 loading="eager"
               />
             </button>

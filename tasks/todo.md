@@ -939,3 +939,13 @@ React Doctor reports a Post component complexity advisory also present on the ba
 Runtime textContent does not parse HTML, but matching build-time escaping also protects later HTML serialization. Final clean-review status is tracked on the PR.
 
 Validation: seven Playwright regressions (including hostile closing-script content), production build, lint, syntax checks, and diff whitespace passed.
+
+# Issue 17: Hero image alternatives
+
+- [x] Inspect all seven rendered heroes and distinguish informative from decorative images.
+- [x] Describe informative images; preserve empty decorative alternatives and named expansion controls.
+- [x] Verify rendered images and dialogs; strict review returned zero findings.
+- [ ] Complete the latest-head Copilot review loop.
+- [ ] Squash merge, verify production, and clean proven disposable resources.
+
+Verification: all seven heroes loaded with expected alternatives; keyboard opening, matching dialog alternatives, and Escape passed. Lint, production build, and diff whitespace checks passed. Final Copilot and merge evidence will be recorded on the PR.
