@@ -17,6 +17,8 @@ The `PSIntuneWinDetection` PowerShell function is crafted to simplify detecting 
 - **Architecture Compatibility**: Equipped to check both 64-bit and 32-bit registry paths.
 - **User Context Awareness**: Capable of detecting installations in user-specific contexts (`HKCU` registry hive).
 
+Before you write a detection rule, [find the app’s uninstall registry keys](/find-registry-uninstall-keys-with-powershell).
+
 ### The Script
 
 The script functions by creating an `UninstallInfo` class that stores vital information about installed applications. It uses the `Get-UninstallInfo` function to gather installation data from specific registry paths, addressing both general and user-specific installations.

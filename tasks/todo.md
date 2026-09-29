@@ -990,7 +990,7 @@ Review: fixed the inherited h2 letter spacing identified by strict review and br
 - [x] Inspect the authenticated Search Console Links report.
 - [x] Verify a sample of relevant public project/profile pages and record a scoped baseline.
 - [x] Prioritize useful article references and define follow-up measurement.
-- [ ] Complete strict/Copilot reviews, merge, and cleanup.
+- [x] Complete strict/Copilot reviews, merge, and cleanup.
 
 Scope: planning and read-only research. Outreach and external profile/repository changes require separate authorization.
 
@@ -1015,3 +1015,13 @@ Priorities, pending separate authorization:
 Measurement: after authorized edits, record each source URL, target URL, and publication date; recheck the same five pages after 28 days. Compare distinct source–target pairs against eight, and report additions/removals separately. If analytics becomes available, compare referral visits over matching 28-day periods; link placement alone does not demonstrate traffic or ranking gains.
 
 Review: fresh strict review found zero issues; baseline counts match the five-page evidence, all four proposed article destinations returned HTTP 200, and diff whitespace checks passed.
+
+# Issue 22: Contextual article links
+
+- [x] Add six descriptive links where a related article helps with the next task.
+- [x] Verify rendered anchors and destination content; run build and strict review.
+- [ ] Complete Copilot review, merge, production verification, and cleanup.
+
+Plan: connect compliance, app detection, remediation, Graph, and Hydration Kit articles without changing their code examples.
+
+Review: all six rendered links navigated to the intended article heading and returned HTTP 200. Lint, build, diff whitespace, and fresh strict review passed with zero findings.
