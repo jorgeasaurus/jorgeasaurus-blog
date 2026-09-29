@@ -13,6 +13,7 @@ import NewsletterSignup from '../components/NewsletterSignup'
 import WallpaperStage from '../components/WallpaperStage'
 import { formatDate, sortPostsByDate } from '../lib/posts'
 import postImages from '../content/postImages'
+import imageMetadata from '../content/imageMetadata'
 import posts from '../content/posts'
 import useLiquidGlassSurface from '../hooks/useLiquidGlassSurface'
 import useModalDialog from '../hooks/useModalDialog'
@@ -47,9 +48,10 @@ const ExpandImageContext = createContext<OpenExpandedImage | null>(null)
 
 function ExpandablePostImage({ alt = '', src, ...props }: MdxImageProps) {
   const expandImage = use(ExpandImageContext)
+  const metadata = src ? imageMetadata[src] : undefined
 
   if (!src || !expandImage) {
-    return <img {...props} alt={alt} />
+    return <img loading="lazy" {...metadata} {...props} src={src} alt={alt} />
   }
 
   return (
@@ -59,7 +61,7 @@ function ExpandablePostImage({ alt = '', src, ...props }: MdxImageProps) {
       onClick={() => expandImage({ src, alt })}
       aria-label={alt ? `Open image: ${alt}` : 'Open image'}
     >
-      <img {...props} src={src} alt={alt} />
+      <img loading="lazy" {...metadata} {...props} src={src} alt={alt} />
     </button>
   )
 }
@@ -230,6 +232,8 @@ export default function Post() {
             >
               <img
                 src={heroImage.src}
+                {...imageMetadata[heroImage.src]}
+                fetchPriority="high"
                 alt={heroImage.alt}
                 loading="eager"
               />

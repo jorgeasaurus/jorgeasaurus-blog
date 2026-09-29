@@ -1020,8 +1020,19 @@ Review: fresh strict review found zero issues; baseline counts match the five-pa
 
 - [x] Add six descriptive links where a related article helps with the next task.
 - [x] Verify rendered anchors and destination content; run build and strict review.
-- [ ] Complete Copilot review, merge, production verification, and cleanup.
+- [x] Complete Copilot review, merge, production verification, and cleanup.
 
 Plan: connect compliance, app detection, remediation, Graph, and Hydration Kit articles without changing their code examples.
 
 Review: all six rendered links navigated to the intended article heading and returned HTTP 200. Lint, build, diff whitespace, and fresh strict review passed with zero findings.
+
+# Issue 23: Image delivery
+
+- [x] Reduce wallpaper and large PNG transfers; preserve screenshot pixels and social formats.
+- [x] Add responsive wallpaper selection, image dimensions, and selective lazy loading.
+- [x] Compare rendering, requests, layout reservation, lightboxes, and transfer sizes.
+- [ ] Complete strict/Copilot reviews, merge, verify production, and clean previews.
+
+Plan: retain full-resolution sources for expansion, keep initial imagery eager, and defer later screenshots.
+
+Review: moved per-image loading policy into content metadata after strict review; fresh review returned zero findings. Lint/build and seven metadata tests passed. Twelve browser cases verified responsive wallpaper requests, deferred screenshots, image decoding, and original lightbox sources; delayed requests verified initial image space reservation. Asset sizes and pixel checks are recorded in `tasks/image-delivery-validation.json`.

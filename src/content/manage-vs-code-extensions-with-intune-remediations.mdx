@@ -9,6 +9,10 @@ tags: ["vscode", "intune", "powershell", "windows", "remediations"]
   <img
     src="/images/posts/manage-vs-code-extensions-with-intune-remediations/unallowed-extension-banner.png"
     alt="VS Code extension details showing that an extension cannot be installed because it is not in the allowed list."
+    width={674}
+    height={147}
+    loading="eager"
+    fetchPriority="high"
   />
   <figcaption>
     VS Code blocks an extension that is not in the managed allow list.
@@ -419,6 +423,9 @@ Win - VS Code - Allowed Extensions - Pilot
   <img
     src="/images/posts/manage-vs-code-extensions-with-intune-remediations/intune-remediation-basics.png"
     alt="Intune custom script package Basics page with a VS Code allowed extensions pilot name and description."
+    width={800}
+    height={453}
+    loading="lazy"
   />
   <figcaption>
     Give the package a name and description that make its scope obvious in reports.
@@ -439,6 +446,9 @@ For production, follow your script-signing standard. If you enable signature enf
   <img
     src="/images/posts/manage-vs-code-extensions-with-intune-remediations/intune-remediation-settings.png"
     alt="Intune Remediations settings with the VS Code detection and remediation scripts uploaded, logged-on credentials disabled, signature enforcement disabled, and 64-bit PowerShell enabled."
+    width={806}
+    height={712}
+    loading="lazy"
   />
   <figcaption>
     Upload both scripts, then set SYSTEM context, no signature enforcement for this unsigned example, and the 64-bit PowerShell host.
@@ -457,6 +467,9 @@ Use a daily schedule during the pilot. A shorter interval only repairs registry 
   <img
     src="/images/posts/manage-vs-code-extensions-with-intune-remediations/intune-remediation-review.png"
     alt="Intune custom script Review and create page showing the VS Code package settings and a daily pilot-group assignment."
+    width={799}
+    height={655}
+    loading="lazy"
   />
   <figcaption>
     Review the execution settings and confirm the assignment is still limited to the pilot group before creating the package.
@@ -471,6 +484,9 @@ The first detection reports a registry issue and exits `1`. Intune then runs rem
   <img
     src="/images/posts/manage-vs-code-extensions-with-intune-remediations/remediation-device-status.png"
     alt="Intune Remediations device status showing detection with issues and remediation status Issue fixed."
+    width={995}
+    height={323}
+    loading="lazy"
   />
   <figcaption>
     Detection found the missing policy, remediation wrote it, post-remediation detection verified the registry state, and Intune recorded <strong>Issue fixed</strong>.
@@ -503,6 +519,9 @@ The type should be `MultiString`, and the parsed object should match your allow 
   <img
     src="/images/posts/manage-vs-code-extensions-with-intune-remediations/terminal-output.png"
     alt="PowerShell terminal showing the VS Code AllowedExtensions registry value as MultiString and the parsed extension allow list."
+    width={2408}
+    height={1360}
+    loading="lazy"
   />
   <figcaption>
     The registry value is the expected type, and PowerShell can parse the complete allow list.
@@ -521,6 +540,9 @@ Confirm `extensions.allowed` appears in the applied-policy table. Check the non-
   <img
     src="/images/posts/manage-vs-code-extensions-with-intune-remediations/policy-diagnostics.png"
     alt="VS Code Policy Diagnostics report showing extensions.allowed under Applied Policy with the AllowedExtensions policy value."
+    width={2704}
+    height={1274}
+    loading="lazy"
   />
   <figcaption>
     Policy Diagnostics confirms that VS Code read and applied the AllowedExtensions registry policy.
@@ -531,6 +553,9 @@ Confirm `extensions.allowed` appears in the applied-policy table. Check the non-
   <img
     src="/images/posts/manage-vs-code-extensions-with-intune-remediations/extensions-allowed-managed-setting.png"
     alt="VS Code settings showing Extensions Allowed as managed by the organization with the approved extension list."
+    width={2022}
+    height={1340}
+    loading="lazy"
   />
   <figcaption>
     VS Code marks the setting as managed and shows the allow list it parsed from the registry policy.
@@ -547,6 +572,9 @@ Finally, test behavior:
   <img
     src="/images/posts/manage-vs-code-extensions-with-intune-remediations/unallowed-extensions-list.png"
     alt="VS Code Extensions view showing approved extensions available to install and unapproved extensions blocked with warning icons."
+    width={401}
+    height={236}
+    loading="lazy"
   />
   <figcaption>
     Approved extensions remain available. Unlisted extensions show a warning and cannot be installed.

@@ -32,6 +32,7 @@
 }
 
 .wallpaper-stage {
+  --wallpaper-image: url('/images/site/wallpaper.webp');
   position: fixed;
   inset: 0;
   z-index: 0;
@@ -40,8 +41,14 @@
     linear-gradient(115deg, rgba(1, 6, 4, 0.02), rgba(2, 10, 7, 0.34) 76%),
     radial-gradient(circle at 18% 12%, rgba(242, 255, 246, 0.12), transparent 22%),
     radial-gradient(circle at 86% 4%, rgba(157, 240, 182, 0.12), transparent 26%),
-    url('/images/site/wallpaper.jpg') center / cover no-repeat;
+    var(--wallpaper-image) center / cover no-repeat;
   transform: translateZ(0);
+}
+
+@media (max-width: 1920px) and (max-height: 1080px) and (max-resolution: 1dppx) {
+  .wallpaper-stage {
+    --wallpaper-image: url('/images/site/wallpaper-1920.webp');
+  }
 }
 
 .wallpaper-stage::after {
@@ -1669,6 +1676,7 @@ h2 {
 
 .post-content img {
   max-width: 100%;
+  height: auto;
   border-radius: 14px;
   margin: 1.2em 0;
   cursor: zoom-in;
