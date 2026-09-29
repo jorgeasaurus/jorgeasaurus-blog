@@ -1,0 +1,26 @@
+const imageMetadata: Record<string, { width: number; height: number; loading?: 'eager' | 'lazy' }> = {
+  '/images/posts/ai-agents-changed-how-i-build-things/ai-in-the-loop.png': { width: 1536, height: 1024 },
+  '/images/posts/back-up-or-restore-jamf-pro-objects-with-powershell/image-1.png': { width: 373, height: 685 },
+  '/images/posts/bootstrap-your-intune-tenant-in-a-single-command/IHKLogo.png': { width: 1024, height: 1024 },
+  '/images/posts/creating-dynamic-device-model-groups-in-entra-with-powershell/Dynamic%20Rules.png': { width: 1295, height: 591 },
+  '/images/posts/creating-dynamic-device-model-groups-in-entra-with-powershell/GroupPage.jpeg': { width: 1811, height: 1212 },
+  '/images/posts/creating-dynamic-device-model-groups-in-entra-with-powershell/Screenshot1_Whatif.png': { width: 1449, height: 774 },
+  '/images/posts/creating-dynamic-device-model-groups-in-entra-with-powershell/WhatIfTable.png': { width: 1449, height: 394 },
+  '/images/posts/intune-deployments-schedule-the-rollout/deployments-preview.jpg': { width: 2328, height: 1258 },
+  '/images/posts/intune-deployments-schedule-the-rollout/example-deployment-created.jpg': { width: 2328, height: 1258 },
+  '/images/posts/intune-deployments-schedule-the-rollout/example-deployment-properties.jpg': { width: 2328, height: 1258 },
+  '/images/posts/intune-deployments-schedule-the-rollout/example-deployment-review.jpg': { width: 2328, height: 1258 },
+  '/images/posts/set-up-and-view-app-inventory-data-in-intune/app-inventory-tab-sanitized.png': { width: 1493, height: 800 },
+  '/images/posts/set-up-and-view-app-inventory-data-in-intune/applicationproperties-selected.png': { width: 2304, height: 1444 },
+  '/images/posts/set-up-and-view-app-inventory-data-in-intune/create-profile-properties-catalog.png': { width: 1174, height: 1444 },
+  '/images/posts/supercharge-microsoft-graph-api-data-retrieval-with-powershell-batch-requests/mgBatchRequests.png': { width: 1200, height: 800 },
+  '/images/posts/syncing-abm-and-vpp-tokens-with-intune-a-powershell-script-for-the-lazy-admin/iphone.jpg': { width: 1200, height: 960 },
+  '/images/posts/use-cpm-with-openrouter-models/copilotterminal.png': { width: 1652, height: 954 },
+  '/images/posts/use-cpm-with-openrouter-models/cpm-repo.png': { width: 1280, height: 900, loading: 'eager' },
+  '/images/posts/use-cpm-with-openrouter-models/openrouter-keys.png': { width: 2772, height: 1533 },
+  '/images/posts/use-cpm-with-openrouter-models/openrouter-models.png': { width: 1280, height: 1334 },
+  '/images/posts/using-net-methods-in-powershell-with-practical-examples-youll-actually-reuse/dotnetPS.png': { width: 1200, height: 800 },
+  '/images/posts/winget-without-winget-building-a-cross-platform-package-manifest-fetcher/logo.png': { width: 1200, height: 800 },
+}
+
+export default imageMetadata

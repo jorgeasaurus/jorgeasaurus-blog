@@ -1,0 +1,225 @@
+{
+  "date": "2026-09-29",
+  "baselineCommit": "8f03a0da54e76b0989ec69e803d2eee3e5d335ca",
+  "assets": [
+    {
+      "path": "public/images/site/wallpaper.webp",
+      "operation": "newWebpVariant",
+      "source": "public/images/site/wallpaper.jpg",
+      "sourceBytes": 2942083,
+      "bytes": 1519976,
+      "width": 3840,
+      "height": 2160,
+      "lossless": false,
+      "originalPreserved": true
+    },
+    {
+      "path": "public/images/site/wallpaper-1920.webp",
+      "operation": "newWebpVariant",
+      "source": "public/images/site/wallpaper.jpg",
+      "sourceBytes": 2942083,
+      "bytes": 465474,
+      "width": 1920,
+      "height": 1080,
+      "lossless": false,
+      "originalPreserved": true
+    },
+    {
+      "path": "public/images/posts/manage-vs-code-extensions-with-intune-remediations/terminal-output.png",
+      "operation": "losslessPngRecompression",
+      "beforeBytes": 2468940,
+      "bytes": 1133785,
+      "savedBytes": 1335155,
+      "width": 2408,
+      "height": 1360,
+      "format": "png",
+      "decodedRgbaEqual": true,
+      "decodedRgbaSha256": "aa97e9bcf54ac04c51771251598863a0f21555c52ae9c79e5aff8dc93b7d7a17",
+      "beforeFileSha256": "99cc0a3b3adade57e4e8f9f75e55d7bcd15d0fa723451ffb6c52e7d2a3218c72",
+      "afterFileSha256": "4473bf25e98dccb97ca529b0dd7e163b1b0ff0b6da95097385b14056a52095ec",
+      "metadataPreserved": true
+    },
+    {
+      "path": "public/images/posts/creating-dynamic-device-model-groups-in-entra-with-powershell/socialcard.png",
+      "operation": "losslessPngRecompression",
+      "beforeBytes": 2060473,
+      "bytes": 1855870,
+      "savedBytes": 204603,
+      "width": 1536,
+      "height": 1024,
+      "format": "png",
+      "decodedRgbaEqual": true,
+      "decodedRgbaSha256": "043b6568da895804b22da435089e6b531488d3b27825ecb1d9d50fac879894f2",
+      "beforeFileSha256": "6375fa10e7e6339e669f2e18d61a7425230a0b8382afe2f71f3cee43143d7522",
+      "afterFileSha256": "0761d9da03d0e57d0955f33acea7ab31bbd935f91b3a10d35f5241dcd86d1d40",
+      "metadataPreserved": true
+    },
+    {
+      "path": "public/images/posts/ai-agents-changed-how-i-build-things/ai-in-the-loop.png",
+      "operation": "losslessPngRecompression",
+      "beforeBytes": 1673641,
+      "bytes": 1339637,
+      "savedBytes": 334004,
+      "width": 1536,
+      "height": 1024,
+      "format": "png",
+      "decodedRgbaEqual": true,
+      "decodedRgbaSha256": "9f67ba35a91cca5a062adcaccf4853ff391a07dfe44206d76efcd90e6e1c3fde",
+      "beforeFileSha256": "b6cad220ce1fe3a9082a5e45aadb67237652b476f30d2e2bade7ed8a2c70898e",
+      "afterFileSha256": "6d4508c7750acb6e07fdcfed8a74d1d3ec6b8e4ef3be95cea5532aeba2cd9b7a",
+      "metadataPreserved": true
+    }
+  ],
+  "browser": {
+    "method": "Fresh Chrome contexts against before/after production builds. Four pages at three viewport/density combinations; initial observations one second after fonts and article body ready. Scrolled through every image and decoded it; opened available lightboxes and checked original source. Disabled animation and hid decorative canvas for screenshot comparisons.",
+    "cases": [
+      {
+        "viewport": {
+          "width": 390,
+          "height": 844,
+          "dpr": 3
+        },
+        "slug": "/",
+        "wallpaperBeforeBytes": 2942083,
+        "wallpaperAfterBytes": 1519976,
+        "initialDeferredImages": 0,
+        "lightboxSourcePreserved": null
+      },
+      {
+        "viewport": {
+          "width": 390,
+          "height": 844,
+          "dpr": 3
+        },
+        "slug": "manage-vs-code-extensions-with-intune-remediations",
+        "wallpaperBeforeBytes": 2942083,
+        "wallpaperAfterBytes": 1519976,
+        "initialDeferredImages": 8,
+        "lightboxSourcePreserved": null
+      },
+      {
+        "viewport": {
+          "width": 390,
+          "height": 844,
+          "dpr": 3
+        },
+        "slug": "intune-deployments-schedule-the-rollout",
+        "wallpaperBeforeBytes": 2942083,
+        "wallpaperAfterBytes": 1519976,
+        "initialDeferredImages": 4,
+        "lightboxSourcePreserved": true
+      },
+      {
+        "viewport": {
+          "width": 390,
+          "height": 844,
+          "dpr": 3
+        },
+        "slug": "ai-agents-changed-how-i-build-things",
+        "wallpaperBeforeBytes": 2942083,
+        "wallpaperAfterBytes": 1519976,
+        "initialDeferredImages": 0,
+        "lightboxSourcePreserved": true
+      },
+      {
+        "viewport": {
+          "width": 1440,
+          "height": 900,
+          "dpr": 1
+        },
+        "slug": "/",
+        "wallpaperBeforeBytes": 2942083,
+        "wallpaperAfterBytes": 465474,
+        "initialDeferredImages": 0,
+        "lightboxSourcePreserved": null
+      },
+      {
+        "viewport": {
+          "width": 1440,
+          "height": 900,
+          "dpr": 1
+        },
+        "slug": "manage-vs-code-extensions-with-intune-remediations",
+        "wallpaperBeforeBytes": 2942083,
+        "wallpaperAfterBytes": 465474,
+        "initialDeferredImages": 8,
+        "lightboxSourcePreserved": null
+      },
+      {
+        "viewport": {
+          "width": 1440,
+          "height": 900,
+          "dpr": 1
+        },
+        "slug": "intune-deployments-schedule-the-rollout",
+        "wallpaperBeforeBytes": 2942083,
+        "wallpaperAfterBytes": 465474,
+        "initialDeferredImages": 4,
+        "lightboxSourcePreserved": true
+      },
+      {
+        "viewport": {
+          "width": 1440,
+          "height": 900,
+          "dpr": 1
+        },
+        "slug": "ai-agents-changed-how-i-build-things",
+        "wallpaperBeforeBytes": 2942083,
+        "wallpaperAfterBytes": 465474,
+        "initialDeferredImages": 0,
+        "lightboxSourcePreserved": true
+      },
+      {
+        "viewport": {
+          "width": 1920,
+          "height": 1080,
+          "dpr": 2
+        },
+        "slug": "/",
+        "wallpaperBeforeBytes": 2942083,
+        "wallpaperAfterBytes": 1519976,
+        "initialDeferredImages": 0,
+        "lightboxSourcePreserved": null
+      },
+      {
+        "viewport": {
+          "width": 1920,
+          "height": 1080,
+          "dpr": 2
+        },
+        "slug": "manage-vs-code-extensions-with-intune-remediations",
+        "wallpaperBeforeBytes": 2942083,
+        "wallpaperAfterBytes": 1519976,
+        "initialDeferredImages": 8,
+        "lightboxSourcePreserved": null
+      },
+      {
+        "viewport": {
+          "width": 1920,
+          "height": 1080,
+          "dpr": 2
+        },
+        "slug": "intune-deployments-schedule-the-rollout",
+        "wallpaperBeforeBytes": 2942083,
+        "wallpaperAfterBytes": 1519976,
+        "initialDeferredImages": 4,
+        "lightboxSourcePreserved": true
+      },
+      {
+        "viewport": {
+          "width": 1920,
+          "height": 1080,
+          "dpr": 2
+        },
+        "slug": "ai-agents-changed-how-i-build-things",
+        "wallpaperBeforeBytes": 2942083,
+        "wallpaperAfterBytes": 1519976,
+        "initialDeferredImages": 0,
+        "lightboxSourcePreserved": true
+      }
+    ],
+    "reservation": "Held image requests pending for AI hero, first VS Code figure, and first CPM figure at 390px; all reserved measured aspect ratios before download.",
+    "social": "Five optimized asset URLs returned expected PNG/WebP MIME types and exact on-disk bytes. Dynamic group social metadata retains the original PNG URL and MIME type.",
+    "limitations": "Transfer reductions do not establish field performance or a Lighthouse score improvement. Lossy wallpapers were visually compared; only the three PNG replacements are pixel-identical."
+  }
+}
