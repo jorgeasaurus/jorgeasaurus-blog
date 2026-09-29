@@ -32,7 +32,7 @@ These results can also affect access. If Conditional Access requires a compliant
 
 ## Give the check one job
 
-Keep the discovery script focused on reading the device and returning a result. Install the app through app deployment. Configure BitLocker through the appropriate policy. Use a separate remediation when something needs repair.
+Keep the discovery script focused on reading the device and returning a result. Install the app through app deployment. Configure BitLocker through the appropriate policy. Use a [separate remediation](/reusable-intune-remediation-template) when something needs repair.
 
 If the check changes the device while measuring it, troubleshooting gets harder.
 
@@ -47,7 +47,7 @@ For this example, I want two answers from the device:
 - **RequiredAppRegistered:** a machine-wide uninstall entry has the expected display name and publisher.
 - **BitLockerPinBaselineMet:** the operating system volume is fully encrypted, protection is on, and a TPM+PIN protector exists. TPM-only and TPM+startup-key protectors must be absent.
 
-The app check searches both uninstall registry locations on 64-bit Windows. Replace the sample name and publisher with the values your installer writes.
+The app check searches both uninstall registry locations on 64-bit Windows. Replace the sample name and publisher with the values your installer writes. To find those values, [inspect the app’s uninstall registry entries](/find-registry-uninstall-keys-with-powershell).
 
 Be careful about what you claim from that result. An uninstall entry can remain after an app breaks. If you need proof of a working client, add a vendor-supported executable, version, or health check.
 
