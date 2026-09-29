@@ -1,0 +1,32 @@
+{
+  "Rules": [
+    {
+      "SettingName": "RequiredAppRegistered",
+      "Operator": "IsEquals",
+      "DataType": "Boolean",
+      "Operand": true,
+      "MoreInfoUrl": "https://example.com/help/required-app",
+      "RemediationStrings": [
+        {
+          "Language": "en_US",
+          "Title": "The required app registration was not found.",
+          "Description": "Install or repair Contoso Secure Client through your organization's approved process. Contact support if it is already installed."
+        }
+      ]
+    },
+    {
+      "SettingName": "BitLockerPinBaselineMet",
+      "Operator": "IsEquals",
+      "DataType": "Boolean",
+      "Operand": true,
+      "MoreInfoUrl": "https://example.com/help/bitlocker-pin",
+      "RemediationStrings": [
+        {
+          "Language": "en_US",
+          "Title": "The BitLocker startup PIN baseline is not met.",
+          "Description": "Contact support to check encryption, protection status, and startup protectors. Do not remove protectors or share your recovery key."
+        }
+      ]
+    }
+  ]
+}
