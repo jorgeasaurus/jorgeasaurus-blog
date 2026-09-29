@@ -22,6 +22,7 @@ type MdxImageProps = React.ComponentPropsWithoutRef<'img'>
 
 interface MdxComponents {
   img?: React.ComponentType<MdxImageProps>
+  table?: React.ComponentType<React.ComponentPropsWithoutRef<'table'>>
 }
 
 interface MdxContentProps {
@@ -66,8 +67,17 @@ function ExpandablePostImage({ alt = '', src, ...props }: MdxImageProps) {
   )
 }
 
+function ScrollableTable(props: React.ComponentPropsWithoutRef<'table'>) {
+  return (
+    <div className="post-table-scroll" role="region" aria-label="Scrollable table" tabIndex={0}>
+      <table {...props} />
+    </div>
+  )
+}
+
 const mdxComponents: MdxComponents = {
   img: ExpandablePostImage,
+  table: ScrollableTable,
 }
 
 function LightboxDialog({ image, onClose }: LightboxDialogProps) {
