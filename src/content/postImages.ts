@@ -39,26 +39,26 @@ const postImages: Record<string, PostImageSet> = {
   'ai-agents-changed-how-i-build-things': [
     {
       src: '/images/posts/ai-agents-changed-how-i-build-things/ai-in-the-loop.png',
-      alt: 'AI agent workflow concept showing code, automation, and human review in a feedback loop.',
+      alt: 'Diagram comparing repeated ask, copy, paste, and run steps with an AI-assisted idea, code, test, debug, fix, and ship loop.',
       caption: 'AI in the loop: context, implementation, review, and iteration staying close to the work.',
     },
   ],
   'using-net-methods-in-powershell-with-practical-examples-youll-actually-reuse': [
     {
       src: '/images/posts/using-net-methods-in-powershell-with-practical-examples-youll-actually-reuse/dotnetPS.png',
-      alt: '',
+      alt: 'PowerShell and .NET connected to Windows, macOS, and Linux.',
     },
   ],
   'bootstrap-your-intune-tenant-in-a-single-command': [
     {
       src: '/images/posts/bootstrap-your-intune-tenant-in-a-single-command/IHKLogo.png',
-      alt: '',
+      alt: 'Intune Hydration Kit logo with a water drop, shield, and PowerShell prompt.',
     },
   ],
   'winget-without-winget-building-a-cross-platform-package-manifest-fetcher': [
     {
       src: '/images/posts/winget-without-winget-building-a-cross-platform-package-manifest-fetcher/logo.png',
-      alt: '',
+      alt: 'WinGet Manifest Fetcher logo with arrows from a PowerShell package to GitHub.',
     },
   ],
   'supercharge-microsoft-graph-api-data-retrieval-with-powershell-batch-requests': [
@@ -70,7 +70,7 @@ const postImages: Record<string, PostImageSet> = {
   'back-up-or-restore-jamf-pro-objects-with-powershell': [
     {
       src: '/images/posts/back-up-or-restore-jamf-pro-objects-with-powershell/image-1.png',
-      alt: '',
+      alt: 'JAMF_Backup folder with XML exports grouped by object type, including buildings, departments, and mobile device applications.',
     },
   ],
   'synchronizing-device-groups-with-entra-user-groups-using-powershell': [
