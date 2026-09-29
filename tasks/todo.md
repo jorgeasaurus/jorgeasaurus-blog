@@ -1042,7 +1042,7 @@ Review: moved per-image loading policy into content metadata after strict review
 - [x] Confirm authenticated access and verified ownership of the intended domain property.
 - [x] Inspect canonical sitemap submission, representative URLs, and coverage limits.
 - [x] Record evidence without account details or verification secrets.
-- [ ] Complete strict/Copilot reviews, merge, and cleanup.
+- [x] Complete strict/Copilot reviews, merge, and cleanup.
 
 Verified September 29, 2026 in `sc-domain:jorgeasaur.us`: Settings reports a verified owner. No new verification method or credential is needed; the property was added September 27. The property-wide Page indexing report is still processing, so coverage totals are unavailable.
 
@@ -1060,3 +1060,20 @@ All four live pages return HTTP 200 and declare their own www URL as canonical. 
 Validation: the namespace regression test failed against the old generator and passed after correction. Lint/build and diff checks pass. After deployment, resubmit the sitemap and record Google's processing result on the PR.
 
 Copilot follow-up: `npm run build` now runs `test:sitemap`, which generates the sitemap and validates its namespace before compilation and deployment.
+
+# Issue 25: Responsive layout
+
+- [x] Reproduce narrow-screen hero, table, and inline-code clipping.
+- [x] Apply scoped responsive CSS fixes.
+- [x] Verify five representative pages at 320/390/768/1440 px and touch interactions.
+- [x] Add behavioral regressions and complete strict review.
+- [ ] Complete the latest-head Copilot review loop.
+- [ ] Merge, verify production, and clean disposable resources.
+
+Plan: allow the hero grid to shrink, scale its mobile title, wrap inline code, and scroll wide tables. Preserve fenced-code scrolling.
+
+Layout evidence: Home, Projects, About, Deployments, and VS Code Remediations pass at 320, 390, 768, and 1440 px. Checks materialized off-screen article content and measured actual inline-text bounds, hero overflow, table scroll-area bounds, and fenced-code scrolling.
+
+Review: replaced the initial block-table approach with a named, keyboard-focusable scroll wrapper after strict review. Fresh review returned zero findings. Lint/build and all 13 browser tests passed, including six responsive regressions. Invalid newsletter input produced no subscription requests.
+
+Copilot follow-up: use non-landmark groups for table scrolling to avoid duplicate landmarks. Responsive geometry tests now load the production fonts before measuring text; unrelated external requests and subscriptions remain blocked.

@@ -1603,6 +1603,20 @@ h2 {
   font-weight: 500;
 }
 
+.post-content :not(pre) > code {
+  overflow-wrap: anywhere;
+}
+
+.post-table-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.post-table-scroll:focus-visible {
+  outline: 2px solid var(--sprout-bright);
+  outline-offset: 2px;
+}
+
 .post-content pre {
   margin: 1.2em 0;
   padding: 20px;
@@ -2236,7 +2250,7 @@ code {
   }
 
   .hero-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     min-height: 0;
   }
 
@@ -2334,8 +2348,12 @@ code {
     max-width: none;
   }
 
+  .hero-title-block h1 {
+    font-size: clamp(2rem, 11vw, 3rem);
+  }
+
   .hero-layout {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     min-height: 0;
   }
 
