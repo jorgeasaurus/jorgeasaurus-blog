@@ -30,7 +30,9 @@ An available menu does not confirm that you have the required licenses. The feat
 
 ## Allow time to review each ring
 
-Under **Devices > Manage devices > Deployments**, create a plan with groups. Add filters and exclusions as needed. Exclusions apply across all rings in the plan. Set the first start time when you use the plan in a deployment. For later rings, set delays in days and hours. Each delay must be at least one hour. Changes to the template do not update existing deployments. [Create a deployment plan](https://learn.microsoft.com/en-us/intune/device-management/deployments/create-deployment-plan).
+A reusable plan is optional. The walkthrough below configures rings directly in a deployment.
+
+To reuse a schedule, open **Devices > Manage devices > Deployments > Deployment plans** and select **Create plan**. Add filters and exclusions as needed. Exclusions apply across all rings in the plan. Set the first start time when you use the plan in a deployment. For later rings, set delays in days and hours. Each delay must be at least one hour. Changes to the template do not update existing deployments. [Create a deployment plan](https://learn.microsoft.com/en-us/intune/device-management/deployments/create-deployment-plan).
 
 The following example shows how to schedule reviews. I did not test this schedule in my tenant:
 
@@ -87,6 +89,8 @@ For the screenshots, I created two assigned security groups with no members:
 
 For your deployment, use groups that contain the intended users or devices. Start with a small pilot group and use a separate group for the broader deployment. Select an app that you have tested on representative devices.
 
+Before you start, confirm that the app has no other scheduled or active deployment. A payload can belong to only one scheduled or active deployment. See the [deployment prerequisites](https://learn.microsoft.com/en-us/intune/device-management/deployments/create-deployment#prerequisites).
+
 After creation, you can edit only the deployment name and description. You cannot change its selected payload, ring names, schedule, or groups through the deployment. Check these values before selecting **Create**. See [deployment editing restrictions](https://learn.microsoft.com/en-us/intune/device-management/deployments/create-deployment#manage-a-deployment).
 
 To create the deployment:
@@ -119,6 +123,8 @@ I configured a custom schedule directly in the deployment. I did not save a reus
 - Download content in the background.
 - Make the app available and install it as soon as possible.
 
+This delivery setting applies after the ring activates. The assignment uses **Required** intent; the word “available” here does not mean **Available** assignment intent.
+
 ![Review screen showing the Firefox payload, future dates, and empty ring groups](/images/posts/intune-deployments-schedule-the-rollout/example-deployment-review.jpg)
 
 After creation, the portal showed **Not started**, two total rings, and both rings **Not activated**. Microsoft Graph independently returned `state: notStarted` and `ringCount: 2`. The start time was `2026-10-05T16:00:00Z`, which matched 9:00 AM Pacific daylight time in this session. Firefox's assignment collection was still empty immediately afterward.
@@ -143,11 +149,12 @@ Use this procedure for the Win32 app example after the pilot ring activates. It 
 4. Match the device rows against your intended pilot device list.
 5. Check **Status**, **Status details**, and **Last check-in** for each pilot device.
 6. Investigate failures and missing or stale device results.
-7. On representative pilot devices, confirm the expected app version and complete a normal user task.
+7. Select a representative sample of pilot devices and record which devices you selected.
+8. On each selected device, confirm the expected app version and complete a normal user task.
 
 The app report can include devices outside the pilot. For user-targeted groups, identify the pilot users' intended devices before comparing results. An activated ring confirms assignment progression; it does not confirm installation. Missing results do not count as successful installations.
 
-For a small pilot, require every intended device to report **Installed** and pass functional checks before continuing. Otherwise, open **Devices > Manage devices > Deployments**. Select the deployment, then select **Pause** before the next ring starts. This is a manual review rule; Intune does not enforce it as a success threshold.
+Continue only when every intended pilot device reports **Installed** and every device in your recorded sample passes the functional checks. Otherwise, open **Devices > Manage devices > Deployments**. Select the deployment, then select **Pause** before the next ring starts. This is a manual review rule; Intune does not enforce it as a success threshold.
 
 ## Try the deployment workflow with Microsoft Graph PowerShell
 
