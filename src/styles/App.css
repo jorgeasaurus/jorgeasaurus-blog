@@ -1096,7 +1096,8 @@ h2 {
 }
 
 .post-card-title,
-.project-card h2 {
+.project-card-title {
+  letter-spacing: -0.05em;
   margin: 0;
   font-weight: 700;
   color: #fff;
@@ -2018,13 +2019,13 @@ h2 {
   min-width: 0;
 }
 
-.project-card h2 {
+.project-card-title {
   max-width: none;
   overflow-wrap: anywhere;
   font-size: 1.35rem;
 }
 
-.project-card--featured h2 {
+.project-card--featured .project-card-title {
   max-width: 12ch;
   font-size: clamp(2.1rem, 4.8vw, 3.25rem);
   letter-spacing: -0.055em;
@@ -2429,8 +2430,8 @@ code {
     padding: 24px;
   }
 
-  .project-card h2,
-  .project-card--featured h2 {
+  .project-card-title,
+  .project-card--featured .project-card-title {
     max-width: none;
   }
 }

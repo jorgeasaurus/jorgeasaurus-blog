@@ -970,7 +970,17 @@ Search Console follow-up: the authenticated `sc-domain:jorgeasaur.us` Core Web V
 - [x] Audit all 131 external MDX destinations with retries; check blocked responses in a browser.
 - [x] Replace the two confirmed 404s with relevant destinations verified as HTTP 200.
 - [x] Verify build/rendered links; strict review returned zero findings.
-- [ ] Complete the latest-head Copilot review loop.
-- [ ] Squash merge, verify production links, and clean proven disposable resources.
+- [x] Complete the latest-head Copilot review loop.
+- [x] Squash merge, verify production links, and clean proven disposable resources.
 
 Audit (September 29): 128 existing destinations reachable, two missing (now replaced), and one inconclusive Cloudflare block at `https://scottduf.medium.com/`. The Medium profile remains because HTTP and Chrome both showed a block, not evidence of a missing page. GET requests followed redirects with a 25-second timeout and up to two attempts, concurrency six.
+
+# Issue 20: Card heading hierarchy
+
+- [x] Change post/project card titles to h3 below their h2 section headings.
+- [x] Preserve computed typography and dimensions on Home/Projects at phone/desktop widths.
+- [ ] Run strict and Copilot review loops, merge, verify production, and clean disposable resources.
+
+Plan: retain post-title classes and give project titles a dedicated class so their styling does not depend on heading level.
+
+Review: fixed the inherited h2 letter spacing identified by strict review and browser comparison. Fresh strict review found zero issues. Lint/build and Home/Projects heading hierarchy plus computed typography/dimensions checks passed at 390 and 1440 px.
