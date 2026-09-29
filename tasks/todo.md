@@ -1067,8 +1067,8 @@ Copilot follow-up: `npm run build` now runs `test:sitemap`, which generates the 
 - [x] Apply scoped responsive CSS fixes.
 - [x] Verify five representative pages at 320/390/768/1440 px and touch interactions.
 - [x] Add behavioral regressions and complete strict review.
-- [ ] Complete the latest-head Copilot review loop.
-- [ ] Merge, verify production, and clean disposable resources.
+- [x] Complete the latest-head Copilot review loop.
+- [x] Merge, verify production, and clean disposable resources.
 
 Plan: allow the hero grid to shrink, scale its mobile title, wrap inline code, and scroll wide tables. Preserve fenced-code scrolling.
 
@@ -1077,3 +1077,17 @@ Layout evidence: Home, Projects, About, Deployments, and VS Code Remediations pa
 Review: replaced the initial block-table approach with a named, keyboard-focusable scroll wrapper after strict review. Fresh review returned zero findings. Lint/build and all 13 browser tests passed, including six responsive regressions. Invalid newsletter input produced no subscription requests.
 
 Copilot follow-up: use non-landmark groups for table scrolling to avoid duplicate landmarks. Responsive geometry tests now load the production fonts before measuring text; unrelated external requests and subscriptions remain blocked.
+
+# Issue 26: Vercel CLI upgrade
+
+- [x] Upgrade the global CLI from the npm registry.
+- [x] Verify the installed version and read-only project access.
+Review: fresh strict review returned zero findings. Final Copilot, merge, production, and cleanup evidence will be recorded on the PR that closes #26.
+
+Plan: update the existing global npm installation, then check its version and linked project with read-only commands. Do not create a deployment to test the CLI.
+
+Verified September 29, 2026: `npm ls -g vercel --depth=0` reported 59.25.0; `npm view vercel version` reported 61.0.0. `npm i -g vercel@latest` completed successfully. Both `vercel --version` and the global npm listing now report 61.0.0.
+
+The upgraded CLI successfully read project `prj_08x5cg9onhcUqxKdTqXiGqBF0MVL` through `vercel api /v9/projects/{id}` with its existing team scope. The response identifies `jorgeasaurus-blog` and its READY production deployment. CLI verification created no deployment; the evidence PR follows the usual Git integration builds.
+
+Installation warnings: a transitive package excludes Node 26 from its declared engine range, and npm did not authorize the esbuild install script. The version and project-read checks passed; local build/deploy CLI commands were not tested.
