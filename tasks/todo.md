@@ -1058,3 +1058,5 @@ Submitted `https://www.jorgeasaur.us/sitemap.xml` after confirming HTTP 200 and 
 All four live pages return HTTP 200 and declare their own www URL as canonical. The homepage index result reflects an older crawl; live canonical markup does not prove Google has adopted it. Recheck that selection and the two new posts after recrawl; sitemap discovery does not establish indexing.
 
 Validation: the namespace regression test failed against the old generator and passed after correction. Lint/build and diff checks pass. After deployment, resubmit the sitemap and record Google's processing result on the PR.
+
+Copilot follow-up: `npm run build` now runs `test:sitemap`, which generates the sitemap and validates its namespace before compilation and deployment.
