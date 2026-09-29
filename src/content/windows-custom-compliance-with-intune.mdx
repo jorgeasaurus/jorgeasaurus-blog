@@ -1,0 +1,212 @@
+---
+title: "Check more Windows requirements with Intune custom compliance"
+date: "2026-09-29"
+description: "Use PowerShell and JSON rules to check required applications and BitLocker startup PIN settings with Intune custom compliance."
+tags: ["intune", "powershell", "windows", "endpoint-management"]
+---
+
+Intune says the device is compliant. The required VPN client is missing. BitLocker is enabled, but your organization requires a startup PIN too.
+
+Those requirements only affect compliance if you actually check them.
+
+This is where I would use Windows custom compliance. PowerShell checks the device, a JSON file defines what passes, and Intune includes those results in its compliance evaluation. You can add a requirement without waiting for a matching setting in the compliance UI. Microsoft's [custom compliance overview](https://learn.microsoft.com/en-us/intune/device-security/compliance/custom-settings) explains how the pieces fit together.
+
+## Check the requirements your environment actually has
+
+I would start with the built-in settings. Maintaining a script for something Intune already checks adds work without adding much value.
+
+Custom compliance becomes useful when your requirement is more specific:
+
+| Requirement | Example discovery signal | What that signal does not prove |
+| --- | --- | --- |
+| Required desktop app | Matching uninstall registration | The app works or is the approved version |
+| BitLocker startup PIN baseline | Encryption state and key protector types | Every startup requires a PIN |
+| Organization-specific service | Service exists and is running | The service can reach its backend |
+| Required configuration | Expected registry or configuration-file value | The application has loaded that value |
+
+Now the help desk has something specific to investigate. The required app registration is missing. The expected service stopped. The startup protector does not meet your standard.
+
+You also control the message and support link users see when a check fails. Make those useful.
+
+These results can also affect access. If Conditional Access requires a compliant device, your custom requirements contribute to that decision. The script itself does not create an access policy. Review the assignments and noncompliance actions before you connect the two. [Compliance and Conditional Access](https://learn.microsoft.com/en-us/intune/device-security/compliance/custom-settings).
+
+## Give the check one job
+
+Keep the discovery script focused on reading the device and returning a result. Install the app through app deployment. Configure BitLocker through the appropriate policy. Use a separate remediation when something needs repair.
+
+If the check changes the device while measuring it, troubleshooting gets harder.
+
+An app detection rule tells Intune whether it detects the deployed app. Custom compliance lets that requirement affect device compliance. The checks may look similar, but they serve different purposes.
+
+For BitLocker, Intune already provides a built-in **Require BitLocker** compliance setting. A custom protector check supplements that setting; it does not replace its attestation behavior. See [Windows compliance settings](https://learn.microsoft.com/en-us/intune/device-security/compliance/ref-windows-settings#device-health).
+
+## Be precise about what a passing result means
+
+For this example, I want two answers from the device:
+
+- **RequiredAppRegistered:** a machine-wide uninstall entry has the expected display name and publisher.
+- **BitLockerPinBaselineMet:** the operating system volume is fully encrypted, protection is on, and a TPM+PIN protector exists. TPM-only and TPM+startup-key protectors must be absent.
+
+The app check searches both uninstall registry locations on 64-bit Windows. Replace the sample name and publisher with the values your installer writes.
+
+Be careful about what you claim from that result. An uninstall entry can remain after an app breaks. If you need proof of a working client, add a vendor-supported executable, version, or health check.
+
+This example does not detect per-user installations, portable apps, or every Microsoft Store app. Do not use `Win32_Product` for this discovery: its queries can initiate Windows Installer consistency checks and repairs. Microsoft documents the [uninstall-registry approach and its limits](https://learn.microsoft.com/en-us/powershell/scripting/samples/working-with-software-installations).
+
+A BitLocker startup PIN is separate from a Windows Hello sign-in PIN. The example requires `TpmPin`. The separate `TpmPinAndStartupKey` combination alone does not satisfy this example. Adapt that choice only if your standard permits it.
+
+Finding the protector does not tell you the PIN's length or whether the recovery key is backed up. Recovery and Network Unlock can also provide other unlock paths. Keep the claim specific: this checks the configured protector baseline, not every possible startup path. See [BitLocker protectors](https://learn.microsoft.com/en-us/powershell/module/bitlocker/add-bitlockerkeyprotector) and [Network Unlock](https://learn.microsoft.com/en-us/windows/security/operating-system-security/data-protection/bitlocker/network-unlock).
+
+## Return one JSON object from PowerShell
+
+Save this as `Discover-WindowsCompliance.ps1`. Use the 64-bit Windows PowerShell host and SYSTEM context for this machine-level example.
+
+```powershell
+# Run in 64-bit Windows PowerShell as SYSTEM.
+$ErrorActionPreference = 'Stop'
+
+# Replace these values with the app's exact uninstall registration values.
+$requiredAppName = 'Contoso Secure Client'
+$requiredPublisher = 'Contoso'
+$uninstallRoots = @(
+    'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall'
+    'HKLM:\SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall'
+)
+
+$matchingApps = @(
+    foreach ($root in $uninstallRoots) {
+        if (Test-Path -LiteralPath $root) {
+            Get-ItemProperty -Path "$root\*" | Where-Object {
+                $name = $_.PSObject.Properties['DisplayName']
+                $publisher = $_.PSObject.Properties['Publisher']
+                $null -ne $name -and $null -ne $publisher -and
+                    $name.Value -eq $requiredAppName -and
+                    $publisher.Value -eq $requiredPublisher
+            }
+        }
+    }
+)
+
+$volume = Get-BitLockerVolume -MountPoint $env:SystemDrive
+if ($null -eq $volume) {
+    throw 'The operating system volume could not be read.'
+}
+$protectorTypes = @(
+    $volume.KeyProtector | ForEach-Object { [string]$_.KeyProtectorType }
+)
+$pinBaselineMet = (
+    $volume.VolumeStatus -eq 'FullyEncrypted' -and
+    $volume.ProtectionStatus -eq 'On' -and
+    $protectorTypes -contains 'TpmPin' -and
+    $protectorTypes -notcontains 'Tpm' -and
+    $protectorTypes -notcontains 'TpmStartupKey'
+)
+
+$result = @{
+    RequiredAppRegistered = [bool]($matchingApps.Count -gt 0)
+    BitLockerPinBaselineMet = [bool]$pinBaselineMet
+}
+return $result | ConvertTo-Json -Compress
+```
+
+[`Get-BitLockerVolume`](https://learn.microsoft.com/en-us/powershell/module/bitlocker/get-bitlockervolume) exposes the volume and protector state used here. Suspended protection fails this baseline even if a PIN protector remains configured.
+
+Intune needs one compressed JSON object from the script. Keep progress messages and formatted tables out of that output. When both checks pass, the result looks like this:
+
+```json
+{"RequiredAppRegistered":true,"BitLockerPinBaselineMet":true}
+```
+
+A missing app returns `false`. A failed query stops the script. Those are different problems, and the result should preserve that distinction. Intune reports discovery failures and invalid results as evaluation errors. [Discovery script requirements](https://learn.microsoft.com/en-us/intune/device-security/compliance/create-custom-script).
+
+## Tell Intune what passes and tell users what to do
+
+Save this as `WindowsComplianceRules.json`. Replace both `example.com` URLs and the sample app text with your organization's support instructions.
+
+```json
+{
+  "Rules": [
+    {
+      "SettingName": "RequiredAppRegistered",
+      "Operator": "IsEquals",
+      "DataType": "Boolean",
+      "Operand": true,
+      "MoreInfoUrl": "https://example.com/help/required-app",
+      "RemediationStrings": [
+        {
+          "Language": "en_US",
+          "Title": "The required app registration was not found.",
+          "Description": "Install or repair Contoso Secure Client through your organization's approved process. Contact support if it is already installed."
+        }
+      ]
+    },
+    {
+      "SettingName": "BitLockerPinBaselineMet",
+      "Operator": "IsEquals",
+      "DataType": "Boolean",
+      "Operand": true,
+      "MoreInfoUrl": "https://example.com/help/bitlocker-pin",
+      "RemediationStrings": [
+        {
+          "Language": "en_US",
+          "Title": "The BitLocker startup PIN baseline is not met.",
+          "Description": "Contact support to check encryption, protection status, and startup protectors. Do not remove protectors or share your recovery key."
+        }
+      ]
+    }
+  ]
+}
+```
+
+`SettingName` is case-sensitive and must match the script's output. Both values are JSON Booleans: use `true`, not the string `"true"`. Each rule includes an `en_US` remediation message. Add other supported languages for your users. [JSON rule requirements](https://learn.microsoft.com/en-us/intune/device-security/compliance/create-custom-json).
+
+The combined example requires both checks to pass. To use only one check, remove the other discovery logic, output property, and JSON rule together.
+
+Download the [discovery script](/downloads/windows-custom-compliance/Discover-WindowsCompliance.ps1) and [JSON rules](/downloads/windows-custom-compliance/WindowsComplianceRules.json).
+
+## Add the script and policy to Intune
+
+Use supported, enrolled Windows devices; Windows Home is excluded from custom compliance. Confirm Intune licensing and administrative permissions before starting.
+
+1. Open **Endpoint security > Device compliance > Scripts** in the Intune admin center.
+2. Select **Add**, then select **Windows**.
+3. Name the discovery script.
+4. Upload `Discover-WindowsCompliance.ps1` under **Detection script**.
+5. Set **Run this script using the logged on credentials** to **No**.
+6. Set **Run script in 64 bit PowerShell Host** to **Yes**.
+7. Set **Enforce script signature check** to match your signing process.
+8. Finish creating the script.
+9. Create a compliance policy for **Windows 10 and later**.
+10. Set **Custom compliance** to **Require** in the policy's configuration settings.
+11. Select the uploaded discovery script.
+12. Upload `WindowsComplianceRules.json`.
+13. Review the imported rules and **Actions for noncompliance**.
+14. Assign the policy to a small pilot group.
+15. On **Review + create**, review the policy and select **Create**.
+
+If signature checking is enabled, sign the script with a certificate trusted by the target devices. Script management requires the default scope tag. Each policy supports one discovery script, and that script can return multiple settings. See [script setup](https://learn.microsoft.com/en-us/intune/device-security/compliance/create-custom-script) and [policy creation](https://learn.microsoft.com/en-us/intune/device-security/compliance/create-policy).
+
+Check existing Conditional Access policies before assigning the pilot. Those users might already need a compliant device to access their apps. A small pilot can still block access if the new requirement fails.
+
+## Test what happens when the check fails
+
+I checked the script syntax, the JSON rules, and 15 simulated device states. I have not run this example on a Windows endpoint or deployed it through Intune. Treat the lab checks below as part of the work before rollout.
+
+Run it as SYSTEM in 64-bit Windows PowerShell, just as you configured in Intune. Confirm that the output is one valid JSON object. Then test the cases that should fail:
+
+| Test state | Expected result |
+| --- | --- |
+| Matching machine-wide app registration | `RequiredAppRegistered: true` |
+| App absent or publisher differs | `RequiredAppRegistered: false` |
+| App installed only for a user | `RequiredAppRegistered: false` |
+| Fully encrypted, protection on, TPM+PIN, no excluded protector | `BitLockerPinBaselineMet: true` |
+| TPM-only, suspended protection, or incomplete encryption | `BitLockerPinBaselineMet: false` |
+| Registry or BitLocker query fails | Script error; investigate before rollout |
+
+In Intune, open **Reports > Device compliance > Reports > Noncompliant devices and settings**. Generate a Windows report and compare each custom setting with the device's actual state. Confirm that your support instructions appear for failing settings.
+
+On Windows, discovery normally runs every eight hours. A device-side **Check Compliance** runs the existing script but does not fetch an updated script. Do not assume an admin-center push runs custom discovery immediately. Account for this delay when testing repairs and access restoration. [Evaluation timing and reporting](https://learn.microsoft.com/en-us/intune/device-security/compliance/custom-settings).
+
+Start with one requirement you can explain, test, and repair. Give the help desk a useful result and the user a clear next step.
+
+That is the value of custom compliance: your device checks can reflect the requirements your organization actually has.

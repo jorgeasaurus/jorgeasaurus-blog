@@ -6,7 +6,29 @@
     <atom:link href="https://www.jorgeasaur.us/rss.xml" rel="self" type="application/rss+xml" />
     <description>Field notes on PowerShell, endpoint management, Microsoft Graph, and automation.</description>
     <language>en-us</language>
-    <lastBuildDate>Wed, 02 Sep 2026 12:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 29 Sep 2026 12:00:00 GMT</lastBuildDate>
+    <item>
+      <title>Check more Windows requirements with Intune custom compliance</title>
+      <link>https://www.jorgeasaur.us/windows-custom-compliance-with-intune</link>
+      <guid isPermaLink="false">https://jorgeasaur.us/windows-custom-compliance-with-intune</guid>
+      <pubDate>Tue, 29 Sep 2026 12:00:00 GMT</pubDate>
+      <description>Use PowerShell and JSON rules to check required applications and BitLocker startup PIN settings with Intune custom compliance.</description>
+      <category>intune</category>
+      <category>powershell</category>
+      <category>windows</category>
+      <category>endpoint-management</category>
+    </item>
+    <item>
+      <title>Intune deployments: Schedule the rollout and check the results</title>
+      <link>https://www.jorgeasaur.us/intune-deployments-schedule-the-rollout</link>
+      <guid isPermaLink="false">https://jorgeasaur.us/intune-deployments-schedule-the-rollout</guid>
+      <pubDate>Sun, 27 Sep 2026 12:00:00 GMT</pubDate>
+      <description>Schedule Windows apps and policies with Intune deployments, check assignments, and prepare recovery steps.</description>
+      <category>intune</category>
+      <category>windows</category>
+      <category>endpoint-management</category>
+      <category>microsoft-graph</category>
+    </item>
     <item>
       <title>AI Does Not Need To Replace You To Take Your Job</title>
       <link>https://www.jorgeasaur.us/ai-will-take-the-repeatable-work</link>

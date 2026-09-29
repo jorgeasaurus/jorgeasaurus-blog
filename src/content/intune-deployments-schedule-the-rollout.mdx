@@ -1,0 +1,400 @@
+---
+title: "Intune deployments: Schedule the rollout and check the results"
+date: "2026-09-27"
+description: "Schedule Windows apps and policies with Intune deployments, check assignments, and prepare recovery steps."
+tags: ["intune", "windows", "endpoint-management", "microsoft-graph"]
+---
+
+Review results from a pilot group before you add production groups. In many Intune environments, an administrator must set a reminder and change assignments manually.
+
+Microsoft's new **Deployment plans and deployments** feature puts the schedule inside Intune. It appeared in the [release notes for the week of September 21, 2026](https://learn.microsoft.com/en-us/intune/whats-new/#week-of-september-21-2026) and is in public preview as of this post.
+
+Intune can add target groups on a schedule. Your team must check the results and decide whether to continue.
+
+## Separate the deployment plan from the payload
+
+A [**deployment plan**](https://learn.microsoft.com/en-us/intune/device-management/deployments/create-deployment-plan) is a reusable template of deployment rings. Each ring defines a stage that targets selected groups. A [**deployment**](https://learn.microsoft.com/en-us/intune/device-management/deployments/create-deployment) applies one app or policy, called the **payload**, through those rings. You can also configure rings for a single deployment.
+
+The preview supports Windows 10 and later with these payloads:
+
+| Payload | Preview support |
+| --- | --- |
+| Windows app (Win32) | Required install |
+| Enterprise App Catalog app | Required install; supersedence updates supported |
+| Settings catalog policy | Supported |
+| Endpoint security policy | Supported |
+
+Available and Uninstall app intents are unsupported. Enterprise App Catalog's Automatically update option is also unsupported with deployments. See Microsoft's [feature overview](https://learn.microsoft.com/en-us/intune/device-management/deployments/overview).
+
+An available menu does not confirm that you have the required licenses. The feature documentation does not state a separate deployments license requirement. [Enterprise App Management](https://learn.microsoft.com/en-us/intune/app-management/deployment/enterprise-app-management) requires an additional subscription.
+
+## Allow time to review each ring
+
+A reusable plan is optional. The walkthrough below configures rings directly in a deployment.
+
+To reuse a schedule, open **Devices > Manage devices > Deployments > Deployment plans** and select **Create plan**. Add filters and exclusions as needed. Exclusions apply across all rings in the plan. Set the first start time when you use the plan in a deployment. For later rings, set delays in days and hours. Each delay must be at least one hour. Changes to the template do not update existing deployments. [Create a deployment plan](https://learn.microsoft.com/en-us/intune/device-management/deployments/create-deployment-plan).
+
+The following example shows how to schedule reviews. I did not test this schedule in my tenant:
+
+| Ring | Audience | Example interval | Review before the next ring |
+| --- | --- | --- | --- |
+| Pilot | IT test devices | Start time | Install or policy result, then a real user task |
+| Early adopters | Representative users and hardware | Two days after pilot | Failure patterns, reboots, support reports |
+| Broad rollout | Remaining intended devices | Three days after early adopters | Named owner confirms whether to continue |
+
+Choose intervals that give you enough time to check the results. A virtual private network (VPN) client can need more review time than a small utility.
+
+The [plan documentation](https://learn.microsoft.com/en-us/intune/device-management/deployments/create-deployment-plan) describes progression by date and time. It does not describe a success percentage that a ring must reach before the next ring starts. Assign someone to review results before the next ring starts. Allow enough time to pause the deployment. The scheduled time controls assignments. It does not confirm that devices have applied the change.
+
+## Check existing assignments first
+
+Each ring adds assignments to the payload. Existing assignments still apply, and direct changes to payload assignments take precedence. If an app already targets production groups, a pilot ring does not restrict it to pilot devices.
+
+A final **All users** or **All devices** ring replaces the earlier **Required** include-group assignments. It preserves exclusions. These virtual groups must be in the last ring. They cannot share that ring with Microsoft Entra security groups.
+
+You can still change the payload during a deployment. Changes can affect assigned devices at their next check-in and change what later rings receive. [Assignment and payload behavior](https://learn.microsoft.com/en-us/intune/device-management/deployments/overview).
+
+Review all payload assignments before you schedule a deployment. Keep the payload content unchanged during the review period. If the content changes, record the change. Check whether the pilot results still apply.
+
+## Plan separate actions to pause and recover
+
+**Pause** stops subsequent rings while retaining assignments already applied. **Cancel** also retains those assignments. Removing them requires a separate edit to the payload. Neither action guarantees that devices will uninstall an app or restore a previous policy state.
+
+Intune also checks for groups duplicated between payload assignments and deployment rings. Resolve duplicate group assignments before you create the deployment. If Intune finds a duplicate during ring activation, it sets an error state and pauses the deployment. Remove the duplicate payload assignment before you resume the deployment. [Create and manage a deployment](https://learn.microsoft.com/en-us/intune/device-management/deployments/create-deployment).
+
+Write a recovery procedure before the first ring starts. Identify a supported previous app version and the configuration needed to restore service. Specify who can authorize the work. Test the recovery procedure separately. A pause prevents later rings from starting. Recovery repairs affected devices.
+
+## Check permissions and approvals
+
+Plans have their own Create, Read, Update, and Delete permissions. Deployments use the selected payload's permissions. To create a deployment, you need Read and Assign permissions under Mobile apps or Device configurations. Deployment visibility follows the payload's scope tags.
+
+If a Multi Admin Approval policy protects the payload type, Create, Resume, Cancel, and Delete require approval. A deployment awaiting creation approval does not appear in the deployment list. Allow time for approval when you schedule the deployment. [Permissions, scope tags, and approvals](https://learn.microsoft.com/en-us/intune/device-management/deployments/rbac-scope-tags).
+
+The [preview's known issues](https://learn.microsoft.com/en-us/intune/device-management/deployments/known-issues) also document limited search and unavailable list sorting. Check those notes if an expected entry does not appear in a list.
+
+## Create a deployment with your groups
+
+I confirmed the preview in my tenant on September 27, 2026. I then created **EXAMPLE - Firefox staged rollout - Empty groups** through the admin center. The saved deployment has two future rings. I did not test installation on an endpoint.
+
+The starting point was **Devices > Manage devices > Deployments (preview)**. Both tabs initially loaded with empty lists.
+
+![Deployments preview before the example was created](/images/posts/intune-deployments-schedule-the-rollout/deployments-preview.jpg)
+
+For the example, I used the existing **Mozilla Firefox - [IHD]** Win32 app. Microsoft Graph showed no app assignments before creation. The app description identifies it as a Hydration Kit starter-pack template. I did not validate its package or installation behavior.
+
+For the screenshots, I created two assigned security groups with no members:
+
+- `EXAMPLE - Intune Deployments - Pilot - Empty`
+- `EXAMPLE - Intune Deployments - Broad - Empty`
+
+For your deployment, use groups that contain the intended users or devices. Start with a small pilot group and use a separate group for the broader deployment. Select an app that you have tested on representative devices.
+
+Before you start, confirm that the app has no other scheduled or active deployment. A payload can belong to only one scheduled or active deployment. See the [deployment prerequisites](https://learn.microsoft.com/en-us/intune/device-management/deployments/create-deployment#prerequisites).
+
+After creation, you can edit only the deployment name and description. You cannot change its selected payload, ring names, schedule, or groups through the deployment. Check these values before selecting **Create**. See [deployment editing restrictions](https://learn.microsoft.com/en-us/intune/device-management/deployments/create-deployment#manage-a-deployment).
+
+To create the deployment:
+
+1. Select **Create**.
+2. Enter a name that identifies the app and deployment.
+3. Enter a description of the target groups and deployment purpose.
+4. Under **Payload Selection**, select **Win32 App**.
+5. Select **Add payload**.
+6. Select your tested app.
+7. Under **Deployment Schedule**, select **Add rings**.
+8. Set future start dates that allow time to review pilot results before the next ring starts.
+9. Add your pilot group to the first ring.
+10. Add your broader deployment group to the next ring.
+11. Check that each group contains only the intended users or devices.
+12. Review the app delivery settings.
+13. Check the settings on **Review**.
+14. Select **Create**.
+
+The screenshots show these demonstration dates and empty groups. Use your own schedule and populated groups:
+
+| Ring | Start displayed in this session | Target membership at creation |
+| --- | --- | --- |
+| Pilot - empty test group | October 5, 2026, 9:00 AM | 0 devices, 0 users |
+| Broad - empty test group | October 7, 2026, 9:00 AM | 0 devices, 0 users |
+
+I configured a custom schedule directly in the deployment. I did not save a reusable deployment plan. These empty groups did not need filters or exclusions. The review displayed these default app delivery settings:
+
+- Show all toast notifications.
+- Download content in the background.
+- Make the app available and install it as soon as possible.
+
+This delivery setting applies after the ring activates. The assignment uses **Required** intent; the word “available” here does not mean **Available** assignment intent.
+
+![Review screen showing the Firefox payload, future dates, and empty ring groups](/images/posts/intune-deployments-schedule-the-rollout/example-deployment-review.jpg)
+
+After creation, the portal showed **Not started**, two total rings, and both rings **Not activated**. Microsoft Graph independently returned `state: notStarted` and `ringCount: 2`. The start time was `2026-10-05T16:00:00Z`, which matched 9:00 AM Pacific daylight time in this session. Firefox's assignment collection was still empty immediately afterward.
+
+![Saved example deployment showing both rings not activated](/images/posts/intune-deployments-schedule-the-rollout/example-deployment-created.jpg)
+
+The saved **Properties** tab shows the payload, ring schedules, group membership, filters, and app delivery settings together. Both example groups still showed zero devices and users.
+
+![Saved deployment properties showing the Firefox payload, two empty groups, schedules, and app delivery settings](/images/posts/intune-deployments-schedule-the-rollout/example-deployment-properties.jpg)
+
+Use populated groups for your deployment. When a ring activates, it targets the members of its groups. Check installation or policy results on pilot devices before the next ring starts. If the results do not meet your requirements, pause the deployment before that ring starts.
+
+The empty groups in these screenshots demonstrate the setup process only. This example did not test delivery, installation, or recovery on a device.
+
+## Check the pilot before the next ring
+
+Use this procedure for the Win32 app example after the pilot ring activates. It follows Microsoft's [app reporting guidance](https://learn.microsoft.com/en-us/mem/intune/fundamentals/reports#device-install-status-report-for-apps-operational). I did not exercise these device checks with the empty demonstration groups.
+
+1. Open **Apps > All apps** in the Intune admin center.
+2. Select the deployed app.
+3. Under **Monitor**, select **Device install status**.
+4. Match the device rows against your intended pilot device list.
+5. Check **Status**, **Status details**, and **Last check-in** for each pilot device.
+6. Investigate failures and missing or stale device results.
+7. Select a representative sample of pilot devices and record which devices you selected.
+8. On each selected device, confirm the expected app version and complete a normal user task.
+
+The app report can include devices outside the pilot. For user-targeted groups, identify the pilot users' intended devices before comparing results. An activated ring confirms assignment progression; it does not confirm installation. Missing results do not count as successful installations.
+
+Continue only when every intended pilot device reports **Installed** and every device in your recorded sample passes the functional checks. Otherwise, open **Devices > Manage devices > Deployments**. Select the deployment, then select **Pause** before the next ring starts. This is a manual review rule; Intune does not enforce it as a success threshold.
+
+## Try the deployment workflow with Microsoft Graph PowerShell
+
+I validated the beta API workflow through app assignment configuration. Commit returned an assignment conflict; successful commit and pause remain unverified. The tests used empty groups and did not test installation on devices.
+
+The examples use `Invoke-MgGraphRequest` with Microsoft Graph `beta` endpoints, which can change. Use populated pilot groups for your own validation. Treat the commit and pause blocks as steps awaiting successful validation, not a verified end-to-end procedure.
+
+The [create deployment API](https://learn.microsoft.com/en-us/graph/api/intune-gntgraphservice-deviceandappmanagementdeployment-create?view=graph-rest-beta) requires `DeviceManagementConfiguration.ReadWrite.All`. Your tenant needs an active Intune license. Use an administrator with the Intune permissions described earlier and administrator consent for both Graph permissions. The app assignment step also requires `DeviceManagementApps.ReadWrite.All`.
+
+### 1. Connect and set your values
+
+Install the authentication module once:
+
+```powershell
+Install-Module Microsoft.Graph.Authentication -Scope CurrentUser
+```
+
+Replace the placeholders with your tenant ID, tested Win32 app ID, and populated group IDs. Run the remaining examples in the same PowerShell session.
+
+```powershell
+$ErrorActionPreference = 'Stop'
+Import-Module Microsoft.Graph.Authentication
+
+[guid]$tenantId = '<tenant-id>'
+[guid]$appId = '<intune-app-id>'
+[guid]$pilotGroupId = '<pilot-group-id>'
+[guid]$broadGroupId = '<broad-group-id>'
+$appName = '<app-display-name>'
+
+$connection = @{
+    TenantId     = $tenantId.ToString()
+    Scopes       = @(
+        'DeviceManagementConfiguration.ReadWrite.All'
+        'DeviceManagementApps.ReadWrite.All'
+    )
+    ContextScope = 'Process'
+    UseDeviceAuthentication = $true
+    ErrorAction  = 'Stop'
+}
+Connect-MgGraph @connection
+
+$graphBase = '/beta/deviceManagement/deployments'
+$writeOptions = @{
+    Method      = 'POST'
+    ContentType = 'application/json'
+    OutputType  = 'PSObject'
+    ErrorAction = 'Stop'
+}
+
+[DateTimeOffset]$pilotStart = [DateTimeOffset]::UtcNow.AddDays(7)
+[DateTimeOffset]$broadStart = $pilotStart.AddDays(2)
+$pilotStartUtc = $pilotStart.ToString('o')
+$broadStartUtc = $broadStart.ToString('o')
+```
+
+This schedule starts the pilot in seven days and the broader ring two days later. Adjust both times before creating the draft. Check existing app assignments and group membership first.
+
+[`Connect-MgGraph`](https://learn.microsoft.com/en-us/powershell/microsoftgraph/authentication-commands) handles authentication. `ContextScope = 'Process'` limits the sign-in context to this session. [`Invoke-MgGraphRequest`](https://learn.microsoft.com/en-us/powershell/module/microsoft.graph.authentication/invoke-mggraphrequest) sends the requests below.
+
+### 2. Create the draft with both rings
+
+Use a published Win32 app. Check for an existing deployment and conflicting app assignments, including **All users** and **All devices**, before you continue. The service requires rings in the initial create request.
+
+```powershell
+$ringDefinitions = @(
+    @{ Name = 'Pilot'; Start = $pilotStartUtc; GroupId = $pilotGroupId }
+    @{ Name = 'Broad deployment'; Start = $broadStartUtc; GroupId = $broadGroupId }
+)
+$deploymentBody = @{
+    displayName = "$appName staged rollout"
+    description = 'Pilot review before broader deployment'
+    payloads = @(
+        @{
+            payloadId = $appId.ToString()
+            payloadEntitySet = 'mobileApps'
+        }
+    )
+    rings = @(
+        foreach ($definition in $ringDefinitions) {
+            @{
+                displayName = $definition.Name
+                activationCriteria = @{
+                    '@odata.type' = '#microsoft.graph.deviceAndAppManagementRingActivationDateTimeCriteria'
+                    startDateTime = $definition.Start
+                }
+                assignmentConfigurations = @(
+                    @{
+                        operation = 'add'
+                        target = @{
+                            '@odata.type' = '#microsoft.graph.groupAssignmentTarget'
+                            groupId = $definition.GroupId.ToString()
+                        }
+                    }
+                )
+            }
+        }
+    )
+}
+$writeOptions.Uri = $graphBase
+$writeOptions.Body = ConvertTo-Json -InputObject $deploymentBody -Depth 20
+$deployment = Invoke-MgGraphRequest @writeOptions
+$deploymentIdProperty = if ($null -ne $deployment) {
+    $deployment.PSObject.Properties['id']
+}
+if ($null -eq $deploymentIdProperty -or
+    [string]::IsNullOrWhiteSpace([string]$deploymentIdProperty.Value)) {
+    throw 'The create response did not contain a deployment ID.'
+}
+$deploymentId = [string]$deploymentIdProperty.Value
+$deploymentUri = "$graphBase/$deploymentId"
+Write-Output "Draft deployment ID: $deploymentId"
+```
+
+Save the deployment ID. If a later request fails, inspect this draft before retrying: repeating creation can create duplicate resources.
+
+### 3. Read the rings and group assignments
+
+```powershell
+$readRequest = @{
+    Method = 'GET'
+    Uri = $deploymentUri + '?$expand=rings($expand=assignmentConfigurations)'
+    OutputType = 'PSObject'
+    ErrorAction = 'Stop'
+}
+$current = Invoke-MgGraphRequest @readRequest
+$current | ConvertTo-Json -Depth 20
+```
+
+Single quotes preserve the literal `$expand` query parameters. Check the app ID, both group IDs, ring order, and start times.
+
+### 4. Configure the app assignments
+
+**Beta schema difference:** this example preserves the portal request accepted during my September 27, 2026 tenant test. The [Graph resource reference](https://learn.microsoft.com/en-us/graph/api/resources/intune-apps-deviceandappmanagementdeploymentassignment?view=graph-rest-beta) uses different names:
+
+| Field | Accepted tenant request | Graph reference |
+| --- | --- | --- |
+| Ring assignment reference | `assignmentConfigurationId` | `referenceAssignmentId` |
+| Assignment details | `assignmentDetails` | `assignmentDetail` |
+| Details type | `mobileAppAssignmentDetails` | `mobileAppAssignmentDetail` |
+| Install intent | `RequiredInstall` | `requiredInstall` |
+
+I have not verified that the documented alternatives work in this tenant. Validate this beta request in your environment before using it. A successful configuration request does not establish that commit will succeed.
+
+**Observed cleanup limitation:** deleting my test draft left two app-side `targetAssignments` records. The documented deletion endpoint rejected cleanup. Do not assume that deleting a draft reverses this step.
+
+If configuration or commit fails, stop before retrying. Inspect the saved deployment and the app-side records associated with its ID. Resolve the partial configuration before creating another deployment. This example does not provide a verified cleanup procedure.
+
+The [configure assignments API](https://learn.microsoft.com/en-us/graph/api/intune-apps-mobileapp-configureassignments?view=graph-rest-beta) connects each ring assignment to the app. This example uses required installation, all notifications, and the default delivery settings. Review these settings for your app before committing.
+
+```powershell
+$appAssignments = @(
+    foreach ($deploymentRing in $current.rings) {
+        foreach ($configuration in $deploymentRing.assignmentConfigurations) {
+            $configurationIdProperty = if ($null -ne $configuration) {
+                $configuration.PSObject.Properties['id']
+            }
+            if ($null -eq $configurationIdProperty -or
+                [string]::IsNullOrWhiteSpace([string]$configurationIdProperty.Value)) {
+                throw 'The ring assignment did not contain an ID.'
+            }
+            @{
+                '@odata.type' = '#microsoft.graph.deviceAndAppManagementDeploymentAssignment'
+                payloadId = $appId.ToString()
+                deploymentId = $deploymentId
+                assignmentConfigurationId = [string]$configurationIdProperty.Value
+                assignmentDetails = @{
+                    '@odata.type' = '#microsoft.graph.mobileAppAssignmentDetails'
+                    intent = 'RequiredInstall'
+                    settings = @{
+                        '@odata.type' = '#microsoft.graph.win32LobAppAssignmentSettings'
+                        notifications = 'showAll'
+                        deliveryOptimizationPriority = 'notConfigured'
+                        installTimeSettings = $null
+                        restartSettings = $null
+                        autoUpdateSettings = $null
+                    }
+                }
+            }
+        }
+    }
+)
+if ($appAssignments.Count -ne 2) {
+    throw 'Expected one group assignment in each of the two rings.'
+}
+$writeOptions.Uri = "/beta/deviceAppManagement/mobileApps/$appId/configureAssignments"
+$writeOptions.Body = ConvertTo-Json -InputObject @{ assignments = $appAssignments } -Depth 20
+Invoke-MgGraphRequest @writeOptions
+```
+
+Check the draft and app delivery settings in Intune before you continue. A successful configuration request does not commit the deployment.
+
+### 5. Commit the deployment
+
+Successful commit remains unverified in this PowerShell test. Review the draft and complete any required approval process before treating it as scheduled. The [deployment action API](https://learn.microsoft.com/en-us/graph/api/intune-gntgraphservice-deviceandappmanagementdeployment-deployaction?view=graph-rest-beta) accepts the [`commit` action](https://learn.microsoft.com/en-us/graph/api/resources/intune-gntgraphservice-deviceandappmanagementdeploymentaction?view=graph-rest-beta).
+
+```powershell
+$writeOptions.Uri = "$deploymentUri/deployAction"
+$writeOptions.Body = ConvertTo-Json -InputObject @{ action = 'commit' }
+Invoke-MgGraphRequest @writeOptions
+
+$current = Invoke-MgGraphRequest @readRequest
+$current | Select-Object id, displayName, mode, state, ringCount, startDateTime
+$current.rings | Select-Object id, displayName, order, state
+```
+
+For comparison, my portal-created deployment returned these values before its first scheduled ring:
+
+| Field | Observed value | Meaning for this example |
+| --- | --- | --- |
+| Deployment `mode` | `active` | The deployment is active rather than a draft. |
+| Deployment `state` | `notStarted` | The first ring has not started. |
+| `ringCount` | `2` | Both configured rings are present. |
+| Each ring's `state` | `notActivated` | Neither ring has applied its assignments. |
+
+Compare the returned app, groups, and start times with your intended configuration. A `draft` mode does not establish successful commitment. These values describe the portal example's scheduling state. They do not confirm device installation or successful execution of this PowerShell commit.
+
+If creation needs Multi Admin Approval, the deployment stays out of the list until approval completes. Check the approval request before retrying creation. See [deployment approvals](https://learn.microsoft.com/en-us/intune/device-management/deployments/rbac-scope-tags#multi-admin-approval).
+
+### Pause later rings when needed
+
+This PowerShell pause step remains unverified. Run it only when you intend to pause an active deployment, then confirm the result in Intune:
+
+```powershell
+$writeOptions.Uri = "$deploymentUri/deployAction"
+$writeOptions.Body = ConvertTo-Json -InputObject @{ action = 'pause' }
+Invoke-MgGraphRequest @writeOptions
+
+$current = Invoke-MgGraphRequest @readRequest
+$current | Select-Object id, mode, state
+```
+
+Pause retains assignments from rings that already activated. When you finish, run `Disconnect-MgGraph` to close the session.
+
+## Before the first deployment
+
+- Audit existing payload assignments and ring membership.
+- Choose a pilot that represents the devices and work you need to protect.
+- Assign an owner to review results before each ring starts.
+- Define the results that justify continuing or pausing.
+- Prepare recovery for devices already affected.
+- Check permissions, scope tags, approvals, and current preview limitations.
+
+Start with a small payload that you can reverse and whose results you can measure. Check assignments, device results, and the pause procedure before you schedule a production deployment.

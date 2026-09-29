@@ -2,6 +2,34 @@ import { type PostMeta } from '../lib/posts'
 
 const posts: PostMeta[] = [
   {
+    slug: 'windows-custom-compliance-with-intune',
+    title: 'Check more Windows requirements with Intune custom compliance',
+    date: '2026-09-29',
+    description:
+      'Use PowerShell and JSON rules to check required applications and BitLocker startup PIN settings with Intune custom compliance.',
+    tags: ['intune', 'powershell', 'windows', 'endpoint-management'],
+    socialImage: {
+      src: '/images/posts/windows-custom-compliance-with-intune/socialcard.png',
+      width: 1200,
+      height: 630,
+      type: 'image/png',
+    },
+  },
+  {
+    slug: 'intune-deployments-schedule-the-rollout',
+    title: 'Intune deployments: Schedule the rollout and check the results',
+    date: '2026-09-27',
+    description:
+      'Schedule Windows apps and policies with Intune deployments, check assignments, and prepare recovery steps.',
+    tags: ['intune', 'windows', 'endpoint-management', 'microsoft-graph'],
+    socialImage: {
+      src: '/images/posts/intune-deployments-schedule-the-rollout/socialcard.png',
+      width: 1200,
+      height: 630,
+      type: 'image/png',
+    },
+  },
+  {
     slug: 'ai-will-take-the-repeatable-work',
     title: 'AI Does Not Need To Replace You To Take Your Job',
     date: '2026-09-02',
