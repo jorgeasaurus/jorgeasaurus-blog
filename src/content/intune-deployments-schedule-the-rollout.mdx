@@ -287,6 +287,17 @@ Single quotes preserve the literal `$expand` query parameters. Check the app ID,
 
 ### 4. Configure the app assignments
 
+**Beta schema difference:** this example preserves the portal request accepted during my September 27, 2026 tenant test. The [Graph resource reference](https://learn.microsoft.com/en-us/graph/api/resources/intune-apps-deviceandappmanagementdeploymentassignment?view=graph-rest-beta) uses different names:
+
+| Field | Accepted tenant request | Graph reference |
+| --- | --- | --- |
+| Ring assignment reference | `assignmentConfigurationId` | `referenceAssignmentId` |
+| Assignment details | `assignmentDetails` | `assignmentDetail` |
+| Details type | `mobileAppAssignmentDetails` | `mobileAppAssignmentDetail` |
+| Install intent | `RequiredInstall` | `requiredInstall` |
+
+I have not verified that the documented alternatives work in this tenant. Validate this beta request in your environment before using it. A successful configuration request does not establish that commit will succeed.
+
 **Observed cleanup limitation:** deleting my test draft left two app-side `targetAssignments` records. The documented deletion endpoint rejected cleanup. Do not assume that deleting a draft reverses this step.
 
 If configuration or commit fails, stop before retrying. Inspect the saved deployment and the app-side records associated with its ID. Resolve the partial configuration before creating another deployment. This example does not provide a verified cleanup procedure.
