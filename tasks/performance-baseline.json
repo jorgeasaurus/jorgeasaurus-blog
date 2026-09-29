@@ -151,7 +151,16 @@
       }
     ],
     "api": "HTTP 429 quota exceeded; UI checked separately",
-    "searchConsole": "Not inspected; ownership and coverage tracked in issue 24",
+    "searchConsole": {
+      "property": "sc-domain:jorgeasaur.us",
+      "url": "https://search.google.com/search-console/core-web-vitals?resource_id=sc-domain%3Ajorgeasaur.us",
+      "checkedAt": "2026-09-29",
+      "lastUpdated": "2026-09-27",
+      "source": "Chrome UX report",
+      "mobile": "Not enough usage data in the last 90 days for this device type.",
+      "desktop": "Not enough usage data in the last 90 days for this device type.",
+      "metrics": "No field LCP, INP, or CLS values displayed; both report buttons disabled."
+    },
     "scope": "URL-specific PSI reports; no origin fallback was displayed. Origin data was not independently queried."
   },
   "priorities": [

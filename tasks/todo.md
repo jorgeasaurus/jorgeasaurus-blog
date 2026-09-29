@@ -961,4 +961,6 @@ Plan: preserve the font URL and display behavior, move discovery from CSS into H
 
 Review: lint, build, seven browser regressions, and strict source review passed. Twelve controlled runs show desktop FCP median 844→758 ms; mobile ranges overlap and LCP is unchanged. `tasks/performance-baseline.json` records production measurements, comparison samples, field-data limits, and image priorities for #23.
 
-Copilot follow-up: checked all three desktop PSI reports in addition to mobile; each shows No Data. The record now identifies form factor and limits the finding to these six URL reports; origin data and Search Console were not independently queried.
+Copilot follow-up: checked all three desktop PSI reports in addition to mobile; each shows No Data. The PSI record identifies form factor and limits its finding to these six URL reports; origin data was not independently queried.
+
+Search Console follow-up: the authenticated `sc-domain:jorgeasaur.us` Core Web Vitals report (updated September 27) shows insufficient usage data for both mobile and desktop. Neither report exposes field metrics.
