@@ -979,8 +979,39 @@ Audit (September 29): 128 existing destinations reachable, two missing (now repl
 
 - [x] Change post/project card titles to h3 below their h2 section headings.
 - [x] Preserve computed typography and dimensions on Home/Projects at phone/desktop widths.
-- [ ] Run strict and Copilot review loops, merge, verify production, and clean disposable resources.
+- [x] Run strict and Copilot review loops, merge, verify production, and clean disposable resources.
 
 Plan: retain post-title classes and give project titles a dedicated class so their styling does not depend on heading level.
 
 Review: fixed the inherited h2 letter spacing identified by strict review and browser comparison. Fresh strict review found zero issues. Lint/build and Home/Projects heading hierarchy plus computed typography/dimensions checks passed at 390 and 1440 px.
+
+# Issue 21: Backlink plan
+
+- [x] Inspect the authenticated Search Console Links report.
+- [x] Verify a sample of relevant public project/profile pages and record a scoped baseline.
+- [x] Prioritize useful article references and define follow-up measurement.
+- [ ] Complete strict/Copilot reviews, merge, and cleanup.
+
+Scope: planning and read-only research. Outreach and external profile/repository changes require separate authorization.
+
+Baseline (September 29, 2026): the authenticated [Search Console Links report](https://search.google.com/search-console/links?resource_id=sc-domain%3Ajorgeasaur.us) is processing; its export is disabled. Inbound totals and referral visits are unavailable, not zero.
+
+Five manually selected public pages returned HTTP 200. They contain 10 blog anchors across three linking pages and three domains, or eight distinct source–target pairs after normalizing the blog host and trailing slash. This sample is not a webwide backlink count; no links were created.
+
+| Source page | Observed blog destinations |
+| --- | --- |
+| [GitHub profile README](https://github.com/jorgeasaurus/jorgeasaurus/blob/main/README.md) | Homepage and five articles: TUI, MMSMOA 2026, remediation template, device model groups, and app inventory. All six anchors have `nofollow`. |
+| [IntuneHydrationKit](https://github.com/jorgeasaurus/IntuneHydrationKit) | None on the inspected repository page. |
+| [TerminalSlides](https://github.com/jorgeasaurus/TerminalSlides) | None on the inspected repository page. |
+| [PowerShell.org podcast episode](https://powershell.org/podcast/2025-12-29-the-powershell-podcast-building-powershell-tools-you-wish-existed-with-jorge-suarez/) | Two homepage anchors; one distinct target. |
+| [PDQ podcast episode](https://www.pdq.com/resources/the-powershell-podcast/building-the-powershell-tools-you-wish-existed-with-jorge-suarez/) | Two homepage anchors; one distinct target. |
+
+Priorities, pending separate authorization:
+
+1. Link TerminalSlides' Quick start to the [PowerShell presentations tutorial](https://www.jorgeasaur.us/build-terminal-presentations-with-powershell) for a worked example.
+2. Link IntuneHydrationKit's Interactive TUI section to the [TUI walkthrough](https://www.jorgeasaur.us/intune-hydration-kit-has-a-tui-now) for setup context.
+3. Refresh the profile's selected writing with the [custom compliance](https://www.jorgeasaur.us/windows-custom-compliance-with-intune) and [deployments](https://www.jorgeasaur.us/intune-deployments-schedule-the-rollout) posts. Maintain the existing podcast references; do not request duplicate homepage links.
+
+Measurement: after authorized edits, record each source URL, target URL, and publication date; recheck the same five pages after 28 days. Compare distinct source–target pairs against eight, and report additions/removals separately. If analytics becomes available, compare referral visits over matching 28-day periods; link placement alone does not demonstrate traffic or ranking gains.
+
+Review: fresh strict review found zero issues; baseline counts match the five-page evidence, all four proposed article destinations returned HTTP 200, and diff whitespace checks passed.
