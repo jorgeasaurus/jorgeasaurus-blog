@@ -1075,3 +1075,5 @@ Plan: allow the hero grid to shrink, scale its mobile title, wrap inline code, a
 Layout evidence: Home, Projects, About, Deployments, and VS Code Remediations pass at 320, 390, 768, and 1440 px. Checks materialized off-screen article content and measured actual inline-text bounds, hero overflow, table scroll-area bounds, and fenced-code scrolling.
 
 Review: replaced the initial block-table approach with a named, keyboard-focusable scroll wrapper after strict review. Fresh review returned zero findings. Lint/build and all 13 browser tests passed, including six responsive regressions. Invalid newsletter input produced no subscription requests.
+
+Copilot follow-up: use non-landmark groups for table scrolling to avoid duplicate landmarks. Responsive geometry tests now load the production fonts before measuring text; unrelated external requests and subscriptions remain blocked.

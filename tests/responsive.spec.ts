@@ -1,11 +1,24 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, type Page } from '@playwright/test'
+
+async function loadFonts(page: Page) {
+  const loaded = await page.evaluate(async () => {
+    const faces = await Promise.all([
+      document.fonts.load('700 16px "Instrument Sans"'),
+      document.fonts.load('500 16px "IBM Plex Mono"'),
+    ])
+    await document.fonts.ready
+    return faces.map((family) => family.filter((face) => face.status === 'loaded').length)
+  })
+  for (const count of loaded) expect(count).toBeGreaterThan(0)
+}
 
 for (const width of [320, 390]) {
   test.describe(`${width}px touch layout`, () => {
     test.use({ viewport: { width, height: 900 }, hasTouch: true, isMobile: true })
 
     test.beforeEach(async ({ context, page, baseURL }) => {
-      await context.route((url) => url.origin !== new URL(baseURL!).origin, (route) => route.abort())
+      const allowed = new Set([new URL(baseURL!).origin, 'https://fonts.googleapis.com', 'https://fonts.gstatic.com'])
+      await context.route((url) => !allowed.has(url.origin), (route) => route.abort())
       await context.route('**/api/subscribe', (route) => route.abort())
       await page.addInitScript(() => localStorage.setItem('newsletter-popup-subscribed', 'true'))
     })
@@ -13,6 +26,7 @@ for (const width of [320, 390]) {
     test('hero text fits its content column', async ({ page }) => {
       await page.goto('/')
       await expect(page.locator('.hero-title-block h1')).toBeVisible()
+      await loadFonts(page)
       const bounds = await page.locator('.hero-title-block h1').evaluate((heading) => {
         const column = heading.closest('.hero-title-block')!.getBoundingClientRect()
         const range = document.createRange()
@@ -31,6 +45,7 @@ for (const width of [320, 390]) {
       for (const slug of ['intune-deployments-schedule-the-rollout', 'manage-vs-code-extensions-with-intune-remediations']) {
         await page.goto(`/${slug}`)
         await expect(page.locator('.post-content')).toBeVisible()
+        await loadFonts(page)
         const code = page.locator('.post-content code')
         let checked = 0
         for (const node of await code.all()) {
@@ -50,7 +65,7 @@ for (const width of [320, 390]) {
         for (const table of await tables.all()) {
           expect(await table.getByRole('columnheader').count()).toBeGreaterThan(0)
           const region = table.locator('..')
-          await expect(region).toHaveAttribute('role', 'region')
+          await expect(region).toHaveAttribute('role', 'group')
           await expect(region).toHaveAttribute('aria-label', 'Scrollable table')
           await region.scrollIntoViewIfNeeded()
           const state = await region.evaluate((element) => {

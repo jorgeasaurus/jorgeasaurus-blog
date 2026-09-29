@@ -69,7 +69,7 @@ function ExpandablePostImage({ alt = '', src, ...props }: MdxImageProps) {
 
 function ScrollableTable(props: React.ComponentPropsWithoutRef<'table'>) {
   return (
-    <div className="post-table-scroll" role="region" aria-label="Scrollable table" tabIndex={0}>
+    <div className="post-table-scroll" role="group" aria-label="Scrollable table" tabIndex={0}>
       <table {...props} />
     </div>
   )
