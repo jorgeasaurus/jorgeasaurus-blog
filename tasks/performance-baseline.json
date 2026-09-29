@@ -1,0 +1,337 @@
+{
+  "measuredAt": "2026-09-29",
+  "productionBaselineCommit": "cd87027d00b63a824fe4e2cfcc70f3faba02ee03",
+  "tool": {
+    "lighthouse": "13.5.0",
+    "chrome": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/154.0.0.0 Safari/537.36"
+  },
+  "method": {
+    "command": "CHROME_PATH=\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" npx --yes lighthouse@13.5.0 URL --only-categories=performance --chrome-flags=\"--headless --no-sandbox\" --output=json --output=html --output-path=PREFIX --quiet [--preset=desktop]",
+    "runsPerPageAndDevice": 1,
+    "cache": "cold",
+    "throttlingMethod": "simulate",
+    "mobile": {
+      "throttling": {
+        "rttMs": 150,
+        "throughputKbps": 1638.4,
+        "requestLatencyMs": 562.5,
+        "downloadThroughputKbps": 1474.5600000000002,
+        "uploadThroughputKbps": 675,
+        "cpuSlowdownMultiplier": 4
+      },
+      "screenEmulation": {
+        "mobile": true,
+        "width": 412,
+        "height": 823,
+        "deviceScaleFactor": 1.75,
+        "disabled": false
+      }
+    },
+    "desktop": {
+      "throttling": {
+        "rttMs": 40,
+        "throughputKbps": 10240,
+        "requestLatencyMs": 0,
+        "downloadThroughputKbps": 0,
+        "uploadThroughputKbps": 0,
+        "cpuSlowdownMultiplier": 1
+      },
+      "screenEmulation": {
+        "mobile": false,
+        "width": 1350,
+        "height": 940,
+        "deviceScaleFactor": 1,
+        "disabled": false
+      }
+    }
+  },
+  "productionBaseline": [
+    {
+      "name": "deployments-desktop",
+      "url": "https://www.jorgeasaur.us/intune-deployments-schedule-the-rollout",
+      "time": "2026-09-29T20:49:18.779Z",
+      "score": 83,
+      "LCP_ms": 3024.678,
+      "CLS": 0.00113375254396026,
+      "TBT_ms": 0,
+      "transfer_bytes": 3524159
+    },
+    {
+      "name": "deployments-mobile",
+      "url": "https://www.jorgeasaur.us/intune-deployments-schedule-the-rollout",
+      "time": "2026-09-29T20:49:06.016Z",
+      "score": 67,
+      "LCP_ms": 17315.954999999998,
+      "CLS": 0,
+      "TBT_ms": 0,
+      "transfer_bytes": 3524153
+    },
+    {
+      "name": "home-desktop",
+      "url": "https://www.jorgeasaur.us/",
+      "time": "2026-09-29T20:48:55.228Z",
+      "score": 83,
+      "LCP_ms": 3033.263,
+      "CLS": 0,
+      "TBT_ms": 0,
+      "transfer_bytes": 3112980
+    },
+    {
+      "name": "home-mobile",
+      "url": "https://www.jorgeasaur.us/",
+      "time": "2026-09-29T20:48:34.327Z",
+      "score": 69,
+      "LCP_ms": 17271.023999999998,
+      "CLS": 0,
+      "TBT_ms": 0,
+      "transfer_bytes": 3112946
+    },
+    {
+      "name": "vscode-desktop",
+      "url": "https://www.jorgeasaur.us/manage-vs-code-extensions-with-intune-remediations",
+      "time": "2026-09-29T20:49:42.350Z",
+      "score": 83,
+      "LCP_ms": 3065.341,
+      "CLS": 0.02770375006379487,
+      "TBT_ms": 0,
+      "transfer_bytes": 6646401
+    },
+    {
+      "name": "vscode-mobile",
+      "url": "https://www.jorgeasaur.us/manage-vs-code-extensions-with-intune-remediations",
+      "time": "2026-09-29T20:49:29.684Z",
+      "score": 67,
+      "LCP_ms": 17543.65,
+      "CLS": 0,
+      "TBT_ms": 0,
+      "transfer_bytes": 6646405
+    }
+  ],
+  "fieldData": {
+    "status": "No Data in PageSpeed Insights for all three sampled URLs",
+    "reports": [
+      {
+        "page": "home",
+        "url": "https://pagespeed.web.dev/analysis/https-www-jorgeasaur-us/uqe4okf4jm?form_factor=mobile"
+      },
+      {
+        "page": "deployments",
+        "url": "https://pagespeed.web.dev/analysis/https-www-jorgeasaur-us-intune-deployments-schedule-the-rollout/l2h48rkrdn?form_factor=mobile"
+      },
+      {
+        "page": "vscode",
+        "url": "https://pagespeed.web.dev/analysis/https-www-jorgeasaur-us-manage-vs-code-extensions-with-intune-remediations/9fypszbsl1?form_factor=mobile"
+      }
+    ],
+    "api": "HTTP 429 quota exceeded; UI checked separately",
+    "searchConsole": "Not inspected; ownership and coverage tracked in issue 24"
+  },
+  "priorities": [
+    {
+      "issue": 23,
+      "finding": "Wallpaper transfers about 2.94 MB on every sampled page; VS Code terminal screenshot adds about 2.47 MB."
+    },
+    {
+      "issue": 18,
+      "finding": "Move unchanged font stylesheet into HTML head; controlled desktop FCP improved modestly, with no LCP improvement."
+    }
+  ],
+  "limits": [
+    "One production run per page/device is a baseline, not proof of a regression.",
+    "Lab TBT is not field INP; no field LCP, INP, or CLS values were available.",
+    "Simulated local comparisons cannot prove production or field improvements."
+  ],
+  "fontDiscoveryComparison": {
+    "baselineCommit": "d4daabad92ccdca6d788a08bd38e04f0bf153645",
+    "candidate": "Move unchanged font CSS URL from CSS import into HTML head with two preconnects.",
+    "method": "Home page; three alternating cold-cache runs per version and device; Lighthouse 13.5.0 with the same simulated throttling as production baseline. Local Vite preview servers on ports 4188 (baseline) and 4187 (candidate). Other browser tests stopped before this series.",
+    "command": "CHROME_PATH=\"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome\" npx --yes lighthouse@13.5.0 http://127.0.0.1:PORT/ --only-categories=performance --chrome-flags=\"--headless --no-sandbox\" --output=json --output-path=REPORT.json --quiet [--preset=desktop]",
+    "medians": [
+      {
+        "name": "baseline",
+        "device": "mobile",
+        "runs": 3,
+        "score": 70.0,
+        "LCP_ms": 17102.23545,
+        "FCP_ms": 2761.8725,
+        "CLS": 0,
+        "TBT_ms": 0,
+        "transfer_bytes": 3106485
+      },
+      {
+        "name": "candidate",
+        "device": "mobile",
+        "runs": 3,
+        "score": 71.0,
+        "LCP_ms": 17105.27580000002,
+        "FCP_ms": 2654.05,
+        "CLS": 0,
+        "TBT_ms": 0,
+        "transfer_bytes": 3106509
+      },
+      {
+        "name": "baseline",
+        "device": "desktop",
+        "runs": 3,
+        "score": 82.0,
+        "LCP_ms": 3002.07105,
+        "FCP_ms": 844.1560000000002,
+        "CLS": 0,
+        "TBT_ms": 0,
+        "transfer_bytes": 3106485
+      },
+      {
+        "name": "candidate",
+        "device": "desktop",
+        "runs": 3,
+        "score": 83.0,
+        "LCP_ms": 3004.238999999997,
+        "FCP_ms": 758.04995,
+        "CLS": 0,
+        "TBT_ms": 0,
+        "transfer_bytes": 3106509
+      }
+    ],
+    "runs": [
+      {
+        "name": "baseline",
+        "device": "desktop",
+        "run": 1,
+        "time": "2026-09-29T20:55:49.173Z",
+        "score": 82.0,
+        "FCP_ms": 844.1560000000002,
+        "LCP_ms": 3043.0585,
+        "CLS": 0,
+        "TBT_ms": 0
+      },
+      {
+        "name": "baseline",
+        "device": "desktop",
+        "run": 2,
+        "time": "2026-09-29T20:56:10.152Z",
+        "score": 82.0,
+        "FCP_ms": 864.07465,
+        "LCP_ms": 3002.07105,
+        "CLS": 0,
+        "TBT_ms": 0
+      },
+      {
+        "name": "baseline",
+        "device": "desktop",
+        "run": 3,
+        "time": "2026-09-29T20:56:31.009Z",
+        "score": 83.0,
+        "FCP_ms": 834.6826500000001,
+        "LCP_ms": 3001.92405,
+        "CLS": 0,
+        "TBT_ms": 0
+      },
+      {
+        "name": "baseline",
+        "device": "mobile",
+        "run": 1,
+        "time": "2026-09-29T20:54:46.476Z",
+        "score": 72.0,
+        "FCP_ms": 2430.0122,
+        "LCP_ms": 17102.23545,
+        "CLS": 0,
+        "TBT_ms": 0
+      },
+      {
+        "name": "baseline",
+        "device": "mobile",
+        "run": 2,
+        "time": "2026-09-29T20:55:07.277Z",
+        "score": 70.0,
+        "FCP_ms": 2761.8725,
+        "LCP_ms": 17102.0052,
+        "CLS": 0,
+        "TBT_ms": 0
+      },
+      {
+        "name": "baseline",
+        "device": "mobile",
+        "run": 3,
+        "time": "2026-09-29T20:55:28.250Z",
+        "score": 70.0,
+        "FCP_ms": 2898.1918,
+        "LCP_ms": 17103.1074,
+        "CLS": 0,
+        "TBT_ms": 0
+      },
+      {
+        "name": "candidate",
+        "device": "desktop",
+        "run": 1,
+        "time": "2026-09-29T20:55:59.623Z",
+        "score": 83.0,
+        "FCP_ms": 749.58745,
+        "LCP_ms": 3004.8075000000017,
+        "CLS": 0,
+        "TBT_ms": 0
+      },
+      {
+        "name": "candidate",
+        "device": "desktop",
+        "run": 2,
+        "time": "2026-09-29T20:56:20.582Z",
+        "score": 83.0,
+        "FCP_ms": 758.04995,
+        "LCP_ms": 3003.7304999999974,
+        "CLS": 0,
+        "TBT_ms": 0
+      },
+      {
+        "name": "candidate",
+        "device": "desktop",
+        "run": 3,
+        "time": "2026-09-29T20:56:41.430Z",
+        "score": 83.0,
+        "FCP_ms": 764.1986999999999,
+        "LCP_ms": 3004.238999999997,
+        "CLS": 0,
+        "TBT_ms": 0
+      },
+      {
+        "name": "candidate",
+        "device": "mobile",
+        "run": 1,
+        "time": "2026-09-29T20:54:56.848Z",
+        "score": 67.0,
+        "FCP_ms": 2649.58805,
+        "LCP_ms": 17104.872450000013,
+        "CLS": 0,
+        "TBT_ms": 213
+      },
+      {
+        "name": "candidate",
+        "device": "mobile",
+        "run": 2,
+        "time": "2026-09-29T20:55:17.746Z",
+        "score": 71.0,
+        "FCP_ms": 2663.0361999999996,
+        "LCP_ms": 17105.27580000002,
+        "CLS": 0,
+        "TBT_ms": 0
+      },
+      {
+        "name": "candidate",
+        "device": "mobile",
+        "run": 3,
+        "time": "2026-09-29T20:55:38.669Z",
+        "score": 71.0,
+        "FCP_ms": 2654.05,
+        "LCP_ms": 17255.607000000018,
+        "CLS": 0,
+        "TBT_ms": 0
+      }
+    ],
+    "findings": [
+      "Font stylesheet initiator changed from app CSS to document HTML; both preconnects recognized.",
+      "Desktop FCP ranges: baseline 835-864 ms, candidate 750-764 ms; median improvement 86 ms.",
+      "Mobile FCP ranges overlap; its 108 ms median improvement is uncertain.",
+      "First mobile candidate had 213 ms TBT; remaining runs had 0.",
+      "No LCP improvement. Image transfer remains the priority in issue 23."
+    ]
+  }
+}
