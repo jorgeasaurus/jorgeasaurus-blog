@@ -226,7 +226,7 @@ export default function Post() {
                   alt: heroImage.alt,
                 })
               }
-              aria-label={heroImage.alt ? `Open image: ${heroImage.alt}` : 'Open article illustration'}
+              aria-label={`Open image: ${heroImage.alt || 'Article illustration'}`}
             >
               <img
                 src={heroImage.src}
