@@ -955,7 +955,7 @@ Verification: all seven heroes loaded with expected alternatives; keyboard openi
 - [x] Measure Home and two articles on mobile/desktop; inspect available field data.
 - [x] Compare earlier font discovery against the baseline with repeated controlled lab runs.
 - [x] Record measured priorities and limits; verify rendering and build.
-- [ ] Complete strict review, Copilot review, squash merge, and production cleanup.
+- [x] Complete strict review, Copilot review, squash merge, and production cleanup.
 
 Plan: preserve the font URL and display behavior, move discovery from CSS into HTML, and preconnect the two font origins. Keep image optimization in #23.
 
@@ -964,3 +964,13 @@ Review: lint, build, seven browser regressions, and strict source review passed.
 Copilot follow-up: checked all three desktop PSI reports in addition to mobile; each shows No Data. The PSI record identifies form factor and limits its finding to these six URL reports; origin data was not independently queried.
 
 Search Console follow-up: the authenticated `sc-domain:jorgeasaur.us` Core Web Vitals report (updated September 27) shows insufficient usage data for both mobile and desktop. Neither report exposes field metrics.
+
+# Issue 19: Outbound links
+
+- [x] Audit all 131 external MDX destinations with retries; check blocked responses in a browser.
+- [x] Replace the two confirmed 404s with relevant destinations verified as HTTP 200.
+- [x] Verify build/rendered links; strict review returned zero findings.
+- [ ] Complete the latest-head Copilot review loop.
+- [ ] Squash merge, verify production links, and clean proven disposable resources.
+
+Audit (September 29): 128 existing destinations reachable, two missing (now replaced), and one inconclusive Cloudflare block at `https://scottduf.medium.com/`. The Medium profile remains because HTTP and Chrome both showed a block, not evidence of a missing page. GET requests followed redirects with a 25-second timeout and up to two attempts, concurrency six.
