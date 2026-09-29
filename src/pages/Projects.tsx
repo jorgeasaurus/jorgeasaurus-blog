@@ -210,7 +210,7 @@ function ProjectCard({ project, featured = false }: { project: Project; featured
     <article className={`project-card ${featured ? 'project-card--featured' : ''}`}>
       <div className="project-card-heading">
         <p className="project-kind">{project.kind}</p>
-        <h2>{project.name}</h2>
+        <h3 className="project-card-title">{project.name}</h3>
       </div>
       <p className="project-description">{project.description}</p>
       <div className="project-tags" aria-label={`${project.name} tags`}>

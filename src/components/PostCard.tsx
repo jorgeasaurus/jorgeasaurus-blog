@@ -23,11 +23,11 @@ export default function PostCard({ post, featured = false }: PostCardProps) {
           {featured && <span>Latest</span>}
           <p className="post-card-date">{formatDate(post.date)}</p>
         </div>
-        <h2 className="post-card-title">
+        <h3 className="post-card-title">
           <Link to={`/${post.slug}`} className="post-card-link">
             {post.title}
           </Link>
-        </h2>
+        </h3>
         <p className="post-card-desc">{post.description}</p>
         {post.tags && post.tags.length > 0 && (
           <div className="post-card-tags" aria-label="Tags">
