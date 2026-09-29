@@ -1031,8 +1031,32 @@ Review: all six rendered links navigated to the intended article heading and ret
 - [x] Reduce wallpaper and large PNG transfers; preserve screenshot pixels and social formats.
 - [x] Add responsive wallpaper selection, image dimensions, and selective lazy loading.
 - [x] Compare rendering, requests, layout reservation, lightboxes, and transfer sizes.
-- [ ] Complete strict/Copilot reviews, merge, verify production, and clean previews.
+- [x] Complete strict/Copilot reviews, merge, verify production, and clean previews.
 
 Plan: retain full-resolution sources for expansion, keep initial imagery eager, and defer later screenshots.
 
 Review: moved per-image loading policy into content metadata after strict review; fresh review returned zero findings. Lint/build and seven metadata tests passed. Twelve browser cases verified responsive wallpaper requests, deferred screenshots, image decoding, and original lightbox sources; delayed requests verified initial image space reservation. Asset sizes and pixel checks are recorded in `tasks/image-delivery-validation.json`.
+
+# Issue 24: Search Console verification
+
+- [x] Confirm authenticated access and verified ownership of the intended domain property.
+- [x] Inspect canonical sitemap submission, representative URLs, and coverage limits.
+- [x] Record evidence without account details or verification secrets.
+- [ ] Complete strict/Copilot reviews, merge, and cleanup.
+
+Verified September 29, 2026 in `sc-domain:jorgeasaur.us`: Settings reports a verified owner. No new verification method or credential is needed; the property was added September 27. The property-wide Page indexing report is still processing, so coverage totals are unavailable.
+
+Submitted `https://www.jorgeasaur.us/sitemap.xml` after confirming HTTP 200 and 37 canonical URLs. Google read 37 URLs but reported an incorrect namespace. The generator now uses `http://www.sitemaps.org/schemas/sitemap/0.9`, as specified by the [Sitemaps protocol](https://www.sitemaps.org/protocol.html); the previous identifier used `sitemap-0.9`.
+
+| Inspected URL (www host) | Google index result | Google-selected canonical / last crawl |
+| --- | --- | --- |
+| `/` | Alternate page with proper canonical tag | `https://jorgeasaur.us/`; September 19, 2026 |
+| `/manage-vs-code-extensions-with-intune-remediations` | Indexed | Inspected www URL; September 25, 2026 |
+| `/windows-custom-compliance-with-intune` | Discovered, currently not indexed | Unavailable; not crawled |
+| `/intune-deployments-schedule-the-rollout` | Discovered, currently not indexed | Unavailable; not crawled |
+
+All four live pages return HTTP 200 and declare their own www URL as canonical. The homepage index result reflects an older crawl; live canonical markup does not prove Google has adopted it. Recheck that selection and the two new posts after recrawl; sitemap discovery does not establish indexing.
+
+Validation: the namespace regression test failed against the old generator and passed after correction. Lint/build and diff checks pass. After deployment, resubmit the sitemap and record Google's processing result on the PR.
+
+Copilot follow-up: `npm run build` now runs `test:sitemap`, which generates the sitemap and validates its namespace before compilation and deployment.
