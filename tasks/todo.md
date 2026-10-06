@@ -1091,3 +1091,15 @@ Verified September 29, 2026: `npm ls -g vercel --depth=0` reported 59.25.0; `npm
 The upgraded CLI successfully read project `prj_08x5cg9onhcUqxKdTqXiGqBF0MVL` through `vercel api /v9/projects/{id}` with its existing team scope. The response identifies `jorgeasaurus-blog` and its READY production deployment. CLI verification created no deployment; the evidence PR follows the usual Git integration builds.
 
 Installation warnings: a transitive package excludes Node 26 from its declared engine range, and npm did not authorize the esbuild install script. The version and project-read checks passed; local build/deploy CLI commands were not tested.
+
+# Intune assignment do's and don'ts
+
+- [x] Review post conventions and lessons; define scope.
+- [x] Research Microsoft Learn, Reddit, and practitioner blogs.
+- [x] Draft practical scenarios and source-linked guidance.
+- [x] Register the post and create its social card.
+- [x] Verify claims, lint, build, metadata, and rendered output.
+
+## Review
+
+Added the source-linked MDX post, metadata, social card, RSS, and sitemap entry. Microsoft Learn, practitioner blogs, and Reddit informed the draft. Lint, build, diff checks, social metadata, and Chrome desktop/mobile rendering passed; no runtime errors or mobile page overflow. Examples are illustrative; no tenant testing or publication performed.

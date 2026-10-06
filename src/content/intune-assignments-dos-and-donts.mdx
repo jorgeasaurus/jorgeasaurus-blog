@@ -1,0 +1,257 @@
+---
+title: "Intune assignments: Do's and don'ts"
+date: "2026-10-06"
+description: "Choose user or device assignments, set the correct context, and avoid common filter, exclusion, and uninstall mistakes in Intune."
+tags: ["intune", "windows", "endpoint-management"]
+---
+
+An app installs on a shared PC when only one employee needs it. An exclusion does nothing. An uninstall assignment leaves the app installed.
+
+These problems often start with assignment design.
+
+**Choose who needs the resource, where it should apply, and how it should run. These are separate decisions.**
+
+This guide focuses on enrolled devices, with Windows examples. Platform and workload exceptions appear where they affect the advice.
+
+The examples are proposed assignment designs, not results from a tested tenant. Sources were checked on October 6, 2026.
+
+## Do separate targeting, intent, and context
+
+An assignment answers who should receive an app or policy. It does not determine every part of its behavior.
+
+| Decision | Question | Example |
+| --- | --- | --- |
+| Target | Who needs the resource? | Finance users or shared warehouse devices |
+| Filter | Which devices within that audience qualify? | Corporate-owned Windows devices |
+| App intent | Should Intune install, offer, or remove it? | Required, Available, or Uninstall |
+| Execution context | Which account runs the installer or script? | User or System |
+| Policy scope | Does the setting affect a user or the device? | A user preference or a machine restriction |
+
+For example, Finance users can receive a **Required** app configured with **System** install behavior. User targeting does not force user-context installation.
+
+For Win32 apps, select **Install behavior** according to the package's installation requirements. Machine-wide software normally needs System context; a per-user package needs suitable user permissions.
+
+Do not expect a standard user's context to provide administrator rights. Intune also requires silent installation without interactive prompts. [Microsoft: Win32 app configuration](https://learn.microsoft.com/en-us/intune/app-management/deployment/add-win32).
+
+## Do assign according to who owns the requirement
+
+Use device targeting when the requirement belongs to the machine. Use user targeting when it belongs to the person.
+
+Microsoft recommends device groups for shared or userless devices, and user groups for resources such as user certificates. [Microsoft: Assign policies](https://learn.microsoft.com/en-us/intune/device-configuration/assign-device-profile).
+
+These are starting designs. Check each workload's supported targeting and settings before deployment.
+
+| Scenario | Suggested assignment | Reason |
+| --- | --- | --- |
+| Security agent on corporate Windows PCs | Required to devices, System context | Every qualifying machine needs the agent |
+| Scanner application on warehouse PCs | Required to a device group, System context | The application belongs to the workstation |
+| Optional diagramming tool for engineers | Available to an engineering user group | The person chooses whether to install it |
+| Required finance application | Required to Finance users, with a corporate-device include filter | Entitlement follows the person; installation stays on qualifying devices |
+| User certificate for authentication | User group, with a supported user certificate profile | The certificate represents the person's identity |
+| Device certificate for machine authentication | Device group, with a supported device certificate profile | The certificate represents the machine |
+| Kiosk restrictions | Kiosk devices | Restrictions must remain relevant without a particular employee |
+| User-scoped Office preference | User group | Only the intended users need that preference |
+
+The practical question is: **Should this requirement remain when a different person uses the device?**
+
+For a shared workstation's scanner application, yes. For a person's optional software entitlement, usually no.
+
+User targeting can reach several applicable devices used by that person. Refine the assignment when the requirement applies only to corporate devices.
+
+Do not assume a user assignment confines machine-wide software to that user's session. Another user might use the installed application.
+
+## Don't confuse a user assignment with a user-scoped setting
+
+Windows settings have their own scope. Assigning a device-scoped restriction to Finance users does not convert it into a Finance-only preference.
+
+Microsoft documents these settings catalog combinations:
+
+| Setting scope | Assignment target | Documented behavior |
+| --- | --- | --- |
+| Device | Device | The setting affects all users on the device |
+| Device | User | After the targeted user signs in and sync occurs, the setting affects all users |
+| User | Device | The setting applies to users on that device |
+| User | User | The setting applies only to that user |
+
+User settings can be **Not applicable** during early check-ins without a user hive. [Microsoft: Settings catalog scope behavior](https://learn.microsoft.com/en-us/intune/device-configuration/settings-catalog/#device-scope-vs-user-scope-settings).
+
+For example, a device-scoped browser restriction assigned to one employee can affect other employees on the same PC.
+
+Review the setting's scope before choosing the audience. Use separate profiles when separating user and device requirements makes assignments easier to maintain.
+
+Azure Virtual Desktop multi-session has stricter requirements: device configuration service providers must target devices; user configuration service providers must target users. [Microsoft: Multi-session targeting](https://learn.microsoft.com/en-us/intune/device-configuration/assign-device-profile#azure-virtual-desktop-multi-session).
+
+## Do use filters to refine a group assignment
+
+A group identifies the audience. An assignment filter narrows that audience using supported device properties.
+
+Filters evaluate during enrollment, check-in, or policy evaluation. They avoid waiting for dynamic device group membership processing for supported property-based targeting. [Microsoft: Assignment filters](https://learn.microsoft.com/en-us/intune/fundamentals/filters/overview).
+
+Example: Finance users need an application on corporate Windows devices, but not on their enrolled personal PCs.
+
+```text
+App: Finance client
+Intent: Required
+Included group: Finance users
+Filter platform: Windows
+Filter mode: Include
+Filter rule: (device.deviceOwnership -eq "Corporate")
+Install behavior: System
+```
+
+This preserves a user-based entitlement while restricting the eligible devices.
+
+For an approved set of shared devices, an enrollment-profile filter can refine an **All devices** assignment:
+
+```text
+(device.enrollmentProfileName -eq "Warehouse shared PCs")
+```
+
+These are Intune assignment filter expressions, not PowerShell commands or Microsoft Entra dynamic membership rules. Verify the exact properties and values in Intune. [Microsoft: Filter properties and syntax](https://learn.microsoft.com/en-us/intune/intune-service/fundamentals/filters-device-properties).
+
+Choose the mode deliberately:
+
+- **Include:** matching devices qualify.
+- **Exclude:** matching devices do not qualify.
+
+For corporate-only deployment, prefer an explicit corporate include condition over excluding personal devices. Test how unknown ownership values affect the intended audience.
+
+Preview matching devices, then inspect actual evaluation results after check-in. A correct expression still depends on correct device inventory.
+
+Do not assume every workload supports filters. Check Microsoft's [filter support matrix](https://learn.microsoft.com/en-us/intune/fundamentals/filters/ref-supported-workloads) for the platform, app type, and policy.
+
+## Don't use dynamic exclusions as an enrollment safeguard
+
+A newly enrolled device can receive an assignment before its dynamic exclusion group membership finishes processing.
+
+For timing-sensitive deployments, Microsoft recommends filters instead of dynamic device exclusions. Built-in **All users** and **All devices** targets also avoid maintaining equivalent tenant-wide groups. [Microsoft: Targeting performance recommendations](https://learn.microsoft.com/en-us/intune/fundamentals/filters/performance-recommendations).
+
+Use groups for business audiences, deployment rings, and explicit exceptions. Use supported filters for properties such as ownership, model, or enrollment profile.
+
+Dynamic groups still have a place when membership is needed outside Intune or uses attributes unavailable to assignment filters. [Microsoft: Choose a targeting method](https://learn.microsoft.com/en-us/intune/fundamentals/choose-targeting-method).
+
+A filter does not make delivery immediate. Device connectivity, check-in, inventory, and workload processing still affect the result.
+
+## Do keep group exclusions the same type as inclusions
+
+Intune does not infer user-to-device relationships when resolving group exclusions.
+
+| Include | Exclude | Expected design |
+| --- | --- | --- |
+| Finance users | Finance pilot users | Valid user-group exclusion |
+| Corporate devices | Static exception devices | Valid device-group exclusion |
+| Finance users | Personal devices | Do not rely on this combination |
+| Warehouse devices | Warehouse managers | Do not rely on this combination |
+
+Exclusion takes precedence over inclusion for the same group type. A device-group exclusion does not remove devices from a user-group assignment.
+
+Use a supported device filter on the user assignment instead. [Microsoft: App inclusion and exclusion rules](https://learn.microsoft.com/en-us/intune/app-management/deployment/configure-assignment-scope).
+
+Also inspect every assignment row. A narrowly filtered assignment does not prove the resource is narrowly targeted overall.
+
+For overlapping assignments, Microsoft documents filter-mode precedence: **Exclude**, then **No filter**, then **Include**. Same-mode filters use OR logic.
+
+App intent conflicts are resolved before filters. Avoid overlapping intent rather than using filters to repair conflicting assignments. [Microsoft: Filter troubleshooting](https://learn.microsoft.com/en-us/intune/intune-service/fundamentals/filters-reports-troubleshoot).
+
+## Don't treat exclusions as uninstall assignments
+
+For Windows apps, removing an assignment or adding an exclusion normally leaves the installed application in place.
+
+An exclusion changes targeting. **Uninstall** requests removal. These actions serve different purposes.
+
+Microsoft documents assignment-removal exceptions for Android Enterprise dedicated, fully managed, and corporate-owned work profile devices. Check the platform behavior before generalizing. [Microsoft: Assignment removal behavior](https://learn.microsoft.com/en-us/intune/app-management/deployment/configure-assignment-scope).
+
+For a Windows application retirement:
+
+1. Identify applicable install assignments and automatic dependency relationships for the retirement audience.
+2. Remove conflicting install targeting and resolve dependency relationships before retirement.
+3. Assign **Uninstall** to the retirement audience.
+4. Verify the uninstall command and detection result on pilot devices.
+5. Expand after confirming removal.
+
+An automatically installed Win32 dependency can install without its own direct assignment. Check parent applications before retiring it. [Microsoft: Win32 dependencies](https://learn.microsoft.com/en-us/intune/app-management/deployment/add-win32#step-5-dependencies).
+
+Do not add Uninstall to a second group and assume it overrides Required.
+
+| Overlapping intents | Documented result |
+| --- | --- |
+| User Required + User Uninstall | Required |
+| Device Required + Device Uninstall | Required |
+| User Required + Device Uninstall | Required |
+| User Available + User Uninstall | Uninstall |
+
+Other combinations have different behavior. In particular, user Available plus device Uninstall can leave the app offered in Company Portal.
+
+Check the full [Microsoft app intent conflict table](https://learn.microsoft.com/en-us/intune/app-management/deployment/assign-groups#how-conflicts-between-app-intents-are-resolved).
+
+Use this table to diagnose mistakes, not to design routine overlapping assignments. Microsoft's [app removal guidance](https://learn.microsoft.com/en-us/intune/app-management/deployment/) recommends clearing conflicting install targeting first.
+
+Policy removal also needs testing. Some Windows settings retain their configured value after the assignment disappears; the underlying configuration service provider controls removal behavior. [Microsoft: Policy removal behavior](https://learn.microsoft.com/en-us/intune/device-configuration/assign-device-profile#windows-csps-and-their-behavior).
+
+## Do verify Company Portal behavior for the app type
+
+**Available** means users can request installation. It does not mean every app type accepts device-group targeting.
+
+Most app types require user groups for Available assignments. Current exceptions include Win32 apps and apps for Android Enterprise fully managed or corporate-owned work profile devices. [Microsoft: Available assignment support](https://learn.microsoft.com/en-us/intune/app-management/deployment/assign-groups).
+
+For optional Windows software, user-group targeting remains a useful default. Check app applicability and the actual Company Portal experience.
+
+Also check the primary user. Company Portal functionality can be limited when its signed-in user differs from the device's primary user.
+
+Windows devices without a primary user are treated as shared devices. Company Portal supports requesting available apps, but shared-device mode restricts uninstall and other self-service actions. [Microsoft: Primary user and Company Portal](https://learn.microsoft.com/en-us/intune/device-management/inventory-and-status/find-primary-user).
+
+For Available apps, open the Company Portal app list to generate filter results. Check the device's **Filter evaluation** report.
+
+Available apps do not appear in **Device install status**. [Microsoft: Filter evaluation reports](https://learn.microsoft.com/en-us/intune/fundamentals/filters/troubleshoot).
+
+Test with a standard user and the intended shared-device configuration. An administrator's successful installation does not prove the employee experience.
+
+## Do test the real execution and provisioning context
+
+For scripts, assignment and execution account remain separate. **Run this script using the logged on credentials** selects user credentials or System context.
+
+Also check the PowerShell host architecture. A script can inspect the wrong registry view even when its assignment is correct. [Microsoft: Windows platform scripts](https://learn.microsoft.com/en-us/intune/device-management/tools/run-powershell-scripts-windows).
+
+A System-context script does not use the signed-in employee's `HKCU`. Do not assume their profile, mapped drives, or interactive session are available.
+
+Match installation, detection, and removal to the package's actual scope. A per-user installation needs detection that finds the intended user's installation.
+
+Provisioning adds timing requirements:
+
+- **Classic Autopilot pre-provisioning:** device-targeted policies apply in the technician phase. Eligible device-context apps can also come from the preassigned user's assignments. Without an assigned user, only device-targeted apps install there. [Microsoft: Pre-provisioning](https://learn.microsoft.com/en-us/autopilot/pre-provision).
+- **Autopilot device preparation:** applications selected for setup must use System context and target the specified device security group. Selected scripts must also target that group. User-based configurations arrive after setup. [Microsoft: Device preparation targeting](https://learn.microsoft.com/en-us/autopilot/device-preparation/faq).
+
+The device preparation policy has its own assignment settings. Keep those separate from the device group receiving its apps and scripts. [Microsoft: Create a device preparation policy](https://learn.microsoft.com/en-us/autopilot/device-preparation/tutorial/user-driven/entra-join-autopilot-policy).
+
+Do not apply one Autopilot mode's rules to another. Test initial enrollment and an existing device separately.
+
+## What practitioner discussions add
+
+Microsoft documentation defines supported behavior. Practitioner blogs and Reddit help identify cases worth testing.
+
+- [Andrew Taylor's user-versus-device examples](https://andrewstaylor.com/2022/11/30/intune-user-vs-device-targeting/) distinguish baseline software from role-based needs. His update-ring example is useful: an administrator visiting another PC should not bring a preview rollout with them.
+- [Peter van der Woude's filter walkthrough](https://petervanderwoude.nl/post/using-filters-for-assigning-apps-policies-and-profiles-to-specific-devices/) shows how groups and device properties work together.
+- [Call4Cloud's user-context detection example](https://call4cloud.nl/intune-detection-rules-user-context/) demonstrates why per-user installation, detection, and removal must agree.
+- [Reddit's assignment best-practices discussion](https://www.reddit.com/r/Intune/comments/1ktme91/intune_assigment_best_practices/) shows different designs for baseline and department applications.
+- [Reddit's exclusion discussion](https://www.reddit.com/r/Intune/comments/1hkaswb/all_users_app_install_with_exclusion_groups/) illustrates the recurring expectation that excluding an installed app should remove it.
+
+Treat these discussions as operational examples. Use current Microsoft documentation to confirm product rules.
+
+Community advice can also age. Check current support tables before repeating an older claim that Available assignments always require user groups.
+
+## Assignment checklist
+
+Before broad deployment:
+
+- Identify whether the requirement belongs to the person or the device.
+- Check policy scope and installer or script context separately.
+- Keep included and excluded groups the same type.
+- Check every assignment row, including existing unfiltered assignments.
+- Preview filters and verify ownership and enrollment-profile values.
+- Test a targeted device and a device that must stay excluded.
+- Test a standard user, a second user, and a shared device where relevant.
+- Test fresh enrollment if the resource is needed during setup.
+- Verify installation, detection, uninstall, and policy removal separately.
+- Review reports and endpoint behavior before expanding the audience.
+
+A useful pilot proves both outcomes: the intended device receives the resource, and the excluded device does not.

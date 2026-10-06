@@ -6,7 +6,17 @@
     <atom:link href="https://www.jorgeasaur.us/rss.xml" rel="self" type="application/rss+xml" />
     <description>Field notes on PowerShell, endpoint management, Microsoft Graph, and automation.</description>
     <language>en-us</language>
-    <lastBuildDate>Tue, 29 Sep 2026 12:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 06 Oct 2026 12:00:00 GMT</lastBuildDate>
+    <item>
+      <title>Intune assignments: Do&apos;s and don&apos;ts</title>
+      <link>https://www.jorgeasaur.us/intune-assignments-dos-and-donts</link>
+      <guid isPermaLink="false">https://jorgeasaur.us/intune-assignments-dos-and-donts</guid>
+      <pubDate>Tue, 06 Oct 2026 12:00:00 GMT</pubDate>
+      <description>Choose user or device assignments, set the correct context, and avoid common filter, exclusion, and uninstall mistakes in Intune.</description>
+      <category>intune</category>
+      <category>windows</category>
+      <category>endpoint-management</category>
+    </item>
     <item>
       <title>Check more Windows requirements with Intune custom compliance</title>
       <link>https://www.jorgeasaur.us/windows-custom-compliance-with-intune</link>
