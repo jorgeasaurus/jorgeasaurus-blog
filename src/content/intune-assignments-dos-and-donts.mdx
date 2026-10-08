@@ -78,7 +78,7 @@ User targeting can reach several applicable devices used by that person. Refine 
 
 Do not assume a user assignment confines machine-wide software to that user's session. Another user might use the installed application.
 
-## Don't confuse a user assignment with a user-scoped setting
+## Do not confuse a user assignment with a user-scoped setting
 
 Windows settings have their own scope. Assigning a device-scoped restriction to Finance users does not convert it into a Finance-only preference.
 
@@ -151,7 +151,7 @@ The device can receive the app before the category updates. A later filter misma
 
 Do not assume every workload supports filters. Check Microsoft's [filter support matrix](https://learn.microsoft.com/en-us/intune/fundamentals/filters/ref-supported-workloads) for the platform, app type, and policy.
 
-## Don't use dynamic exclusions as an enrollment safeguard
+## Do not use dynamic exclusions as an enrollment safeguard
 
 A newly enrolled device can receive an assignment before its dynamic exclusion group membership finishes processing.
 
@@ -191,7 +191,7 @@ For overlapping assignments, Microsoft documents filter-mode precedence: **Exclu
 
 App intent conflicts are resolved before filters. Required and Available assignments can merge, with filters from both assignments evaluated. Avoid overlapping intent rather than using filters to repair conflicting assignments. [Microsoft: Filter troubleshooting](https://learn.microsoft.com/en-us/intune/intune-service/fundamentals/filters-reports-troubleshoot).
 
-## Don't treat exclusions as uninstall assignments
+## Do not treat exclusions as uninstall assignments
 
 For Windows apps, removing an assignment or adding an exclusion normally leaves the installed application in place.
 
