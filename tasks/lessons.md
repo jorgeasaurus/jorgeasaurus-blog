@@ -37,3 +37,4 @@
 - Do not reuse "boring on purpose" as a default blog-post thesis; choose wording specific to the project and delete repeated stock phrases.
 - When asked for "main plus one post," restore and preserve main's complete content set, then add only that post; never reinterpret existing published posts as drafts.
 - Before creating a blog social card, inspect existing post cards and match their branding, layout, typography, and palette; do not invent a separate editorial style.
+- Apply ASD-STE100 Simplified Technical English and the Google developer documentation style guide to all blog drafts and edits. These standards override conflicting voice guidance.

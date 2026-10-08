@@ -1103,3 +1103,11 @@ Installation warnings: a transitive package excludes Node 26 from its declared e
 ## Review
 
 Added the source-linked MDX post, metadata, social card, RSS, and sitemap entry. Microsoft Learn, practitioner blogs, and Reddit informed the draft. Lint, build, diff checks, social metadata, and Chrome desktop/mobile rendering passed; no runtime errors or mobile page overflow. Examples are illustrative; no tenant testing or publication performed.
+
+# Blog writing standards
+
+- [x] Save ASD-STE100 and Google style as standing blog guidance.
+- [x] Remove conflicting skill examples and revise the assignment post.
+- [x] Verify lint and build; update PR #40.
+
+Lint, production build, and diff whitespace checks passed. Revised wording and single-action removal steps; technical guidance is unchanged.

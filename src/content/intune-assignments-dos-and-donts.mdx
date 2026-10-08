@@ -39,7 +39,7 @@ Use device targeting when the requirement belongs to the machine. Use user targe
 
 Microsoft recommends device groups for shared or userless devices, and user groups for resources such as user certificates. [Microsoft: Assign policies](https://learn.microsoft.com/en-us/intune/device-configuration/assign-device-profile).
 
-These are starting designs. Check each workload's supported targeting and settings before deployment.
+Use these examples as initial assignment designs. Check each workload's supported targeting and settings before deployment.
 
 | Scenario | Suggested assignment | Reason |
 | --- | --- | --- |
@@ -52,9 +52,9 @@ These are starting designs. Check each workload's supported targeting and settin
 | Kiosk restrictions | Kiosk devices | Restrictions must remain relevant without a particular employee |
 | User-scoped Office preference | User group | Only the intended users need that preference |
 
-The practical question is: **Should this requirement remain when a different person uses the device?**
+**Use device targeting when the requirement must remain for every user of the device.**
 
-For a shared workstation's scanner application, yes. For a person's optional software entitlement, usually no.
+A shared workstation needs its scanner application for every user. An optional software assignment usually applies to specific users.
 
 User targeting can reach several applicable devices used by that person. Refine the assignment when the requirement applies only to corporate devices.
 
@@ -163,11 +163,14 @@ Microsoft documents assignment-removal exceptions for Android Enterprise dedicat
 
 For a Windows application retirement:
 
-1. Identify applicable install assignments and automatic dependency relationships for the retirement audience.
-2. Remove conflicting install targeting and resolve dependency relationships before retirement.
-3. Assign **Uninstall** to the retirement audience.
-4. Verify the uninstall command and detection result on pilot devices.
-5. Expand after confirming removal.
+1. Identify applicable install assignments for the retirement audience.
+2. Check automatic dependency relationships.
+3. Remove conflicting install targeting.
+4. Resolve dependency relationships before retirement.
+5. Assign **Uninstall** to the retirement audience.
+6. Verify the uninstall command on pilot devices.
+7. Verify that detection reports the application as absent.
+8. After you confirm removal, expand the assignment.
 
 An automatically installed Win32 dependency can install without its own direct assignment. Check parent applications before retiring it. [Microsoft: Win32 dependencies](https://learn.microsoft.com/en-us/intune/app-management/deployment/add-win32#step-5-dependencies).
 
@@ -229,7 +232,7 @@ Do not apply one Autopilot mode's rules to another. Test initial enrollment and 
 
 Microsoft documentation defines supported behavior. Practitioner blogs and Reddit help identify cases worth testing.
 
-- [Andrew Taylor's user-versus-device examples](https://andrewstaylor.com/2022/11/30/intune-user-vs-device-targeting/) distinguish baseline software from role-based needs. His update-ring example is useful: an administrator visiting another PC should not bring a preview rollout with them.
+- [Andrew Taylor's user-versus-device examples](https://andrewstaylor.com/2022/11/30/intune-user-vs-device-targeting/) distinguish baseline software from role-based needs. Assign preview update rings to selected devices. An administrator signing in to another PC should not change that PC's update assignment.
 - [Peter van der Woude's filter walkthrough](https://petervanderwoude.nl/post/using-filters-for-assigning-apps-policies-and-profiles-to-specific-devices/) shows how groups and device properties work together.
 - [Call4Cloud's user-context detection example](https://call4cloud.nl/intune-detection-rules-user-context/) demonstrates why per-user installation, detection, and removal must agree.
 - [Reddit's assignment best-practices discussion](https://www.reddit.com/r/Intune/comments/1ktme91/intune_assigment_best_practices/) shows different designs for baseline and department applications.
@@ -237,7 +240,7 @@ Microsoft documentation defines supported behavior. Practitioner blogs and Reddi
 
 Treat these discussions as operational examples. Use current Microsoft documentation to confirm product rules.
 
-Community advice can also age. Check current support tables before repeating an older claim that Available assignments always require user groups.
+Community advice can become outdated. Check current support tables before repeating an older claim that Available assignments always require user groups.
 
 ## Assignment checklist
 
