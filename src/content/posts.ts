@@ -2,6 +2,20 @@ import { type PostMeta } from '../lib/posts'
 
 const posts: PostMeta[] = [
   {
+    slug: 'intune-assignments-dos-and-donts',
+    title: "Intune assignments: Do's and don'ts",
+    date: '2026-10-06',
+    description:
+      'Choose user or device assignments, set the correct context, and avoid common filter, exclusion, and uninstall mistakes in Intune.',
+    tags: ['intune', 'windows', 'endpoint-management'],
+    socialImage: {
+      src: '/images/posts/intune-assignments-dos-and-donts/socialcard.png',
+      width: 1200,
+      height: 630,
+      type: 'image/png',
+    },
+  },
+  {
     slug: 'windows-custom-compliance-with-intune',
     title: 'Check more Windows requirements with Intune custom compliance',
     date: '2026-09-29',

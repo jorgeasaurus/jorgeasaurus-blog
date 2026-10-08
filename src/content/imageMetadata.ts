@@ -21,6 +21,11 @@ const imageMetadata: Record<string, { width: number; height: number; loading?: '
   '/images/posts/use-cpm-with-openrouter-models/openrouter-models.png': { width: 1280, height: 1334 },
   '/images/posts/using-net-methods-in-powershell-with-practical-examples-youll-actually-reuse/dotnetPS.png': { width: 1200, height: 800 },
   '/images/posts/winget-without-winget-building-a-cross-platform-package-manifest-fetcher/logo.png': { width: 1200, height: 800 },
+  '/images/posts/intune-assignments-dos-and-donts/assignment-decisions.png': { width: 2000, height: 1378 },
+  '/images/posts/intune-assignments-dos-and-donts/assignment-scenarios.png': { width: 2000, height: 2222 },
+  '/images/posts/intune-assignments-dos-and-donts/policy-scope.png': { width: 2000, height: 1240 },
+  '/images/posts/intune-assignments-dos-and-donts/group-exclusions.png': { width: 2000, height: 932 },
+  '/images/posts/intune-assignments-dos-and-donts/app-intent-conflicts.png': { width: 2000, height: 932 },
 }
 
 export default imageMetadata

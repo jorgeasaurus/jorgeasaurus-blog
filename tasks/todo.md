@@ -1091,3 +1091,54 @@ Verified September 29, 2026: `npm ls -g vercel --depth=0` reported 59.25.0; `npm
 The upgraded CLI successfully read project `prj_08x5cg9onhcUqxKdTqXiGqBF0MVL` through `vercel api /v9/projects/{id}` with its existing team scope. The response identifies `jorgeasaurus-blog` and its READY production deployment. CLI verification created no deployment; the evidence PR follows the usual Git integration builds.
 
 Installation warnings: a transitive package excludes Node 26 from its declared engine range, and npm did not authorize the esbuild install script. The version and project-read checks passed; local build/deploy CLI commands were not tested.
+
+# Intune assignment do's and don'ts
+
+- [x] Review post conventions and lessons; define scope.
+- [x] Research Microsoft Learn, Reddit, and practitioner blogs.
+- [x] Draft practical scenarios and source-linked guidance.
+- [x] Register the post and create its social card.
+- [x] Verify claims, lint, build, metadata, and rendered output.
+
+## Review
+
+Added the source-linked MDX post, metadata, social card, RSS, and sitemap entry. Microsoft Learn, practitioner blogs, and Reddit informed the draft. Lint, build, diff checks, social metadata, and Chrome desktop/mobile rendering passed; no runtime errors or mobile page overflow. Examples are illustrative; no tenant testing or publication performed.
+
+# Blog writing standards
+
+- [x] Save ASD-STE100 and Google style as standing blog guidance.
+- [x] Remove conflicting skill examples and revise the assignment post.
+- [x] Verify lint and build; update PR #40.
+
+Lint, production build, and diff whitespace checks passed. Revised wording and single-action removal steps; technical guidance is unchanged.
+
+# PR 40 Copilot review
+
+- [x] Inspect feedback and confirm Required app intent in Microsoft guidance.
+- [x] Clarify device preparation app assignments.
+- [x] Verify and push; resolve feedback and request a fresh review.
+
+Copilot completed a clean review at aee879c with no open findings.
+
+# Assignment table images
+
+- [x] Preserve all five table datasets and accessible text.
+- [x] Render images with clear grid lines and register dimensions.
+- [x] Verify image content, desktop/mobile display, and expansion; update PR #40.
+
+All five original datasets match the text alternatives. Lint, build, whitespace checks, Chrome image loading/expansion, and mobile overflow checks passed.
+
+# Adversarial assignment-post review
+
+- [x] Challenge technical claims against current primary sources.
+- [x] Correct broad claims and synchronize image/text examples.
+- [x] Verify lint, build, content parity, and push PR updates.
+
+Corrected deployment/access language, enrollment filter races, uninstall scope, certificate dependencies, reporting scope, and device preparation requirements. Independent review confirmed the core targeting/conflict examples. Lint, build, diff checks, and image/text parity passed; updated image inspected. No tenant execution was performed.
+
+# PR 40 image-dimension review
+
+- [x] Replace rounded layout dimensions with actual PNG dimensions.
+- [x] Regenerate and verify all image metadata, lint, and build.
+
+All five metadata entries match actual PNG dimensions. Lint, build, and diff checks passed. External review-loop status is reported on PR #40 and in chat.
