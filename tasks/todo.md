@@ -1127,3 +1127,11 @@ Copilot completed a clean review at aee879c with no open findings.
 - [x] Verify image content, desktop/mobile display, and expansion; update PR #40.
 
 All five original datasets match the text alternatives. Lint, build, whitespace checks, Chrome image loading/expansion, and mobile overflow checks passed.
+
+# Adversarial assignment-post review
+
+- [x] Challenge technical claims against current primary sources.
+- [x] Correct broad claims and synchronize image/text examples.
+- [x] Verify lint, build, content parity, and push PR updates.
+
+Corrected deployment/access language, enrollment filter races, uninstall scope, certificate dependencies, reporting scope, and device preparation requirements. Independent review confirmed the core targeting/conflict examples. Lint, build, diff checks, and image/text parity passed; updated image inspected. No tenant execution was performed.

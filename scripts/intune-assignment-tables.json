@@ -62,7 +62,7 @@
       [
         "Required finance application",
         "Required to Finance users, with a corporate-device include filter",
-        "Entitlement follows the person; installation stays on qualifying devices"
+        "The user group defines the audience; the filter limits assignment applicability"
       ],
       [
         "User certificate for authentication",
