@@ -1135,3 +1135,10 @@ All five original datasets match the text alternatives. Lint, build, whitespace 
 - [x] Verify lint, build, content parity, and push PR updates.
 
 Corrected deployment/access language, enrollment filter races, uninstall scope, certificate dependencies, reporting scope, and device preparation requirements. Independent review confirmed the core targeting/conflict examples. Lint, build, diff checks, and image/text parity passed; updated image inspected. No tenant execution was performed.
+
+# PR 40 image-dimension review
+
+- [x] Replace rounded layout dimensions with actual PNG dimensions.
+- [x] Regenerate and verify all image metadata, lint, and build.
+
+All five metadata entries match actual PNG dimensions. Lint, build, and diff checks passed. External review-loop status is reported on PR #40 and in chat.

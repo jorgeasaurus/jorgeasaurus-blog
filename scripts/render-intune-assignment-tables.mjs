@@ -24,9 +24,10 @@ try {
     </style></head><body><main><h1>${escape(table.title)}</h1><table><thead>${row(table.headers, 'th')}</thead><tbody>${table.rows.map((cells) => row(cells, 'td')).join('')}</tbody></table></main></body></html>`)
     await page.evaluate(() => document.fonts.ready)
     const main = page.locator('main')
-    const box = await main.boundingBox()
-    await main.screenshot({ path: path.join(root, 'public', assetDir, `${table.slug}.png`) })
-    dimensions.push(`  '${assetDir}/${table.slug}.png': { width: ${Math.round(box.width * 2)}, height: ${Math.round(box.height * 2)} },`)
+    const png = await main.screenshot({ path: path.join(root, 'public', assetDir, `${table.slug}.png`) })
+    const width = png.readUInt32BE(16)
+    const height = png.readUInt32BE(20)
+    dimensions.push(`  '${assetDir}/${table.slug}.png': { width: ${width}, height: ${height} },`)
   }
 } finally {
   await browser.close()
