@@ -222,7 +222,7 @@ Match installation, detection, and removal to the package's actual scope. A per-
 Provisioning adds timing requirements:
 
 - **Classic Autopilot pre-provisioning:** device-targeted policies apply in the technician phase. Eligible device-context apps can also come from the preassigned user's assignments. Without an assigned user, only device-targeted apps install there. [Microsoft: Pre-provisioning](https://learn.microsoft.com/en-us/autopilot/pre-provision).
-- **Autopilot device preparation:** applications selected for setup must use System context and target the specified device security group. Selected scripts must also target that group. User-based configurations arrive after setup. [Microsoft: Device preparation targeting](https://learn.microsoft.com/en-us/autopilot/device-preparation/faq).
+- **Autopilot device preparation:** Assign applications selected for setup as **Required** to the specified device security group. Configure them to install in **System** context. Selected scripts must also target that group. User-based configurations arrive after setup. [Microsoft: Device preparation targeting](https://learn.microsoft.com/en-us/autopilot/device-preparation/faq).
 
 The device preparation policy has its own assignment settings. Keep those separate from the device group receiving its apps and scripts. [Microsoft: Create a device preparation policy](https://learn.microsoft.com/en-us/autopilot/device-preparation/tutorial/user-driven/entra-join-autopilot-policy).
 

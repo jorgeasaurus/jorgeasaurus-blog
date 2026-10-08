@@ -1111,3 +1111,9 @@ Added the source-linked MDX post, metadata, social card, RSS, and sitemap entry.
 - [x] Verify lint and build; update PR #40.
 
 Lint, production build, and diff whitespace checks passed. Revised wording and single-action removal steps; technical guidance is unchanged.
+
+# PR 40 Copilot review
+
+- [x] Inspect feedback and confirm Required app intent in Microsoft guidance.
+- [x] Clarify device preparation app assignments.
+- [ ] Verify and push; resolve feedback and request a fresh review.
