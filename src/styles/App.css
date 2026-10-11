@@ -13,11 +13,11 @@
   padding: calc(var(--fixed-nav-offset) + var(--fixed-nav-block-size) + var(--fixed-nav-gap)) 0 56px;
   display: grid;
   align-content: start;
-  grid-template-columns: minmax(24px, 1fr) minmax(0, 880px) minmax(24px, 1fr);
+  grid-template-columns: minmax(16px, 1fr) minmax(0, 1040px) minmax(16px, 1fr);
   grid-template-areas:
     '. hero .'
     '. content .';
-  gap: 24px;
+  gap: 24px 12px;
 }
 
 .blog-shell--about {
@@ -167,7 +167,7 @@
   position: fixed;
   top: var(--fixed-nav-offset);
   left: 50%;
-  width: min(880px, calc(100% - (2 * var(--fixed-nav-offset))));
+  width: min(1040px, calc(100% - (2 * var(--fixed-nav-offset))));
   min-height: var(--fixed-nav-block-size);
   border-radius: 999px;
   flex-direction: row;
@@ -437,6 +437,7 @@
 
 .content-panel {
   grid-area: content;
+  padding-inline: 20px;
 }
 
 .content-heading {
@@ -1337,7 +1338,7 @@ h2 {
   line-height: 1.75;
   font-size: 1.05rem;
   font-weight: 500;
-  max-width: 72ch;
+  max-width: none;
 }
 
 .post-hero-figure {
@@ -2188,7 +2189,7 @@ code {
 /* ── Responsive: tablet ── */
 @media (max-width: 1080px) {
   .blog-shell {
-    grid-template-columns: minmax(20px, 1fr) minmax(0, 880px) minmax(20px, 1fr);
+    grid-template-columns: minmax(12px, 1fr) minmax(0, 1040px) minmax(12px, 1fr);
     grid-template-areas:
       '. hero .'
       '. content .';

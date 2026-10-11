@@ -26,6 +26,16 @@ const imageMetadata: Record<string, { width: number; height: number; loading?: '
   '/images/posts/intune-assignments-dos-and-donts/policy-scope.png': { width: 2000, height: 1240 },
   '/images/posts/intune-assignments-dos-and-donts/group-exclusions.png': { width: 2000, height: 932 },
   '/images/posts/intune-assignments-dos-and-donts/app-intent-conflicts.png': { width: 2000, height: 932 },
+  '/images/posts/bitlocker-startup-pin-after-autopilot/logo-requirements.png': { width: 1536, height: 1024 },
+  '/images/posts/bitlocker-startup-pin-after-autopilot/policy-settings-single.png': { width: 1536, height: 1024 },
+  '/images/posts/bitlocker-startup-pin-after-autopilot/policy-settings.png': { width: 1774, height: 887 },
+  '/images/posts/bitlocker-startup-pin-after-autopilot/requirement-settings.png': { width: 1536, height: 1024 },
+  '/images/posts/bitlocker-startup-pin-after-autopilot/app-settings.png': { width: 1672, height: 941 },
+  '/images/posts/bitlocker-startup-pin-after-autopilot/preview.png': { width: 1184, height: 944 },
+  '/images/posts/bitlocker-startup-pin-after-autopilot/enrollment.png': { width: 1184, height: 944 },
+  '/images/posts/bitlocker-startup-pin-after-autopilot/enrollment-success.png': { width: 1184, height: 944 },
+  '/images/posts/bitlocker-startup-pin-after-autopilot/preboot-pin.png': { width: 1012, height: 756 },
+  '/images/posts/bitlocker-startup-pin-after-autopilot/policy-reference.png': { width: 1100, height: 719 },
 }
 
 export default imageMetadata

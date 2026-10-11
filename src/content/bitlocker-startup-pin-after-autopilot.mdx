@@ -1,0 +1,141 @@
+---
+title: "Add a BitLocker startup PIN after Autopilot"
+date: "2026-10-10"
+description: "Configure and deploy a full-screen BitLocker startup PIN prompt with Intune."
+tags: ["intune", "powershell", "windows", "tutorial"]
+---
+
+This package adds a user-selected BitLocker startup PIN after provisioning. The full-screen prompt runs as SYSTEM through ServiceUI.
+
+![BitLocker startup PIN popup with company branding, masked PIN and confirmation fields, and the Set startup PIN button.](/images/posts/bitlocker-startup-pin-after-autopilot/enrollment.png)
+
+*Pilot screenshot; the current version also includes Cancel.*
+
+**Support status:** Microsoft does not support ServiceUI-based interactive Win32 installations. [Microsoft: Win32 app management](https://learn.microsoft.com/en-us/intune/app-management/deployment/win32).
+
+## Prepare the device
+
+Use a fully encrypted, unlocked Windows OS drive with protection **On**, one TPM-only protector, and a recovery-password protector.
+
+Confirm that you can retrieve the device’s recovery key from Intune or Entra before deployment. Keep the Windows Security tray enabled.
+
+The user must be signed in at the console desktop. RDP-only sessions are unsupported. The ARM64 pilot uses x64 ServiceUI through emulation.
+
+## Import and assign the enrollment policy
+
+[Download the Startup PIN enrollment policy](/downloads/bitlocker-pin/BitLocker-Startup-PIN-Enrollment.json).
+
+1. Open **Devices > Manage devices > Configuration**.
+2. Select **Create > Import policy**.
+3. Select the downloaded JSON file.
+4. Name the policy and complete the import.
+5. Review its settings.
+6. Assign it to your encrypted pilot device group.
+7. Synchronize the devices.
+8. Confirm successful policy application with no conflicts.
+
+This uses Intune’s [Settings Catalog import](https://learn.microsoft.com/en-us/intune/device-configuration/settings-catalog/#import-and-export-a-profile). The import does not copy assignments.
+
+For initial silent encryption, use an **Endpoint security > Disk encryption > BitLocker** policy with Microsoft’s [required settings and prerequisites](https://learn.microsoft.com/en-us/intune/device-configuration/endpoint-security/encrypt-bitlocker-windows#configure-silent-bitlocker-encryption). Microsoft specifies blocking startup PINs for that stage. After encryption, remove that blocking assignment before applying this enrollment policy.
+
+The supplied enrollment policy requires encryption and allows a PIN. It does not establish reliable silent initial encryption on every device.
+
+The enrollment policy allows TPM and TPM+PIN, blocks startup keys, and sets a six-digit minimum:
+
+![Enrollment BitLocker settings: device encryption required; standard-user encryption allowed; other encryption warning disabled; startup authentication enabled; non-TPM BitLocker disabled; TPM and TPM startup PIN allowed; startup key and key plus PIN blocked; minimum PIN length enabled at 6; standard-user PIN change restriction disabled; slate preboot input unconfigured unless verified hardware requires it.](/images/posts/bitlocker-startup-pin-after-autopilot/policy-settings-single.png)
+
+*Enrollment-policy values; this illustration is not an Intune screenshot.*
+
+The app’s desktop requirement delays the app, not either policy. Remove conflicting BitLocker settings from other policies. Keep Windows Security tray visible.
+
+Keep the enrollment policy assigned after enrollment and retain recovery-key access. **Allow startup PIN** permits enrollment; it does not itself enforce a PIN. Required app detection checks that state.
+
+**Disallow standard users from changing the PIN or password** is disabled. This permits later PIN changes; it does not grant permission to create the initial protector. The app performs initial enrollment as SYSTEM.
+
+## Build the package
+
+**Don’t trust or run any code you find online before verifying it.** Review the [complete package source on GitHub](https://github.com/jorgeasaurus/jorgeasaurus-blog/tree/main/scripts/intune/bitlocker-pin) before deployment.
+
+1. [Download the scripts](/downloads/bitlocker-pin/BitLockerPinPilot.zip).
+2. Extract the ZIP into `C:\Packages\BitLockerPinPilot`.
+3. Add your trusted **x64 ServiceUI.exe** to that folder. It is not included; you can [search GitHub for ServiceUI.exe](https://github.com/search?q=ServiceUI.exe&type=code).
+
+The source folder must contain:
+
+```text
+Install-BitLockerPin.ps1
+Uninstall-BitLockerPin.ps1
+Test-BitLockerPinInstalled.ps1
+Test-PostProvisioningRequirement.ps1
+PinWindow.xaml
+generic-logo.png
+ServiceUI.exe
+```
+
+For company branding, replace `generic-logo.png` with a PNG using the same filename. Use at most 2 MB and 64–2048 pixels per side; 256 × 256 is recommended.
+
+Package the folder with the [Win32 Content Prep Tool](https://github.com/microsoft/Microsoft-Win32-Content-Prep-Tool):
+
+```text
+IntuneWinAppUtil.exe -c C:\Packages\BitLockerPinPilot -s Install-BitLockerPin.ps1 -o C:\Packages\Output
+```
+
+## Configure the Intune Win32 app
+
+Upload `Install-BitLockerPin.intunewin`. Set **Install behavior** to **System** and **Device restart behavior** to **No specific action**.
+
+Use this install command. Replace `Contoso` with your company name:
+
+```text
+%SystemRoot%\Sysnative\WindowsPowerShell\v1.0\powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Install-BitLockerPin.ps1 -ServiceUIPath .\ServiceUI.exe -CompanyName "Contoso"
+```
+
+Use this uninstall command:
+
+```text
+%SystemRoot%\Sysnative\WindowsPowerShell\v1.0\powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Uninstall-BitLockerPin.ps1
+```
+
+Set **Operating system architecture** to **x64** for the initial pilot. Add ARM64 only after testing your ServiceUI executable on that platform.
+
+Under **Detection rules**, select **Use a custom detection script**:
+
+- Script: `Test-BitLockerPinInstalled.ps1`.
+- Run as a 32-bit process on 64-bit clients: **No**.
+- Enforce script signature check: **No**, unless you sign the scripts.
+
+Under **Requirements**, add `Test-PostProvisioningRequirement.ps1` with these settings:
+
+![Requirement settings: run using logged-on credentials No; run as a 32-bit process No; output Boolean; operator Equals; value True.](/images/posts/bitlocker-startup-pin-after-autopilot/requirement-settings.png)
+
+The requirement checks OOBE/setup state and Explorer plus Windows Security tray in the same interactive session. This is a desktop-readiness heuristic, not an ESP-completion API. A hidden or disabled tray process can prevent applicability.
+
+Under **Return codes**, keep `0` as **Success** and `1618` as **Retry**. Set `1` and `1602` to **Failed**.
+
+Assign the app as **Required** to your pilot group. Keep it outside the ESP blocking-app list.
+
+## Verify enrollment
+
+The user enters and confirms a 6–20 digit startup PIN. This PIN is separate from the Windows sign-in PIN.
+
+The installer waits for enrollment. It returns success only when protection is on, TPM+PIN exists, recovery protection remains, and TPM-only protection is removed.
+
+**Cancel** returns `1602` and leaves enrollment undetected. Intune retries an undetected Required app; neither sign-in nor sync guarantees an immediate retry. [Microsoft: Add Win32 apps](https://learn.microsoft.com/en-us/mem/intune/apps/apps-win32-add).
+
+Before wider deployment:
+
+1. Test the prompt with a standard user.
+2. Cancel enrollment and confirm the app does not report Installed.
+3. Retry enrollment and confirm Company Portal reports Installed.
+4. Verify the protector types:
+
+```powershell
+(Get-BitLockerVolume -MountPoint C:).KeyProtector |
+    Select-Object KeyProtectorType
+```
+
+Expect recovery-password protection and exactly one `TpmPin`, with no other protector types. Confirm protection remains **On**, then restart and test the PIN privately.
+
+Uninstall restores TPM-only protection and removes the PIN while retaining encryption and recovery protection. The assigned policy must allow TPM-only protection. Remove the Required app assignment before uninstalling, or Intune can prompt for enrollment again.
+
+For errors, recovery-only preparation, and hardware exceptions, use the [troubleshooting guide](https://github.com/jorgeasaurus/jorgeasaurus-blog/blob/main/scripts/intune/bitlocker-pin/TROUBLESHOOTING.md).
