@@ -156,6 +156,14 @@ Expect recovery-password protection and exactly one `TpmPin`, with no other prot
 
 *BitLocker startup PIN prompt after restarting the pilot device.*
 
+<div className="post-image-centered">
+
+![BitLocker Drive Encryption in Control Panel shows C: BitLocker on and highlights the Change PIN option.](/images/posts/bitlocker-startup-pin-after-autopilot/bitlocker-control-panel.png)
+
+</div>
+
+*Control Panel shows BitLocker on and the Change PIN option after enrollment.*
+
 Uninstall restores TPM-only protection and removes the PIN while retaining encryption and recovery protection. The assigned policy must allow TPM-only protection. Remove the Required app assignment before uninstalling, or Intune can prompt for enrollment again.
 
 For errors, recovery-only preparation, and hardware exceptions, use the [troubleshooting guide](https://github.com/jorgeasaurus/jorgeasaurus-blog/blob/main/scripts/intune/bitlocker-pin/TROUBLESHOOTING.md).
