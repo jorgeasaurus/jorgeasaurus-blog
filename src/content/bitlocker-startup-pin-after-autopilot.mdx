@@ -36,7 +36,7 @@ This uses Intune’s [Settings Catalog import](https://learn.microsoft.com/en-us
 
 For initial silent encryption, use an **Endpoint security > Disk encryption > BitLocker** policy with Microsoft’s [required settings and prerequisites](https://learn.microsoft.com/en-us/intune/device-configuration/endpoint-security/encrypt-bitlocker-windows#configure-silent-bitlocker-encryption). Microsoft specifies blocking startup PINs for that stage. After encryption, remove that blocking assignment before applying this enrollment policy.
 
-The supplied enrollment policy requires encryption and allows a PIN. It does not establish reliable silent initial encryption on every device.
+**The supplied policy configures encryption and permits startup PIN enrollment. Verify silent initial encryption on your hardware before deployment.**
 
 The enrollment policy allows TPM and TPM+PIN, blocks startup keys, and sets a six-digit minimum:
 
