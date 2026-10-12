@@ -135,13 +135,16 @@ Before wider deployment:
 4. Verify the protector types:
 
 ```powershell
-(Get-BitLockerVolume -MountPoint C:).KeyProtector |
-    Select-Object KeyProtectorType
+(Get-BitLockerVolume -MountPoint C:).KeyProtector | Select-Object KeyProtectorType
 ```
 
 Expect recovery-password protection and exactly one `TpmPin`, with no other protector types. Confirm protection remains **On**, then restart and test the PIN privately.
 
+<div className="post-image-centered">
+
 ![Company Portal shows BitLocker startup PIN version 3.5 as Installed, with the drive, padlock, and PIN keypad icon.](/images/posts/bitlocker-startup-pin-after-autopilot/company-portal-installed.png)
+
+</div>
 
 *Company Portal after successful enrollment.*
 
