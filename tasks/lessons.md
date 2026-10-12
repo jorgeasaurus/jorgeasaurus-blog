@@ -39,3 +39,50 @@
 - Before creating a blog social card, inspect existing post cards and match their branding, layout, typography, and palette; do not invent a separate editorial style.
 - Apply ASD-STE100 Simplified Technical English and the Google developer documentation style guide to all blog drafts and edits. These standards override conflicting voice guidance.
 - For assignment-post comparisons, use images with clear grid lines when requested. Preserve equivalent text and verify image expansion on mobile.
+
+- For Windows PowerShell 5.1 deliverables, save scripts/modules/XAML as UTF-8 with BOM and read XAML with explicit UTF8 encoding. Verify with Windows PowerShell 5.1, including the packaged local-check script.
+
+- Resolve defaults based on PSScriptRoot in the script body after parameter binding, not in parameter default expressions; test the actual entry command without optional arguments.
+
+- Inspect high-level BitLocker cmdlet side effects before claiming staged protector removal. Provide non-secret error IDs/codes and permit closing failed enrollment without reporting success.
+
+- Provide Cancel before PIN submission. Separate installed prompt infrastructure from PIN completion; a required Intune assignment alone does not guarantee a prompt at next sign-in.
+
+- Explain session 0 visibility and the interactive task boundary explicitly. Do not list ServiceUI as a dependency of a package that does not use it; verify current Microsoft support guidance.
+
+- Standard-user enrollment is a core acceptance criterion for Autopilot PIN workflows. Do not substitute an administrator-only pilot; implement the requested privilege/session bridge and label unsupported dependencies accurately.
+
+- Forward nested PowerShell script exit codes explicitly. Presence of TpmPin alone is insufficient completion evidence when TPM-only protection can remain after a failed transaction.
+
+- For this post, use an image-generated graphic for the logo requirements table, as requested; retain the requirements in alternative text.
+- All tables in the BitLocker PIN post must be image-generated graphics, with accurate settings preserved in alt text.
+- Keep the ASCII-only Intune requirement script BOM-free. A BOM may appear as ï»¿ when read or copied through an ANSI editor. Preserve UTF-8 BOM only where non-ASCII Windows PowerShell text needs it.
+
+- When accepting user-reported ARM64 testing, update Intune eligibility and runtime guards together; do not leave the installer rejecting an eligible architecture.
+
+- For enrollment apps, agree on Installed semantics: detect the completed protected enrollment, not only staged infrastructure.
+
+- Required PIN enrollment needs completion-based detection and persistent prompting; an Available launcher assignment does not fulfill that workflow.
+
+- Never combine asynchronous prompt staging with completion-based Intune detection. Wait for enrollment in the installer before reporting success.
+- Reimage testing must validate policy bootstrap, not reuse an already protected prior OS state.
+
+- Keep ServiceUI setup simple: do not require a SHA256 parameter when the operator supplies the executable. Retain executable and architecture validation.
+
+- For package deployment posts, keep only prerequisites, required settings, commands and validation. Put diagnostic detail in the repository guide.
+
+- When a parameter is removed, audit all reader-facing copies, desktop notes and archived ZIPs, not just runtime scripts and the post.
+
+- Do not describe a manual acknowledgment switch as recovery-key validation. Keep required device-state checks separate from operator review.
+
+- Interpret whether a supplied policy is sufficient in the deployment context: check policy coverage alongside the app, rather than whether policy replaces the app.
+
+- For Intune console import requests, provide Settings Catalog JSON and console steps, not Graph creation scripts. Silent encryption and PIN enrollment need separate, non-overlapping startup-policy stages.
+
+- Keep the privileged enrollment console hidden without suppressing WPF. Treat missing Parallels Tools as an unverified hypothesis; VM preboot errors do not prove physical-device behavior.
+
+- Keep the BitLocker post consistent with the selected single-policy workflow. Explain its validation limits without inserting an unsolicited two-policy deployment procedure.
+
+- Explain BitLocker policy conflicts separately from app desktop readiness. Connect each prerequisite to the behavior it enables; remove stale references to two policies.
+
+- A maximized WPF window does not ensure its form fits. Scale the form to the available viewport; avoid ScrollViewer for the full-screen enrollment flow.

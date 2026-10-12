@@ -1142,3 +1142,344 @@ Corrected deployment/access language, enrollment filter races, uninstall scope, 
 - [x] Regenerate and verify all image metadata, lint, and build.
 
 All five metadata entries match actual PNG dimensions. Lint, build, and diff checks passed. External review-loop status is reported on PR #40 and in chat.
+
+# BitLocker startup PIN pilot
+
+- [x] Check current BitLocker and Intune interaction guidance.
+- [x] Confirm TPM-only enrollment, 6-20 digits, no deferral, and DESKTOP-T0GJ9KQ pilot.
+- [x] Build full-screen WPF preview with configurable local logo.
+- [x] Build post-OOBE requirement; verify eight mocked readiness cases.
+- [ ] Verify requirement behavior during actual OOBE and ESP.
+- [ ] Design silent installation and privileged PIN application after scope confirmation.
+- [ ] Run local checks, Windows UI tests, protector tests, and Intune/Autopilot pilot.
+- [ ] Write the tutorial only after Windows pilot evidence is accepted.
+
+Plan: preview first; separate silent Win32 installation from user interaction. Never store or log the PIN. Require recovery readiness before protector changes.
+
+## Review
+
+PowerShell parsing, XAML XML structure, eight mocked readiness cases, and diff whitespace checks passed on macOS. WPF rendering, BitLocker, Intune, and reboot tests remain pending. Added elevated interactive enrollment pilot and protector module. Actual ARM64 VM inspection confirmed fully encrypted/protection On with TPM and recovery protectors; WPF load passed and requirement returned False without a desktop session. Policy UseTPMPIN=0 blocked preflight. Tenant matching BitLocker policy has no current assignments, so source attribution remains unproven. Recovery access confirmed by user. No protector changes, installer deployment, or blog draft created.
+
+# PIN prompt logo
+
+- [x] Add logo format, pixel size, and file-size constraints to both entry points.
+- [x] Generate a generic transparent 256x256 logo and package it as the default.
+- [x] Verify asset dimensions, script checks, and Windows logo loading.
+
+Plan: preserve aspect ratio in the existing 220x64 display area; document square and wide logo options.
+
+Review: default PNG is 256x256 with alpha, 35,929 bytes. Actual Windows WPF decoder loaded it and rejected unsupported extensions and files over 2 MB. Script parsing, XML/readiness checks, and diff whitespace passed. Full interactive UI testing remains pending.
+
+# PIN pilot policy guidance
+
+- [x] Verify current OIB source and live tenant policy assignments.
+- [x] Record stock vs post-encryption settings and device-group staging.
+- [x] Identify OIB tray-visibility and compliance policy roles.
+
+Review: pinned upstream SHA confirms OS Disk v3.7 blocks PIN and Security Experience v4.0 keeps tray visible. Tenant stock policy still has no assignments. Saved guidance in Pilot-notes.txt; no policy mutations or blog draft.
+
+# Assign BitLocker PIN pilot policy
+
+- [x] Verify source, device identity, and conflicting assignments.
+- [x] Clone policy with TPM Allowed, PIN Required, and minimum 6.
+- [x] Create pilot device group and add only DESKTOP-T0GJ9KQ.
+- [x] Assign clone and verify settings, membership, and assignment readback.
+
+Plan: scope managed changes to this encrypted pilot device; preserve stock policy and recovery settings.
+
+Review: created policy ab4d6154-0c4f-4ceb-b2ab-e8c9f08f3177 and group 7d7f0c0c-6aeb-4ed3-afba-bb18f300167a. Verified nine settings, exactly one device member, and direct group assignment. Source remains unassigned and unchanged. Audited all 88 Windows configuration policies plus legacy policies/intents. API sync returned 403 for missing PrivilegedOperations scope; manual sync and device-side receipt remain pending.
+
+# PIN pilot encoding repair
+
+- [x] Save PowerShell and XAML files as UTF-8 with BOM; read XAML as UTF8.
+- [x] Make local-check script compatible with Windows PowerShell 5.1.
+- [x] Verify corrected XAML and local checks with Windows PowerShell 5.1 on the VM.
+
+Review: exact user error requested; encoding incompatibility is a candidate cause until the error is supplied.
+
+Encoding review: Windows PowerShell 5.1.26100.9168 loaded corrected WPF XAML and preserved its Unicode text. Corrected package has UTF-8 BOM in all eight script/module/XAML files. Guest transfers intermittently fail in Parallels; provide the corrected ZIP for the user copy. Exact reported error remains pending.
+
+# PIN default-logo parameter fix
+
+- [x] Resolve default logo after parameter binding in both entry points.
+- [x] Rebuild ZIP and verify default/empty override on Windows PowerShell 5.1.
+
+Review: actual preview parameter/body excerpt passes default and explicit-empty logo checks on the VM. Local syntax/readiness and diff checks passed. Full interactive preview remains pending.
+
+# PIN enrollment failure investigation
+
+- [x] Inspect live protector state without writes.
+- [x] Replace high-level cmdlet side effects with staged CIM creation/removal.
+- [x] Show non-secret error IDs/HRESULTs and allow closing failed setup.
+- [x] Update Desktop copies/ZIP and verify Windows preflight with WhatIf.
+- [x] Capture native failure code on user-driven retry; complete conversion and reboot test.
+
+Review: original TPM and recovery IDs remain, FullyEncrypted/protection On. Windows dry run passes through the write boundary. Original failure cause remains unknown because the prior UI suppressed diagnostics. No live PIN creation performed during investigation.
+
+# Preboot keyboard blocker
+
+- [x] Resolve native 0x803100B5 against Microsoft error documentation.
+- [x] Verify live slate/policy state and unchanged protected drive.
+- [x] Add targeted UI explanation and conditional reader policy guidance.
+- [x] Verify preboot input before assigning a slate-input exception.
+
+Review: real PIN enrollment remains blocked by preboot keyboard detection; no policy exception applied.
+
+### Pilot preboot input exception
+- [x] Record user-confirmed firmware keyboard input.
+- [x] Enable slate preboot input setting on the existing pilot policy.
+- [x] Verify original nine settings and one-device group assignment remain intact.
+- [x] Verify device receipt, PIN enrollment, and actual BitLocker startup input.
+
+Review: Graph PUT succeeded; readback confirms ten settings. Firmware input is user-reported, not computer-control verified.
+
+### BitLocker PIN field note and cancellation
+- [x] Record user-confirmed TPM+PIN enrollment and successful preboot unlock.
+- [x] Add cancellation and desktop-only retry lifecycle with explicit account limitations.
+- [x] Draft source-linked post using supplied screenshots and exact pilot policy settings.
+- [x] Package files, validate PowerShell, build site, and inspect rendered post.
+
+Review: Win32 deployment and revised Cancel behavior require separate verification from the successful original local pilot.
+
+Review: user confirmed preboot unlock. Windows silent install/detection/task launch on enrolled VM/uninstall passed; original protector types retained and test task/files removed. Syntax, WPF loading, eight readiness fixtures, seven detection fixtures, snippets, lint/build, metadata and desktop/mobile rendering passed. Actual Cancel/sign-in/periodic/provisioning/Intune delivery remain pending. Draft not published.
+
+### Clarify ServiceUI and session context
+- [x] Recheck current Microsoft interactive-install guidance.
+- [x] Explain SYSTEM session 0, User install privileges, and the separate interactive task.
+- [x] Explain unsupported ServiceUI status and exclusion from downloads; revised standard-user workflow requires it.
+
+### Standard-user ServiceUI deployment
+- [x] Replace administrator-targeted tasks with guarded SYSTEM ServiceUI launch and cancellation retry.
+- [x] Preserve protected files, desktop requirement, staged protector changes, and independent recovery checks.
+- [x] Rewrite post for standard users, external ServiceUI acquisition, unsupported status, and actual evidence.
+- [x] Validate scripts, package without executable, site build, and rendered post.
+
+Plan: ServiceUI displays an elevated SYSTEM enrollment process on the user desktop; users remain standard users. Silent install registers later prompts. No PIN IPC or file transport. The original administrator-only test does not prove this flow.
+
+Review: supplied ignored ServiceUI1.3 Microsoft signatureValid; harmless SYSTEM WPF in console1 on ARM64 and exits0/1602/1 observed. Updated scripts pass Windows5.1 fixtures; standard-user conversion and newSYSTEMtask runtime on x64 remain pending. Original PIN untouched. Public/Desktop ZIP excludes all.exe and obsolete admin deployment; lint/build/snippets/render passed.
+
+### Wider site layout
+- [x] Increase the shared content width and reduce horizontal gutters and post padding.
+- [x] Check home, posts, About, and Projects at desktop and mobile widths.
+- [x] Run build and record results.
+
+Plan: widen the shared shell from 880px to 1040px, remove the narrower post body cap, and retain compact mobile spacing.
+
+Review: build passed. Twenty browser checks across five routes at 390, 768, 1440, and 1920px found no horizontal overflow. Desktop post panel is 1040px; body is 1000px.
+
+### Image-generated logo table
+- [x] Generate and inspect the six-row graphic with exact logo constraints.
+- [x] Replace the Markdown table; include full requirements in alternative text and image dimensions.
+- [x] Build the site.
+
+Review: built-in image generation produced a 1536 × 1024 PNG; all row labels, dimensions, units, and limits visually verified. Build passed.
+
+### Image-generated policy table
+- [x] Generate and visually verify all eight policy rows.
+- [x] Replace the policy table and preceding reference image with one graphic; retain full settings in alt text.
+- [x] Build the site.
+
+Review: 1774 × 887 PNG contains the supplied labels and values. Build passed.
+
+### Convert all post tables to images
+- [x] Generate requirement and application settings graphics; inspect all labels and values.
+- [x] Replace remaining tables and preserve their contents in alt text.
+- [x] Confirm no Markdown tables remain and build the site.
+
+Review: all four tables in this post are image-generated graphics. Build passed.
+
+### Intune packaging helper
+- [x] Add a Windows packaging helper with explicit dependency paths and approved ServiceUI hash.
+- [x] Stage only deployment files; generate Intune commands and external detection/requirement scripts.
+- [x] Validate syntax, sync Desktop, and rebuild the public ZIP without executables.
+
+Review: PowerShell parser passed; ZIP exclusions verified; Desktop synced. Actual .intunewin generation requires the operator-supplied Content Prep Tool and remains untested.
+
+### Requirement encoding fix
+- [x] Remove the BOM from the ASCII-only requirement script.
+- [x] Update standalone download, ZIPs, Desktop copy, and encoding guidance.
+- [x] Run local syntax and readiness fixtures.
+
+### Inspect Intune app and repackage with Win32Forge
+- [x] Read app and assignments through authenticated Graph.
+- [x] Repackage current payload using Win32Forge packaging function without publishing.
+- [x] Decrypt and verify all 12 payload files against source hashes.
+- [x] Prepare corrected app metadata and standalone requirement/detection scripts on Desktop.
+
+Review: app 023357dd-5766-4d1e-a15e-a00ae4f42b28 is notPublished, size 0, no committed content or assignments. Requirement incorrectly uses installation detection; architecture includes x86. Verified replacement is local on Desktop; upload and standard-user end-to-end test remain pending.
+
+### Win32 upload result
+- [x] Existing app content version 1 published; file commit succeeded.
+- [x] Exact desktop readiness script, x64 allowed architecture, SYSTEM context, and suppress restart verified by readback.
+
+Review: app remains unassigned; standard-user device acceptance testing pending.
+
+### Permit existing PIN changes
+- [x] Disable standard-user PIN-change restriction in the assigned pilot policy.
+- [x] Verify nine other settings unchanged; add reader guidance.
+
+Review: tenant readback confirms Disabled. Device policy receipt and standard-user Change PIN UI remain pending.
+
+### Document standard-user PIN changes
+- [x] Update image-generated policy table and alt text with Disabled PIN-change restriction.
+- [x] Add sync, effective policy, current-PIN troubleshooting, and standard-user verification guidance.
+- [x] Build the site.
+
+Review: all nine image rows visually verified; build passed. Initial enrollment and later PIN change remain distinct workflows.
+
+### Uninstall removes startup PIN
+- [x] Add verified TPM-only replacement before PIN removal; retain recovery protectors and encryption.
+- [x] Guard required-PIN policy and failed transactions; add seven mocked cases.
+- [x] Update post, ZIPs, and Desktop copies.
+
+Review: local checks passed. Live rollback and reboot remain untested; published Intune package still contains previous uninstall behavior.
+
+### ARM64 eligibility
+- [x] Enable x64 and ARM64 in Intune and runtime guard.
+- [x] Rebuild via Win32Forge; upload content version 2 and verify published state.
+- [x] Sync source, ZIP, Desktop, and blog architecture guidance.
+
+Review: user reports successful VM testing; local fixtures passed. Intune readback confirms x64,arm64 with unchanged desktop requirement. Updated package also includes the requested PIN-removing uninstall.
+
+### Visible enrollment preflight failure
+- [x] Show a closable failure screen and fixed diagnostic code before PIN entry.
+- [x] Verify visible failure screen on the recovery-only VM; sync Desktop and public downloads.
+
+Review: local syntax and deployment fixtures passed. Desktop source and ZIP updated. Live ServiceUI task displayed the failure screen and wrote BITLOCKER_NOT_PROTECTED. Computer-use dismissal did not succeed; close interaction remains unverified. Intune package remains version 2.
+
+### Publish preflight update
+- [x] Build with Win32Forge and verify packaged files.
+- [x] Publish existing Intune app with version 2.1 detection; verify settings and assignment.
+
+Review: 12 decrypted files match source; local and detection checks passed. Content version 4 published, display version 2.1. Existing settings and assignment verified. Client upgrade remains unverified.
+
+### Enrollment detection
+- [x] Require protected TPM+PIN state for Installed.
+- [x] Test protector states and update live Intune detection.
+
+Review: 13 fixtures passed. Live Intune detection readback matches; content version 4 retained. Recovery-only VM must return undetected; Company Portal refresh pending.
+
+### Required enrollment retries
+- [x] Replace Available-to-all assignment with Required pilot-device assignment.
+- [x] Verify current VM membership, enrollment detection, and retry guidance.
+
+Review: Required assignment readback verified. Existing task retries after sign-in and every eight hours; Intune detection remains false until protected PIN enrollment. Live failed-to-success status transition remains pending.
+
+### Stage BitLocker policy before PIN enrollment
+- [x] Create initial TPM-only encryption policy and replace early PIN-policy assignment.
+- [x] Document protection-state gate and non-overlapping policy transition.
+- [ ] Verify device sync, TPM-only protection, then transition to PIN policy.
+
+### Reliable synchronous PIN package
+- [x] Diagnose current install and policy state.
+- [x] Consolidate install, uninstall, detection, requirement; synchronous ServiceUI completion.
+- [x] Use one policy allowing TPM+PIN; document Required app enforcement.
+- [ ] Verify live standard-user cancel, retry, successful enrollment, and detection.
+- [ ] Rebuild, publish, and verify Intune install; update reader assets.
+
+Review: v3.1/content 6 published; Required pilot assignment retained. Two live SYSTEM/ServiceUI enrollments succeeded on current administrator desktop. Guarded uninstall restored protected TPM-only and retained recovery. IME independently detected protected PIN as Installed. Cancellation, standard-user and actual revised-package IME install remain pending. Local checks: 8 install, 11 detection, 7 uninstall fixtures; site build passed.
+
+Latest live check: IME received internal version 6 and reported Detected/Applicable at 11:01 on the pilot. Company Portal v3.1 still displays Failed to install with Retry disabled. Awaiting user confirmation before removing the current PIN for the Intune Cancel/retry test; no status-cache or GRS registry edits performed.
+
+Verified: after reopening Company Portal, version 3.1 shows Installed and Required by organization Yes. Protection remains On with RecoveryPassword,TpmPin; no ServiceUI process remains. Remaining live tests require user confirmation to reset the pilot PIN, user PIN submission on retry, and a standard-user sign-in.
+
+### Remove ServiceUI hash setup
+- [x] Remove hash parameters and checks from runtime, packaging, blog, ZIP and desktop copy.
+- [x] Verify local checks.
+
+Review: ServiceUI hash requirement removed. Local validation and synchronous bootstrap fixtures passed; website build passed. Intune v3.2/content 7 published with matching hash-free install command. Runtime retest remains pending.
+
+### Move PIN troubleshooting out of the post
+- [x] Move troubleshooting and preflight failure guidance to scripts/intune/bitlocker-pin/TROUBLESHOOTING.md; link from the post.
+
+### Reduce PIN post to deployment essentials
+- [x] Keep prerequisites, policy, package files, Intune commands/settings, and validation only.
+- [x] Run post checks.
+
+Review: post reduced to deployment essentials; optional recovery-only preparation moved to the repository guide. ESLint, build, image-reference and whitespace checks passed. Runtime validation limits remain explicit.
+
+### Audit obsolete PIN package instructions
+- [x] Check post, guide, helper, downloads and desktop against current runtime.
+- [x] Replace stale desktop notes/tests/ZIP; correct architecture, detection and error guidance.
+- [x] Run validation.
+
+Review: obsolete hash/task instructions absent from reader files and desktop copies. ZIP contents match source. PowerShell local checks, ESLint, build and whitespace checks passed. No runtime behavior changed.
+
+### Remove recovery acknowledgment switch
+- [x] Remove pilot status paragraph and RecoveryKeyVerified parameter/checks; add source link and code-review warning.
+- [x] Validate and update Intune package/command together.
+
+Review: removed RecoveryKeyVerified across scripts, helper and ZIP; published v3.3/content 8 with matching command. Source link and online-code verification warning added. Local PowerShell checks, lint and build passed. Live standard-user testing remains pending.
+
+### Provide BitLocker policy import option
+- [x] Inspect supplied export; preserve original and create corrected portable policy.
+- [x] Add JSON/helper downloads and import/assignment instructions.
+- [ ] Validate artifacts and post; live tenant import remains untested.
+
+### Console import and silent encryption
+- [x] Remove Graph import helper; prepare two Settings Catalog JSON downloads.
+- [x] Document console import and non-overlapping silent-encryption/PIN policy stages.
+- [x] Validate downloads and build; live native import remains unverified.
+
+Review: both JSON files use Settings Catalog template metadata and preserve encryption/recovery settings. Initial policy blocks PIN; enrollment policy allows PIN. Download parity, policy invariants, lint and build passed. Tenant assignments unchanged.
+
+- [x] 2026-10-11: Imported BitLocker-Startup-PIN-Enrollment.json through the Intune console; native import succeeded. Policy f23be93d-ae5e-4296-b8d4-bd05afdf866d assigned to All devices per user request. Graph readback confirmed nine settings, TPM/PIN allowed, minimum PIN 6, encryption required, and the unfiltered All devices assignment. Fresh-device silent encryption remains pending.
+
+### Hide enrollment console
+- [x] Hide the interactive PowerShell console independently of WPF.
+- [x] Validate local checks and sync reader/VM assets.
+- [ ] Verify console hiding on Windows; physical-device preboot testing pending.
+
+Review: syntax/XAML and existing readiness, session, protector-state, and child-exit fixtures passed. Updated installer and six-file ZIP copied to the Mac Desktop share. Intune content still needs repackaging; Windows console hiding is not yet verified.
+
+### Publish console-hiding package
+- [x] Rebuild with Win32Forge and verify source parity.
+- [x] Commit uploaded content and publish existing Intune app version 3.4.
+- [x] Verify published version and assignments.
+
+Review: Win32Forge rebuilt matching source assets. Encrypted MAC, IV, plaintext length and SHA-256 digest verified. Block upload committed successfully as content 10; existing app updated to 3.4. Required pilot group and Available All users assignments retained. Windows UI and physical preboot tests remain pending. Failed content 9 remains uncommitted.
+
+### Add PIN enrollment logging
+- [x] Add sanitized stage/error/result logging under IME Logs.
+- [x] Verify checks and synchronize package sources and reader ZIP.
+
+Review: local checks passed. Dedicated rotating enrollment log excludes credential values and raw exceptions. Source, desktop installer, private package source and reader ZIP synchronized. Windows write test blocked by Parallels guest-session availability; Intune repackaging pending.
+
+### Publish enrollment logging package
+- [x] Rebuild and upload with Win32Forge.
+- [x] Verify committed content and published app version 3.5.
+
+Review: Win32Forge package and block upload completed; content 11 committed and version 3.5 published. Source parity and local checks passed. Detection/requirement rules and x64/ARM64 support retained; required pilot and available All users assignments verified. Windows log write and enrollment tests remain pending.
+
+### Company Portal icon and social card
+- [x] Upload generated icon to existing Intune app; byte-for-byte Graph readback matched.
+- [x] Replace social card with generated icon composition; match metadata to actual 1730 x 909 dimensions.
+- [x] Verify build.
+
+Review: Intune icon readback matched generated PNG; app remains published as 3.5/content 11. Blog social image and dimensions updated; production build passed. Website changes are local until publication.
+
+### Technical accuracy review
+- [x] Cross-check policy/import/encryption claims against current Microsoft documentation.
+- [x] Correct policy stages, standard-user change semantics, readiness and retry wording.
+- [x] Complete script review, artifact parity and checks.
+
+Review: Microsoft source checks corrected initial silent-encryption guidance and separated enrollment permissions, app detection and compliance. Requirement is explicitly a readiness heuristic; retries are not promised at sign-in. Uninstall now validates legacy task ownership. Images/metadata and JSON/ZIP parity verified; 8 bootstrap, 11 detection, 7 uninstall fixtures and local checks passed; lint/build passed. ServiceUI dependency excluded per request. Revised uninstall is local, not deployed; standard-user/cancel/retry/physical preboot evidence remains pending.
+
+### Wider layout and PR
+- [x] Increase desktop content width to 1120px and reduce horizontal spacing.
+- [x] Run responsive checks; commit, push and open PR.
+
+Review: content 1120px; desktop gaps 8px, panel horizontal padding 16px. Six responsive tests, lint and build passed. Pushed d10d1b0 and opened draft PR #41; BitLocker live validation remains pending.
+
+### Fit PIN form to screen
+- [x] Replace scrolling with a centered, proportionally scaled form inside the full-screen window.
+- [x] Record user-confirmed x64 enrollment; update architecture instructions.
+- [x] Verify checks and sync/push source artifacts.
+- [ ] Validate revised WPF layout on Windows.
+
+Review: XAML uses DownOnly uniform scaling within maximized borderless window. Local checks/build passed; source, reader ZIP, helper and Desktop copies synchronized. Windows rendering still pending; deployed Intune content remains 11.
+
+### Remove unused PIN post files
+- [x] Remove unused screenshots, obsolete launchers/module/policy exports and duplicate ZIP.
+- [x] Point binary validation fixtures at the current installer.
+- [ ] Verify retained references, tests and build; push PR cleanup.
