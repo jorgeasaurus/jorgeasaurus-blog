@@ -49,7 +49,9 @@ The enrollment policy allows TPM and TPM+PIN, blocks startup keys, and sets a si
 
 *Enrollment-policy values; this illustration is not an Intune screenshot.*
 
-The app’s desktop requirement delays the app, not either policy. Remove conflicting BitLocker settings from other policies. Keep Windows Security tray visible.
+Check other assigned BitLocker policies for conflicting startup settings before deployment.
+
+The app waits for the desktop before displaying the PIN prompt. Its requirement script checks that Explorer and the Windows Security tray process are running in the same session. Keep that tray process enabled so the app can run. This check does not delay the BitLocker policy.
 
 Keep the enrollment policy assigned after enrollment and retain recovery-key access. **Allow startup PIN** permits enrollment; it does not itself enforce a PIN. Required app detection checks that state.
 
