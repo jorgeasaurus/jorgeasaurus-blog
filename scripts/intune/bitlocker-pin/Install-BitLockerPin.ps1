@@ -13,6 +13,7 @@ param(
 )
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
+# Record progress in the IME logs without recording the PIN or recovery secrets.
 function Write-PinEnrollmentLog {
     param(
         [ValidateSet('LOG_TEST','START','PREFLIGHT_READY','PREFLIGHT_FAILED','UI_OPEN','PIN_CREATION_START','PIN_CREATION_SUCCESS','PIN_CREATION_FAILED','BITLOCKER_ERROR','RESULT','ALREADY_ENROLLED','INSTALL_FAILED')][string]$Event,
@@ -43,6 +44,7 @@ function Write-PinEnrollmentLog {
     }
 }
 
+# Check that the supplied ServiceUI file is an x64 executable before launching it.
 function Assert-ServiceUIBinary {
     [CmdletBinding()]
     param([Parameter(Mandatory)][string]$Path)
@@ -63,6 +65,7 @@ function Assert-ServiceUIBinary {
     } finally { $reader.Dispose(); $stream.Dispose() }
 }
 
+# Validate the logo format, size, and dimensions before loading it into WPF.
 function Import-PinLogo {
     [CmdletBinding()]
     param([Parameter(Mandatory)][string]$Path)
@@ -88,6 +91,7 @@ function Import-PinLogo {
     } finally { $stream.Dispose() }
 }
 
+# Treat enrollment as complete only when PIN and recovery protection are active.
 function Test-PinEnrollmentComplete {
     [CmdletBinding()]
     param([Parameter(Mandatory)][object]$Volume)
@@ -103,6 +107,7 @@ function Test-PinEnrollmentComplete {
     }
     return $true
 }
+# Check TPM-only protection and applied PIN policy before changing protectors.
 function Get-PinEnrollmentState {
     [CmdletBinding()]
     param([string]$MountPoint = $env:SystemDrive)
@@ -135,6 +140,7 @@ function Get-PinEnrollmentState {
     if ($minimum -gt 20) { throw 'Configured PIN minimum exceeds 20.' }
     [pscustomobject]@{ Volume = $volume; MinimumPinLength = $minimum }
 }
+# Add and verify TPM+PIN first, then remove the original TPM-only protector.
 function Add-StartupPin {
     [CmdletBinding(SupportsShouldProcess)]
     param(
@@ -193,6 +199,7 @@ function Add-StartupPin {
     [pscustomobject]@{ Status = 'Enrolled'; MountPoint = $MountPoint; RebootTestPending = $true }
 }
 
+# Require completed Windows setup and a desktop with the Windows Security tray.
 function Test-DesktopReadiness {
     param(
         [bool]$OobeComplete,
@@ -206,6 +213,7 @@ function Test-DesktopReadiness {
     return @($TrayProcesses | Where-Object { $_.SessionId -gt 0 -and $_.SessionId -in $sessions }).Count -gt 0
 }
 
+# Read the current OOBE, setup, and process state for the desktop check.
 function Test-InstallDesktop {
 $ready = $false
 try {
@@ -237,6 +245,7 @@ return $ready
 
 }
 
+# Optional recovery-only preparation: back up recovery keys before adding TPM protection.
 function Initialize-PinProtection {
     $v = Get-BitLockerVolume -MountPoint $env:SystemDrive -ErrorAction Stop
     if ($v.VolumeType -ne 'OperatingSystem' -or $v.LockStatus -ne 'Unlocked' -or $v.VolumeStatus -ne 'FullyEncrypted') { throw 'BITLOCKER_NOT_READY: Finish OS drive encryption first.' }
@@ -265,6 +274,7 @@ function Initialize-PinProtection {
     if ((Get-BitLockerVolume -MountPoint $env:SystemDrive).ProtectionStatus -ne 'On') { throw 'PROTECTION_RESUME_FAILED' }
 }
 
+# Load the full-screen form, validate both PIN entries, and return the outcome.
 function Show-InstallPinUI {
 $MinimumPinLength = 6
 $LogoPath = Join-Path $PSScriptRoot 'generic-logo.png'
@@ -391,6 +401,7 @@ return $script:enrollmentExitCode
 
 }
 
+# Save the final install outcome for troubleshooting; detection reads BitLocker itself.
 function Write-InstallResult {
     param([string]$Folder, [ValidateSet('STARTING','COMPLETED','CANCELLED','FAILED')][string]$Status, [int]$ExitCode)
     Write-PinEnrollmentLog -Event RESULT -ExitCode $ExitCode -ErrorCode $Status
@@ -401,6 +412,7 @@ function Write-InstallResult {
     } catch { }
 }
 
+# Dot-sourcing loads the functions without starting installation.
 if ($MyInvocation.InvocationName -eq '.') { return }
 Write-PinEnrollmentLog -Event START
 $mutex = $null
@@ -423,6 +435,7 @@ public static class PinInstallConsole {
     $consoleTray = @(Get-Process SecurityHealthSystray -ErrorAction SilentlyContinue | Where-Object SessionId -eq $console)
     if ($consoleExplorer.Count -eq 0 -or $consoleTray.Count -eq 0) { throw 'CONSOLE_DESKTOP_NOT_READY' }
     if (Test-PinEnrollmentComplete -Volume (Get-BitLockerVolume -MountPoint $env:SystemDrive)) { Write-PinEnrollmentLog -Event ALREADY_ENROLLED -ExitCode 0; exit 0 }
+    # ServiceUI starts this child as SYSTEM in the console user session to display WPF.
     if ($Interactive) {
         if ($session -ne $ExpectedSessionId -or $session -ne $console) { throw 'INTERACTIVE_SESSION_INVALID' }
         if ([Threading.Thread]::CurrentThread.ApartmentState -ne 'STA') { throw 'STA_REQUIRED' }
@@ -447,6 +460,7 @@ public static class PinEnrollmentConsole {
         exit $result
     }
     if ($session -ne 0) { throw 'INSTALL_REQUIRES_SESSION_ZERO' }
+    # Allow only one parent installation to stage files and launch the prompt at a time.
     $mutex = New-Object Threading.Mutex($false, 'Global\BitLockerPinEnrollment')
     try { $ownsMutex = $mutex.WaitOne(0) } catch [Threading.AbandonedMutexException] { $ownsMutex = $true }
     if (-not $ownsMutex) { exit 1618 }
@@ -459,6 +473,7 @@ public static class PinEnrollmentConsole {
         $existing = @(Get-Item -LiteralPath $destination) + @(Get-ChildItem -LiteralPath $destination -Force -Recurse)
         if (@($existing | Where-Object { $_.Attributes -band [IO.FileAttributes]::ReparsePoint }).Count) { throw 'REPARSE_POINT_REJECTED' }
     }
+    # Stage the UI under Program Files; only SYSTEM and administrators can modify it.
     New-Item -Path $destination -ItemType Directory -Force | Out-Null
     $acl = New-Object Security.AccessControl.DirectorySecurity
     $acl.SetAccessRuleProtection($true, $false)
@@ -491,6 +506,7 @@ public static class PinEnrollmentConsole {
     }
     Remove-Item -LiteralPath (Join-Path $destination 'LastPreflightFailure.txt') -Force -ErrorAction SilentlyContinue
     Write-InstallResult -Folder $destination -Status STARTING -ExitCode 0
+    # Wait for the interactive child so Intune receives its success, failure, or cancel code.
     Push-Location -LiteralPath $destination
     try {
         $powerShell = Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe'
@@ -503,6 +519,7 @@ public static class PinEnrollmentConsole {
         & $serviceUI ('-session:{0}' -f $console) $powerShell -NoProfile -STA -ExecutionPolicy Bypass -EncodedCommand $encodedCommand
         $code = $LASTEXITCODE
     } finally { Pop-Location }
+    # Verify actual BitLocker state again before reporting a successful installation.
     if ($code -eq 0 -and -not (Test-PinEnrollmentComplete -Volume (Get-BitLockerVolume -MountPoint $env:SystemDrive))) { $code = 1 }
     $status = 'FAILED'
     if ($code -eq 0) { $status = 'COMPLETED' } elseif ($code -eq 1602) { $status = 'CANCELLED' }
