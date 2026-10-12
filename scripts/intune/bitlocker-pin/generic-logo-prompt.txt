@@ -1,3 +1,0 @@
-Generated with the built-in image_gen tool. Output resized to 256x256 with sips; alpha preserved.
-
-Use case: logo-brand. Create one generic company logo for a modern Windows BitLocker startup PIN prompt. A simple distinctive abstract geometric shield mark, pale blue and white, flat clean vector-like shapes, readable at 64 pixels high on dark navy #1E293B. No text, letters, company names, watermark, gradients, shadows, padlock, or mockup. Center the mark with a small even transparent margin. Output exactly 256 x 256 pixels, square PNG, genuine transparent background. This is a neutral placeholder admins replace with their company logo.
