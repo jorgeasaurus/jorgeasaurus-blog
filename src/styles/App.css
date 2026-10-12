@@ -1396,6 +1396,10 @@ h2 {
   margin: 0;
 }
 
+.post-content .post-image-centered {
+  text-align: center;
+}
+
 .post-video-figure {
   counter-increment: post-figure;
   margin: 1.4em 0 1.8em;
