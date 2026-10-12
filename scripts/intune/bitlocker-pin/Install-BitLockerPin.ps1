@@ -316,10 +316,8 @@ $window.Add_Closing({ param($sender, $eventArgs)
 $window.FindName('Instructions').Text = "Choose $MinimumPinLength to 20 digits. You will enter this PIN before Windows starts. This is separate from your Windows sign-in PIN."
 $pin.MaxLength = 20
 $confirmation.MaxLength = 20
-if ($LogoPath) {
-    $logo.Source = Import-PinLogo -Path $LogoPath
-    $logo.Visibility = 'Visible'
-}
+$logo.Source = Import-PinLogo -Path $LogoPath
+$logo.Visibility = 'Visible'
 if ($preflightFailure) {
     Write-PinEnrollmentLog -Event PREFLIGHT_FAILED -ExitCode 1 -ErrorCode $preflightFailure.Code
     $script:enrollmentExitCode = 1
@@ -357,9 +355,6 @@ $window.FindName('Submit').Add_Click({
                 Write-PinEnrollmentLog -Event PIN_CREATION_SUCCESS -ExitCode 0
                 $script:enrollmentExitCode = 0
                 $script:allowClose = $true
-                $status.Text = 'Startup PIN set. Arrange a restart to test it. This app will not restart your device.'
-                $window.FindName('Later').Content = 'Finish'
-                $window.FindName('Later').Visibility = 'Visible'
                 $window.Close()
             } catch {
                 $script:enrollmentExitCode = 1
@@ -408,7 +403,6 @@ function Write-InstallResult {
 
 if ($MyInvocation.InvocationName -eq '.') { return }
 Write-PinEnrollmentLog -Event START
-$destination = Join-Path $env:ProgramFiles 'BitLockerPin'
 $mutex = $null
 $ownsMutex = $false
 $destination = $null
@@ -458,8 +452,7 @@ public static class PinEnrollmentConsole {
     if (-not $ownsMutex) { exit 1618 }
     if (-not $ServiceUIPath) { throw 'SERVICEUI_PARAMETERS_REQUIRED' }
     Assert-ServiceUIBinary -Path $ServiceUIPath
-    Write-PinEnrollmentLog -Event START
-$destination = Join-Path $env:ProgramFiles 'BitLockerPin'
+    $destination = Join-Path $env:ProgramFiles 'BitLockerPin'
     $legacy = Get-ScheduledTask -TaskName 'BitLocker startup PIN' -ErrorAction SilentlyContinue
     if ($legacy -and $legacy.State -eq 'Running') { exit 1618 }
     if (Test-Path -LiteralPath $destination) {
