@@ -141,6 +141,10 @@ Before wider deployment:
 
 Expect recovery-password protection and exactly one `TpmPin`, with no other protector types. Confirm protection remains **On**, then restart and test the PIN privately.
 
+![Company Portal shows BitLocker startup PIN version 3.5 as Installed, with the drive, padlock, and PIN keypad icon.](/images/posts/bitlocker-startup-pin-after-autopilot/company-portal-installed.png)
+
+*Company Portal after successful enrollment.*
+
 Uninstall restores TPM-only protection and removes the PIN while retaining encryption and recovery protection. The assigned policy must allow TPM-only protection. Remove the Required app assignment before uninstalling, or Intune can prompt for enrollment again.
 
 For errors, recovery-only preparation, and hardware exceptions, use the [troubleshooting guide](https://github.com/jorgeasaurus/jorgeasaurus-blog/blob/main/scripts/intune/bitlocker-pin/TROUBLESHOOTING.md).
