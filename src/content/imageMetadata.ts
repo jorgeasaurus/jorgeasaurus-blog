@@ -29,7 +29,7 @@ const imageMetadata: Record<string, { width: number; height: number; loading?: '
   '/images/posts/bitlocker-startup-pin-after-autopilot/policy-settings-single.png': { width: 1536, height: 1024 },
   '/images/posts/bitlocker-startup-pin-after-autopilot/requirement-settings.png': { width: 1536, height: 1024 },
   '/images/posts/bitlocker-startup-pin-after-autopilot/company-portal-installed.png': { width: 796, height: 536 },
-  '/images/posts/bitlocker-startup-pin-after-autopilot/enrollment.png': { width: 1184, height: 944 },
+  '/images/posts/bitlocker-startup-pin-after-autopilot/enrollment.png': { width: 1016, height: 759 },
   '/images/posts/bitlocker-startup-pin-after-autopilot/preboot-pin.png': { width: 1012, height: 756 },
   '/images/posts/bitlocker-startup-pin-after-autopilot/bitlocker-control-panel.png': { width: 777, height: 587 },
 }
