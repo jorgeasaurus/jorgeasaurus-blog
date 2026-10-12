@@ -2,6 +2,20 @@ import { type PostMeta } from '../lib/posts'
 
 const posts: PostMeta[] = [
   {
+    slug: 'bitlocker-startup-pin-after-autopilot',
+    title: 'Add a BitLocker startup PIN after Autopilot',
+    date: '2026-10-10',
+    description:
+      'Add a startup PIN to an encrypted Windows device with a full-screen PowerShell prompt, Intune policy settings, and desktop readiness checks.',
+    tags: ['intune', 'powershell', 'windows', 'tutorial'],
+    socialImage: {
+      src: '/images/posts/bitlocker-startup-pin-after-autopilot/socialcard.png',
+      width: 1730,
+      height: 909,
+      type: 'image/png',
+    },
+  },
+  {
     slug: 'intune-assignments-dos-and-donts',
     title: "Intune assignments: Do's and don'ts",
     date: '2026-10-06',

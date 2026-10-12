@@ -34,3 +34,4 @@ tasks/todo.md
 .agents/skills/*
 !.agents/skills/resend-newsletter/
 !.agents/skills/resend-newsletter/**
+scripts/intune/bitlocker-pin/ServiceUI.exe

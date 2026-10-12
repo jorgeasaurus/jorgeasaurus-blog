@@ -13,11 +13,11 @@
   padding: calc(var(--fixed-nav-offset) + var(--fixed-nav-block-size) + var(--fixed-nav-gap)) 0 56px;
   display: grid;
   align-content: start;
-  grid-template-columns: minmax(24px, 1fr) minmax(0, 880px) minmax(24px, 1fr);
+  grid-template-columns: minmax(12px, 1fr) minmax(0, 1120px) minmax(12px, 1fr);
   grid-template-areas:
     '. hero .'
     '. content .';
-  gap: 24px;
+  gap: 24px 8px;
 }
 
 .blog-shell--about {
@@ -167,7 +167,7 @@
   position: fixed;
   top: var(--fixed-nav-offset);
   left: 50%;
-  width: min(880px, calc(100% - (2 * var(--fixed-nav-offset))));
+  width: min(1120px, calc(100% - (2 * var(--fixed-nav-offset))));
   min-height: var(--fixed-nav-block-size);
   border-radius: 999px;
   flex-direction: row;
@@ -437,6 +437,7 @@
 
 .content-panel {
   grid-area: content;
+  padding-inline: 16px;
 }
 
 .content-heading {
@@ -1337,7 +1338,7 @@ h2 {
   line-height: 1.75;
   font-size: 1.05rem;
   font-weight: 500;
-  max-width: 72ch;
+  max-width: none;
 }
 
 .post-hero-figure {
@@ -1393,6 +1394,14 @@ h2 {
 
 .post-content .image-expand-trigger--content img {
   margin: 0;
+}
+
+.post-content .post-image-centered {
+  text-align: center;
+}
+
+.post-content .post-image-centered .image-expand-trigger--content {
+  margin-inline: auto;
 }
 
 .post-video-figure {
@@ -2188,7 +2197,7 @@ code {
 /* ── Responsive: tablet ── */
 @media (max-width: 1080px) {
   .blog-shell {
-    grid-template-columns: minmax(20px, 1fr) minmax(0, 880px) minmax(20px, 1fr);
+    grid-template-columns: minmax(8px, 1fr) minmax(0, 1120px) minmax(8px, 1fr);
     grid-template-areas:
       '. hero .'
       '. content .';
@@ -2481,4 +2490,25 @@ code {
     width: 32px;
     min-width: 32px;
   }
+}
+
+.post-content .post-warning {
+  margin-block: 24px;
+  padding: 18px 20px;
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  border-left: 4px solid #fbbf24;
+  border-radius: 12px;
+  background: rgba(120, 78, 8, 0.22);
+}
+
+.post-content .post-warning-title {
+  display: block;
+  margin-bottom: 6px;
+  color: #fbbf24;
+  font-size: 1.05rem;
+}
+
+.post-content .post-warning p {
+  margin: 0;
+  color: #fff4d6;
 }
