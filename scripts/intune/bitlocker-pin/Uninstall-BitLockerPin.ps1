@@ -56,19 +56,7 @@ $ownsMutex = $false
 try {
     try { $ownsMutex = $mutex.WaitOne(0) } catch [Threading.AbandonedMutexException] { $ownsMutex = $true }
     if (-not $ownsMutex) { throw 'Enrollment is running. Close PIN setup before uninstall.' }
-$task = Get-ScheduledTask -TaskName 'BitLocker startup PIN' -ErrorAction SilentlyContinue
-if ($task) {
-    $ownedFolder = Join-Path $env:ProgramFiles 'BitLockerPin'
-    if ($task.Principal.UserId -notin @('SYSTEM','S-1-5-18') -or
-        @($task.Actions | Where-Object { $_.Arguments -notlike ('*' + $ownedFolder + '*') }).Count) {
-        throw 'LEGACY_TASK_NOT_OWNED: Uninstall did not change the unrelated task.'
-    }
-    Disable-ScheduledTask -TaskName $task.TaskName | Out-Null
-    Stop-ScheduledTask -TaskName $task.TaskName
-}
-# Leave the task disabled if rollback fails, avoiding concurrent enrollment.
 Remove-PilotStartupPin -MountPoint $env:SystemDrive
-if ($task) { Unregister-ScheduledTask -TaskName $task.TaskName -Confirm:$false }
 $folder = Join-Path $env:ProgramFiles 'BitLockerPin'
 if (Test-Path -LiteralPath $folder) {
     $items = @(Get-Item -LiteralPath $folder) + @(Get-ChildItem -LiteralPath $folder -Force -Recurse)

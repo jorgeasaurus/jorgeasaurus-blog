@@ -467,8 +467,6 @@ public static class PinEnrollmentConsole {
     if (-not $ServiceUIPath) { throw 'SERVICEUI_PARAMETERS_REQUIRED' }
     Assert-ServiceUIBinary -Path $ServiceUIPath
     $destination = Join-Path $env:ProgramFiles 'BitLockerPin'
-    $legacy = Get-ScheduledTask -TaskName 'BitLocker startup PIN' -ErrorAction SilentlyContinue
-    if ($legacy -and $legacy.State -eq 'Running') { exit 1618 }
     if (Test-Path -LiteralPath $destination) {
         $existing = @(Get-Item -LiteralPath $destination) + @(Get-ChildItem -LiteralPath $destination -Force -Recurse)
         if (@($existing | Where-Object { $_.Attributes -band [IO.FileAttributes]::ReparsePoint }).Count) { throw 'REPARSE_POINT_REJECTED' }
@@ -497,13 +495,6 @@ public static class PinEnrollmentConsole {
         Set-Acl -LiteralPath $file.FullName -AclObject $fileAcl
     }
     Assert-ServiceUIBinary -Path $serviceUI
-    $legacy = Get-ScheduledTask -TaskName 'BitLocker startup PIN' -ErrorAction SilentlyContinue
-    if ($legacy) {
-        if ($legacy.Principal.UserId -notin @('SYSTEM','S-1-5-18') -or @($legacy.Actions | Where-Object { $_.Arguments -notlike ('*' + $destination + '*') }).Count) { throw 'LEGACY_TASK_NOT_OWNED' }
-        Disable-ScheduledTask -TaskName 'BitLocker startup PIN' | Out-Null
-        Stop-ScheduledTask -TaskName 'BitLocker startup PIN'
-        Unregister-ScheduledTask -TaskName 'BitLocker startup PIN' -Confirm:$false
-    }
     Remove-Item -LiteralPath (Join-Path $destination 'LastPreflightFailure.txt') -Force -ErrorAction SilentlyContinue
     Write-InstallResult -Folder $destination -Status STARTING -ExitCode 0
     # Wait for the interactive child so Intune receives its success, failure, or cancel code.
