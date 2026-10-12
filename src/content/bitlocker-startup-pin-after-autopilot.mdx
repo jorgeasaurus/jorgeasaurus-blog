@@ -34,7 +34,9 @@ The user must be signed in at the console desktop. RDP-only sessions are unsuppo
 
 This uses Intune’s [Settings Catalog import](https://learn.microsoft.com/en-us/intune/device-configuration/settings-catalog/#import-and-export-a-profile). The import does not copy assignments.
 
-For initial silent encryption, use an **Endpoint security > Disk encryption > BitLocker** policy with Microsoft’s [required settings and prerequisites](https://learn.microsoft.com/en-us/intune/device-configuration/endpoint-security/encrypt-bitlocker-windows#configure-silent-bitlocker-encryption). Microsoft specifies blocking startup PINs for that stage. After encryption, remove that blocking assignment before applying this enrollment policy.
+Use the supplied policy alongside the Win32 app. It enables device encryption, suppresses encryption warnings, permits standard-user encryption, and allows TPM startup PINs.
+
+Review Microsoft’s [silent-encryption prerequisites and configuration](https://learn.microsoft.com/en-us/intune/device-configuration/endpoint-security/encrypt-bitlocker-windows#configure-silent-bitlocker-encryption). The supplied policy allows startup PINs; Microsoft’s documented silent-encryption configuration blocks them.
 
 **The supplied policy configures encryption and permits startup PIN enrollment. Verify silent initial encryption on your hardware before deployment.**
 
