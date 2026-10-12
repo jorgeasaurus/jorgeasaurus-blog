@@ -47,8 +47,6 @@ The enrollment policy allows TPM and TPM+PIN, blocks startup keys, and sets a si
 
 ![Enrollment BitLocker settings: device encryption required; standard-user encryption allowed; other encryption warning disabled; startup authentication enabled; non-TPM BitLocker disabled; TPM and TPM startup PIN allowed; startup key and key plus PIN blocked; minimum PIN length enabled at 6; standard-user PIN change restriction disabled; slate preboot input unconfigured unless verified hardware requires it.](/images/posts/bitlocker-startup-pin-after-autopilot/policy-settings-single.png)
 
-*Enrollment-policy values; this illustration is not an Intune screenshot.*
-
 Check other assigned BitLocker policies for conflicting startup settings before deployment.
 
 The app waits for the desktop before displaying the PIN prompt. Its requirement script checks that Explorer and the Windows Security tray process are running in the same session. Keep that tray process enabled so the app can run. This check does not delay the BitLocker policy.
