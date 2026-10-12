@@ -56,7 +56,7 @@ try {
     }
     $instructions = @"
 Install behavior: System
-Architecture: x64; add ARM64 only after validating x64 ServiceUI emulation
+Architecture: x64, ARM64, or both; enrollment tested on both architectures
 Assignment: Required; pilot group
 Install command:
 %SystemRoot%\Sysnative\WindowsPowerShell\v1.0\powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Install-BitLockerPin.ps1 -ServiceUIPath .\ServiceUI.exe -CompanyName "$CompanyName"

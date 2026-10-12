@@ -32,9 +32,9 @@
         </Style>
         <Style TargetType="TextBlock"><Setter Property="TextWrapping" Value="Wrap"/></Style>
     </Window.Resources>
-    <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-        <Grid Margin="32">
-            <Border MaxWidth="600" Padding="36" CornerRadius="24" Background="#1E293B" HorizontalAlignment="Stretch" VerticalAlignment="Center">
+    <Grid Margin="16">
+        <Viewbox Stretch="Uniform" StretchDirection="DownOnly" HorizontalAlignment="Center" VerticalAlignment="Center">
+            <Border Width="600" Padding="28" CornerRadius="24" Background="#1E293B" HorizontalAlignment="Stretch" VerticalAlignment="Center">
                 <StackPanel>
                     <Image x:Name="Logo" Height="64" MaxWidth="220" Stretch="Uniform" HorizontalAlignment="Left" Visibility="Collapsed" Margin="0,0,0,20"/>
                     <TextBlock x:Name="Company" FontWeight="SemiBold" Foreground="#93C5FD" Margin="0,0,0,28"/>
@@ -50,6 +50,6 @@
                     <TextBlock x:Name="PreviewNotice" Text="PREVIEW ONLY · No BitLocker changes" FontSize="12" Foreground="#CBD5E1" Margin="0,24,0,0" HorizontalAlignment="Center"/>
                 </StackPanel>
             </Border>
-        </Grid>
-    </ScrollViewer>
+        </Viewbox>
+    </Grid>
 </Window>
