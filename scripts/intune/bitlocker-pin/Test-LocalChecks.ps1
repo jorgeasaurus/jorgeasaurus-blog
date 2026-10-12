@@ -61,4 +61,3 @@ try {
     $env:PROCESSOR_ARCHITEW6432 = $oldWowArchitecture
     Remove-Item -LiteralPath $fixture -Force -ErrorAction SilentlyContinue
 }
-
