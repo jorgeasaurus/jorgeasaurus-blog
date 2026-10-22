@@ -1282,6 +1282,41 @@ h2 {
   letter-spacing: 0;
 }
 
+.post-filter-recovery {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+}
+
+.post-filter-recovery .post-filter-status {
+  grid-column: auto;
+}
+
+.post-filter-retry {
+  border: 0;
+  background: transparent;
+  color: var(--sprout-bright);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 0.74rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 8px 0;
+  cursor: pointer;
+}
+
+.post-filter-retry:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.post-filter-retry:focus-visible {
+  outline: 2px solid var(--sprout-bright);
+  outline-offset: 3px;
+}
+
 .tag-filter-empty {
   margin: 0;
   padding: 4px;

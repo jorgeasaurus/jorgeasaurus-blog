@@ -12,6 +12,8 @@ interface PostFiltersProps {
   posts: PostMeta[]
   matchCount: number
   pending: boolean
+  unavailable: boolean
+  onRetry: () => void
 }
 
 function statusText(pending: boolean, matchCount: number) {
@@ -20,13 +22,14 @@ function statusText(pending: boolean, matchCount: number) {
   return matchCount === 1 ? '1 post' : `${matchCount} posts`
 }
 
-export default function PostFilters({ posts, matchCount, pending }: PostFiltersProps) {
+export default function PostFilters({ posts, matchCount, pending, unavailable, onRetry }: PostFiltersProps) {
   const [searchParams, setSearchParams] = useSearchParams()
   const query = searchParams.get('q') ?? ''
   const category = searchParams.get('category') ?? ''
   const tag = searchParams.get('tag') ?? ''
   const page = searchParams.get('page') ?? ''
   const queryEditSession = useRef(false)
+  const queryEditedByInput = useRef(false)
   const previousFilters = useRef({ category, tag, page, query })
 
   useEffect(() => {
@@ -39,10 +42,13 @@ export default function PostFilters({ posts, matchCount, pending }: PostFiltersP
 
   useEffect(() => {
     const previous = previousFilters.current
-    const paginationChanged = previous.page !== page && previous.query === query
-    if (previous.category !== category || previous.tag !== tag || paginationChanged) {
+    const queryChanged = previous.query !== query
+    const paginationChanged = previous.page !== page && !queryChanged
+    const queryChangedOutsideInput = queryChanged && !queryEditedByInput.current
+    if (previous.category !== category || previous.tag !== tag || paginationChanged || queryChangedOutsideInput) {
       queryEditSession.current = false
     }
+    queryEditedByInput.current = false
     previousFilters.current = { category, tag, page, query }
   }, [category, tag, page, query])
   const keywords = keywordOptions(posts)
@@ -56,6 +62,7 @@ export default function PostFilters({ posts, matchCount, pending }: PostFiltersP
   function update(key: 'q' | 'category' | 'tag', value: string) {
     const replace = key === 'q' && queryEditSession.current
     queryEditSession.current = key === 'q'
+    queryEditedByInput.current = key === 'q'
     setSearchParams((current) => {
       const next = new URLSearchParams(current)
       if (value) next.set(key, value)
@@ -107,12 +114,23 @@ export default function PostFilters({ posts, matchCount, pending }: PostFiltersP
           ))}
         </select>
       </div>
-      <p
-        className={`post-filter-status${matchCount === 0 && !pending ? ' post-filter-status--empty' : ''}`}
-        role="status"
-      >
-        {statusText(pending, matchCount)}
-      </p>
+      {unavailable ? (
+        <div className="post-filter-recovery">
+          <p className="post-filter-status post-filter-status--empty" role="status">
+            Search couldn&apos;t load post text.
+          </p>
+          <button type="button" className="post-filter-retry" onClick={onRetry}>
+            Try again
+          </button>
+        </div>
+      ) : (
+        <p
+          className={`post-filter-status${matchCount === 0 && !pending ? ' post-filter-status--empty' : ''}`}
+          role="status"
+        >
+          {statusText(pending, matchCount)}
+        </p>
+      )}
     </form>
   )
 }

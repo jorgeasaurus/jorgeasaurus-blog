@@ -22,12 +22,15 @@ export default function Home() {
   })
 
   const [searchText, setSearchText] = useState<Record<string, string>>()
+  const [searchFailed, setSearchFailed] = useState(false)
   const query = searchParams.get('q') ?? ''
   const category = searchParams.get('category') ?? ''
   const activeTag = searchParams.get('tag') ?? ''
-  const searchPending = Boolean(query.trim()) && !searchText
+  const queryActive = Boolean(query.trim())
+  const searchPending = queryActive && !searchText && !searchFailed
+  const searchUnavailable = queryActive && searchFailed
   const sorted = sortPostsByDate(posts)
-  const filtered = searchPending
+  const filtered = searchPending || searchUnavailable
     ? []
     : filterPosts(sorted, { query, category, tag: activeTag }, searchText ?? {})
   const totalPages = Math.max(1, Math.ceil(filtered.length / POSTS_PER_PAGE))
@@ -57,7 +60,7 @@ export default function Home() {
         if (!canceled) setSearchText(module.default)
       },
       () => {
-        if (!canceled) setSearchText({})
+        if (!canceled) setSearchFailed(true)
       },
     )
     return () => {
@@ -70,6 +73,7 @@ export default function Home() {
   scrollState.current = { page: currentPage, filters: filtersKey }
 
   useEffect(() => {
+    window.scrollTo(0, 0)
     const onPopState = () => {
       const params = new URLSearchParams(window.location.search)
       const nextFilters = `${params.get('q') ?? ''}\0${params.get('category') ?? ''}\0${params.get('tag') ?? ''}`
@@ -130,7 +134,13 @@ export default function Home() {
             </Link>
           )}
         </div>
-        <PostFilters posts={posts} matchCount={filtered.length} pending={searchPending} />
+        <PostFilters
+          posts={posts}
+          matchCount={filtered.length}
+          pending={searchPending}
+          unavailable={searchUnavailable}
+          onRetry={() => window.location.reload()}
+        />
         {visiblePosts.map((post, index) => (
           <PostCard
             key={post.slug}
