@@ -1,6 +1,6 @@
 import usePageMetadata from '../hooks/usePageMetadata'
 import { Link, useSearchParams } from 'react-router-dom'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Topbar from '../components/Topbar'
 import PostCard from '../components/PostCard'
 import PostFilters from '../components/PostFilters'
@@ -65,9 +65,22 @@ export default function Home() {
     }
   }, [])
 
+  const filtersKey = `${query}\0${category}\0${activeTag}`
+  const scrollState = useRef({ page: currentPage, filters: filtersKey })
+  scrollState.current = { page: currentPage, filters: filtersKey }
+
   useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [currentPage, activeTag, category, query])
+    const onPopState = () => {
+      const params = new URLSearchParams(window.location.search)
+      const nextFilters = `${params.get('q') ?? ''}\0${params.get('category') ?? ''}\0${params.get('tag') ?? ''}`
+      const requested = Number.parseInt(params.get('page') ?? '1', 10)
+      const nextPage = Number.isFinite(requested) && requested > 0 ? requested : 1
+      const previous = scrollState.current
+      if (previous.page !== nextPage && previous.filters === nextFilters) window.scrollTo(0, 0)
+    }
+    window.addEventListener('popstate', onPopState, true)
+    return () => window.removeEventListener('popstate', onPopState, true)
+  }, [])
 
   return (
     <main className="blog-shell">
@@ -128,7 +141,7 @@ export default function Home() {
         {totalPages > 1 && (
           <nav className="pagination" aria-label="Posts pagination">
             {currentPage > 1 ? (
-              <Link className="pagination-link pagination-link--wide" to={listingPath({ q: query, category, tag: activeTag, page: currentPage - 1 })}>
+              <Link className="pagination-link pagination-link--wide" to={listingPath({ q: query, category, tag: activeTag, page: currentPage - 1 })} onClick={() => window.scrollTo(0, 0)}>
                 ← Newer
               </Link>
             ) : (
@@ -150,14 +163,14 @@ export default function Home() {
                     {page}
                   </span>
                 ) : (
-                  <Link className="pagination-link" to={listingPath({ q: query, category, tag: activeTag, page })} key={page}>
+                  <Link className="pagination-link" to={listingPath({ q: query, category, tag: activeTag, page })} key={page} onClick={() => window.scrollTo(0, 0)}>
                     {page}
                   </Link>
                 )
               })}
             </div>
             {currentPage < totalPages ? (
-              <Link className="pagination-link pagination-link--wide" to={listingPath({ q: query, category, tag: activeTag, page: currentPage + 1 })}>
+              <Link className="pagination-link pagination-link--wide" to={listingPath({ q: query, category, tag: activeTag, page: currentPage + 1 })} onClick={() => window.scrollTo(0, 0)}>
                 Older →
               </Link>
             ) : (

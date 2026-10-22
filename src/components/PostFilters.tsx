@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import {
   categories,
@@ -24,6 +25,26 @@ export default function PostFilters({ posts, matchCount, pending }: PostFiltersP
   const query = searchParams.get('q') ?? ''
   const category = searchParams.get('category') ?? ''
   const tag = searchParams.get('tag') ?? ''
+  const page = searchParams.get('page') ?? ''
+  const queryEditSession = useRef(false)
+  const previousFilters = useRef({ category, tag, page, query })
+
+  useEffect(() => {
+    const resetQueryEditSession = () => {
+      queryEditSession.current = false
+    }
+    window.addEventListener('popstate', resetQueryEditSession)
+    return () => window.removeEventListener('popstate', resetQueryEditSession)
+  }, [])
+
+  useEffect(() => {
+    const previous = previousFilters.current
+    const paginationChanged = previous.page !== page && previous.query === query
+    if (previous.category !== category || previous.tag !== tag || paginationChanged) {
+      queryEditSession.current = false
+    }
+    previousFilters.current = { category, tag, page, query }
+  }, [category, tag, page, query])
   const keywords = keywordOptions(posts)
   const keywordChoices = tag && !keywords.includes(tag)
     ? [...keywords, tag].sort((a, b) => a.localeCompare(b, 'en'))
@@ -33,7 +54,8 @@ export default function PostFilters({ posts, matchCount, pending }: PostFiltersP
     : categories
 
   function update(key: 'q' | 'category' | 'tag', value: string) {
-    const replace = key === 'q' && searchParams.has('q')
+    const replace = key === 'q' && queryEditSession.current
+    queryEditSession.current = key === 'q'
     setSearchParams((current) => {
       const next = new URLSearchParams(current)
       if (value) next.set(key, value)
