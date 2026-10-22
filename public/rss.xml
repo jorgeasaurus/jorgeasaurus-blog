@@ -6,7 +6,19 @@
     <atom:link href="https://www.jorgeasaur.us/rss.xml" rel="self" type="application/rss+xml" />
     <description>Field notes on PowerShell, endpoint management, Microsoft Graph, and automation.</description>
     <language>en-us</language>
-    <lastBuildDate>Sat, 10 Oct 2026 12:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Thu, 22 Oct 2026 12:00:00 GMT</lastBuildDate>
+    <item>
+      <title>Learn Intune and PowerShell automation: field notes</title>
+      <link>https://www.jorgeasaur.us/learn-intune-powershell-automation</link>
+      <guid isPermaLink="false">https://jorgeasaur.us/learn-intune-powershell-automation</guid>
+      <pubDate>Thu, 22 Oct 2026 12:00:00 GMT</pubDate>
+      <description>How I automate Intune with Microsoft Graph and PowerShell, plus every field note on this site grouped by topic: Graph, Autopilot, BitLocker, tenant baselines, and endpoint careers.</description>
+      <category>intune</category>
+      <category>powershell</category>
+      <category>microsoft-graph</category>
+      <category>automation</category>
+      <category>endpoint-management</category>
+    </item>
     <item>
       <title>Add a BitLocker startup PIN after Autopilot</title>
       <link>https://www.jorgeasaur.us/bitlocker-startup-pin-after-autopilot</link>

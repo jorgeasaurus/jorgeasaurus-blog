@@ -111,6 +111,17 @@ export function getPageMetadata(kind, { post, filtered = false } = {}) {
     mainEntityOfPage: { '@type': 'WebPage', '@id': url },
     url,
     ...(tags.length > 0 ? { keywords: tags.join(', ') } : {}),
+    ...(post.faq?.length ? {
+      hasPart: {
+        '@type': 'FAQPage',
+        '@id': `${url}#faq`,
+        mainEntity: post.faq.map(({ question, answer }) => ({
+          '@type': 'Question',
+          name: question,
+          acceptedAnswer: { '@type': 'Answer', text: answer },
+        })),
+      },
+    } : {}),
   } : siteGraph(page, url)
 
   return {
