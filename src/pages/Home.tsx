@@ -1,24 +1,18 @@
 import usePageMetadata from '../hooks/usePageMetadata'
 import { Link, useSearchParams } from 'react-router-dom'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Topbar from '../components/Topbar'
 import PostCard from '../components/PostCard'
+import PostFilters from '../components/PostFilters'
 import NewsletterSignup from '../components/NewsletterSignup'
 import SocialIcon from '../components/SocialIcon'
 import WallpaperStage from '../components/WallpaperStage'
 import { sortPostsByDate } from '../lib/posts'
+import { categoryLabel, filterPosts, listingPath } from '../lib/postSearch.mjs'
 import posts from '../content/posts'
 import useLiquidGlassSurface from '../hooks/useLiquidGlassSurface'
 
 const POSTS_PER_PAGE = 5
-
-function getPagePath(page: number, tag: string | null) {
-  const params = new URLSearchParams()
-  if (tag) params.set('tag', tag)
-  if (page > 1) params.set('page', String(page))
-  const query = params.toString()
-  return query ? `/?${query}` : '/'
-}
 
 export default function Home() {
   const [searchParams] = useSearchParams()
@@ -27,26 +21,53 @@ export default function Home() {
     type: 'rounded',
   })
 
-  const activeTag = searchParams.get('tag')
+  const [searchText, setSearchText] = useState<Record<string, string>>()
+  const query = searchParams.get('q') ?? ''
+  const category = searchParams.get('category') ?? ''
+  const activeTag = searchParams.get('tag') ?? ''
+  const searchPending = Boolean(query.trim()) && !searchText
   const sorted = sortPostsByDate(posts)
-  const filtered = activeTag
-    ? sorted.filter((post) => post.tags?.includes(activeTag))
-    : sorted
+  const filtered = searchPending
+    ? []
+    : filterPosts(sorted, { query, category, tag: activeTag }, searchText ?? {})
   const totalPages = Math.max(1, Math.ceil(filtered.length / POSTS_PER_PAGE))
   const requestedPage = Number.parseInt(searchParams.get('page') ?? '1', 10)
   const currentPage = Math.min(
     Math.max(Number.isFinite(requestedPage) ? requestedPage : 1, 1),
     totalPages
   )
-  const isFiltered = Boolean(activeTag) || currentPage > 1
+  const filtersActive = Boolean(query.trim() || category || activeTag)
+  const isFiltered = filtersActive || currentPage > 1
   const pageStart = (currentPage - 1) * POSTS_PER_PAGE
   const visiblePosts = filtered.slice(pageStart, pageStart + POSTS_PER_PAGE)
+  const heading = activeTag
+    ? `Tagged: ${activeTag}`
+    : category
+      ? `Category: ${categoryLabel(category)}`
+      : query.trim()
+        ? 'Search results'
+        : 'Recent field notes'
 
   usePageMetadata('home', { filtered: isFiltered })
 
   useEffect(() => {
+    let canceled = false
+    void import('virtual:post-search-text').then(
+      (module) => {
+        if (!canceled) setSearchText(module.default)
+      },
+      () => {
+        if (!canceled) setSearchText({})
+      },
+    )
+    return () => {
+      canceled = true
+    }
+  }, [])
+
+  useEffect(() => {
     window.scrollTo(0, 0)
-  }, [currentPage, activeTag])
+  }, [currentPage, activeTag, category, query])
 
   return (
     <main className="blog-shell">
@@ -88,28 +109,26 @@ export default function Home() {
         <div className="content-heading">
           <div>
             <p className="eyebrow">Posts</p>
-            <h2>{activeTag ? `Tagged: ${activeTag}` : 'Recent field notes'}</h2>
+            <h2>{heading}</h2>
           </div>
-          {activeTag && (
+          {filtersActive && (
             <Link className="tag-filter-clear" to="/">
               Clear filter ×
             </Link>
           )}
         </div>
-        {visiblePosts.length === 0 && (
-          <p className="tag-filter-empty">No posts tagged “{activeTag}”.</p>
-        )}
+        <PostFilters posts={posts} matchCount={filtered.length} pending={searchPending} />
         {visiblePosts.map((post, index) => (
           <PostCard
             key={post.slug}
             post={post}
-            featured={index === 0 && currentPage === 1 && !activeTag}
+            featured={index === 0 && currentPage === 1 && !filtersActive}
           />
         ))}
         {totalPages > 1 && (
           <nav className="pagination" aria-label="Posts pagination">
             {currentPage > 1 ? (
-              <Link className="pagination-link pagination-link--wide" to={getPagePath(currentPage - 1, activeTag)}>
+              <Link className="pagination-link pagination-link--wide" to={listingPath({ q: query, category, tag: activeTag, page: currentPage - 1 })}>
                 ← Newer
               </Link>
             ) : (
@@ -131,14 +150,14 @@ export default function Home() {
                     {page}
                   </span>
                 ) : (
-                  <Link className="pagination-link" to={getPagePath(page, activeTag)} key={page}>
+                  <Link className="pagination-link" to={listingPath({ q: query, category, tag: activeTag, page })} key={page}>
                     {page}
                   </Link>
                 )
               })}
             </div>
             {currentPage < totalPages ? (
-              <Link className="pagination-link pagination-link--wide" to={getPagePath(currentPage + 1, activeTag)}>
+              <Link className="pagination-link pagination-link--wide" to={listingPath({ q: query, category, tag: activeTag, page: currentPage + 1 })}>
                 Older →
               </Link>
             ) : (

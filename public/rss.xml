@@ -18,6 +18,8 @@
       <category>microsoft-graph</category>
       <category>automation</category>
       <category>endpoint-management</category>
+      <category>autopilot</category>
+      <category>bitlocker</category>
     </item>
     <item>
       <title>Add a BitLocker startup PIN after Autopilot</title>
@@ -29,6 +31,8 @@
       <category>powershell</category>
       <category>windows</category>
       <category>tutorial</category>
+      <category>bitlocker</category>
+      <category>autopilot</category>
     </item>
     <item>
       <title>Intune assignments: Do&apos;s and don&apos;ts</title>
@@ -39,6 +43,7 @@
       <category>intune</category>
       <category>windows</category>
       <category>endpoint-management</category>
+      <category>assignments</category>
     </item>
     <item>
       <title>Check more Windows requirements with Intune custom compliance</title>
@@ -50,6 +55,8 @@
       <category>powershell</category>
       <category>windows</category>
       <category>endpoint-management</category>
+      <category>bitlocker</category>
+      <category>custom-compliance</category>
     </item>
     <item>
       <title>Intune deployments: Schedule the rollout and check the results</title>
@@ -61,6 +68,7 @@
       <category>windows</category>
       <category>endpoint-management</category>
       <category>microsoft-graph</category>
+      <category>deployments</category>
     </item>
     <item>
       <title>AI Does Not Need To Replace You To Take Your Job</title>
@@ -71,6 +79,7 @@
       <category>career</category>
       <category>automation</category>
       <category>growth</category>
+      <category>ai</category>
     </item>
     <item>
       <title>Build Terminal Presentations with PowerShell</title>
@@ -155,6 +164,7 @@
       <category>windows</category>
       <category>security</category>
       <category>device-management</category>
+      <category>gotchas</category>
     </item>
     <item>
       <title>Intune Hydration Kit Has a TUI Now</title>
@@ -167,6 +177,7 @@
       <category>automation</category>
       <category>microsoft-graph</category>
       <category>endpoint-management</category>
+      <category>hydration-kit</category>
     </item>
     <item>
       <title>MMSMOA 2026: Endpoint Management Is an Engineering Discipline Now</title>
@@ -205,6 +216,7 @@
       <category>entra-id</category>
       <category>microsoft-graph</category>
       <category>automation</category>
+      <category>device-groups</category>
     </item>
     <item>
       <title>Set Up and View App Inventory Data in Intune</title>
@@ -236,7 +248,9 @@
       <guid isPermaLink="false">https://jorgeasaur.us/hello-world</guid>
       <pubDate>Fri, 01 May 2026 12:00:00 GMT</pubDate>
       <description>Welcome to my new blog. Built with React, Vite, and MDX.</description>
-
+      <category>react</category>
+      <category>vite</category>
+      <category>mdx</category>
     </item>
     <item>
       <title>PowerShell Summit 2026: We Are All Insane, and That Is the Opportunity</title>
@@ -355,6 +369,7 @@
       <category>apple</category>
       <category>abm</category>
       <category>automation</category>
+      <category>vpp</category>
     </item>
     <item>
       <title>Automating Device Management with PowerShell: Function Invoke-AppInstalledDevicesGroup</title>
@@ -379,6 +394,7 @@
       <category>device-management</category>
       <category>windows</category>
       <category>microsoft</category>
+      <category>device-query</category>
     </item>
     <item>
       <title>Streamlining Application Detection in Intune and MECM with PowerShell</title>
@@ -414,6 +430,7 @@
       <category>device-management</category>
       <category>microsoft</category>
       <category>tutorial</category>
+      <category>filters</category>
     </item>
     <item>
       <title>Proactive Remediation to Remind Windows Users to Reboot</title>
@@ -425,6 +442,7 @@
       <category>powershell</category>
       <category>proactive-remediation</category>
       <category>windows</category>
+      <category>reboot</category>
     </item>
     <item>
       <title>Find Registry Uninstall Keys with PowerShell</title>

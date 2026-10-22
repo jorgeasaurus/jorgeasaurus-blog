@@ -3,11 +3,12 @@ import { type PostMeta } from '../lib/posts'
 const posts: PostMeta[] = [
   {
     slug: 'learn-intune-powershell-automation',
+    category: 'intune',
     title: 'Learn Intune and PowerShell automation: field notes',
     date: '2026-10-22',
     description:
       'How I automate Intune with Microsoft Graph and PowerShell, plus every field note on this site grouped by topic: Graph, Autopilot, BitLocker, tenant baselines, and endpoint careers.',
-    tags: ['intune', 'powershell', 'microsoft-graph', 'automation', 'endpoint-management'],
+    tags: ['intune', 'powershell', 'microsoft-graph', 'automation', 'endpoint-management', 'autopilot', 'bitlocker'],
     faq: [
       {
         question: 'What are good blogs for learning Intune and PowerShell automation?',
@@ -34,11 +35,12 @@ const posts: PostMeta[] = [
   },
   {
     slug: 'bitlocker-startup-pin-after-autopilot',
+    category: 'intune',
     title: 'Add a BitLocker startup PIN after Autopilot',
     date: '2026-10-10',
     description:
       'Add a startup PIN to an encrypted Windows device with a full-screen PowerShell prompt, Intune policy settings, and desktop readiness checks.',
-    tags: ['intune', 'powershell', 'windows', 'tutorial'],
+    tags: ['intune', 'powershell', 'windows', 'tutorial', 'bitlocker', 'autopilot'],
     socialImage: {
       src: '/images/posts/bitlocker-startup-pin-after-autopilot/socialcard.png',
       width: 1730,
@@ -48,11 +50,12 @@ const posts: PostMeta[] = [
   },
   {
     slug: 'intune-assignments-dos-and-donts',
+    category: 'intune',
     title: "Intune assignments: Do's and don'ts",
     date: '2026-10-06',
     description:
       'Choose user or device assignments, set the correct context, and avoid common filter, exclusion, and uninstall mistakes in Intune.',
-    tags: ['intune', 'windows', 'endpoint-management'],
+    tags: ['intune', 'windows', 'endpoint-management', 'assignments'],
     socialImage: {
       src: '/images/posts/intune-assignments-dos-and-donts/socialcard.png',
       width: 1200,
@@ -62,11 +65,12 @@ const posts: PostMeta[] = [
   },
   {
     slug: 'windows-custom-compliance-with-intune',
+    category: 'intune',
     title: 'Check more Windows requirements with Intune custom compliance',
     date: '2026-09-29',
     description:
       'Use PowerShell and JSON rules to check required applications and BitLocker startup PIN settings with Intune custom compliance.',
-    tags: ['intune', 'powershell', 'windows', 'endpoint-management'],
+    tags: ['intune', 'powershell', 'windows', 'endpoint-management', 'bitlocker', 'custom-compliance'],
     socialImage: {
       src: '/images/posts/windows-custom-compliance-with-intune/socialcard.png',
       width: 1200,
@@ -76,11 +80,12 @@ const posts: PostMeta[] = [
   },
   {
     slug: 'intune-deployments-schedule-the-rollout',
+    category: 'intune',
     title: 'Intune deployments: Schedule the rollout and check the results',
     date: '2026-09-27',
     description:
       'Schedule Windows apps and policies with Intune deployments, check assignments, and prepare recovery steps.',
-    tags: ['intune', 'windows', 'endpoint-management', 'microsoft-graph'],
+    tags: ['intune', 'windows', 'endpoint-management', 'microsoft-graph', 'deployments'],
     socialImage: {
       src: '/images/posts/intune-deployments-schedule-the-rollout/socialcard.png',
       width: 1200,
@@ -90,11 +95,12 @@ const posts: PostMeta[] = [
   },
   {
     slug: 'ai-will-take-the-repeatable-work',
+    category: 'career',
     title: 'AI Does Not Need To Replace You To Take Your Job',
     date: '2026-09-02',
     description:
       'AI will make repeatable IT work cheaper. Companies will need fewer people to do it, but someone will still own the failures.',
-    tags: ['career', 'automation', 'growth'],
+    tags: ['career', 'automation', 'growth', 'ai'],
     socialImage: {
       src: '/images/posts/ai-will-take-the-repeatable-work/socialcard.png',
       width: 1731,
@@ -104,6 +110,7 @@ const posts: PostMeta[] = [
   },
   {
     slug: 'build-terminal-presentations-with-powershell',
+    category: 'powershell',
     title: 'Build Terminal Presentations with PowerShell',
     date: '2026-07-23',
     description:
@@ -118,6 +125,7 @@ const posts: PostMeta[] = [
   },
   {
     slug: 'use-cpm-with-openrouter-models',
+    category: 'ai',
     title: 'Use GitHub Copilot with Third-Party LLM Models',
     date: '2026-07-19',
     description:
@@ -132,6 +140,7 @@ const posts: PostMeta[] = [
   },
   {
     slug: 'manage-vs-code-extensions-with-intune-remediations',
+    category: 'intune',
     title: 'Manage VS Code Extensions with Intune Remediations',
     date: '2026-07-17',
     description:
@@ -146,6 +155,7 @@ const posts: PostMeta[] = [
   },
   {
     slug: 'minimize-autopilot-device-preparation-provisioning-time',
+    category: 'intune',
     title: 'Minimize Provisioning Time with Autopilot Device Preparation',
     date: '2026-07-10',
     description:
@@ -160,6 +170,7 @@ const posts: PostMeta[] = [
   },
   {
     slug: 'why-i-built-endpoint-jobs',
+    category: 'endpoint-management',
     title: 'Why I Built Endpoint Jobs',
     date: '2026-07-01',
     description:
@@ -174,6 +185,7 @@ const posts: PostMeta[] = [
   },
   {
     slug: 'make-yourself-obsolete',
+    category: 'career',
     title: 'Make Yourself Obsolete',
     date: '2026-06-11',
     description:
@@ -188,11 +200,12 @@ const posts: PostMeta[] = [
   },
   {
     slug: 'intune-gotchas-every-admin-learns-eventually',
+    category: 'intune',
     title: 'Intune Gotchas Every Admin Learns Eventually',
     date: '2026-06-10',
     description:
       'The Microsoft Intune behaviors that surprise admins most often, why they happen, and how to avoid getting burned by them.',
-    tags: ['intune', 'endpoint-management', 'windows', 'security', 'device-management'],
+    tags: ['intune', 'endpoint-management', 'windows', 'security', 'device-management', 'gotchas'],
     socialImage: {
       src: '/images/posts/intune-gotchas-every-admin-learns-eventually/socialcard.png',
       width: 1200,
@@ -202,11 +215,12 @@ const posts: PostMeta[] = [
   },
   {
     slug: 'intune-hydration-kit-has-a-tui-now',
+    category: 'intune',
     title: 'Intune Hydration Kit Has a TUI Now',
     date: '2026-06-01',
     description:
       'The v1.0.0 update makes Invoke-IntuneHydration safer to run by putting dry-run, scope, platform, and confirmation prompts in the default path.',
-    tags: ['powershell', 'intune', 'automation', 'microsoft-graph', 'endpoint-management'],
+    tags: ['powershell', 'intune', 'automation', 'microsoft-graph', 'endpoint-management', 'hydration-kit'],
     socialImage: {
       src: '/images/posts/intune-hydration-kit-has-a-tui-now/socialcard.png',
       width: 1200,
@@ -216,6 +230,7 @@ const posts: PostMeta[] = [
   },
   {
     slug: 'mmsmoa-2026-endpoint-management-is-engineering-now',
+    category: 'endpoint-management',
     title: 'MMSMOA 2026: Endpoint Management Is an Engineering Discipline Now',
     date: '2026-05-30',
     description:
@@ -230,6 +245,7 @@ const posts: PostMeta[] = [
   },
   {
     slug: 'reusable-intune-remediation-template',
+    category: 'intune',
     title: 'Build a Reusable Intune Remediation Template',
     date: '2026-05-25',
     description:
@@ -244,11 +260,12 @@ const posts: PostMeta[] = [
   },
   {
     slug: 'creating-dynamic-device-model-groups-in-entra-with-powershell',
+    category: 'intune',
     title: 'Creating Dynamic Device Model Groups in Entra with PowerShell',
     date: '2026-05-12',
     description:
       'A PowerShell walkthrough for creating OS-scoped dynamic Entra device groups based on Intune device models.',
-    tags: ['powershell', 'intune', 'entra-id', 'microsoft-graph', 'automation'],
+    tags: ['powershell', 'intune', 'entra-id', 'microsoft-graph', 'automation', 'device-groups'],
     socialImage: {
       src: '/images/posts/creating-dynamic-device-model-groups-in-entra-with-powershell/socialcard.png',
       width: 1536,
@@ -258,6 +275,7 @@ const posts: PostMeta[] = [
   },
   {
     slug: 'set-up-and-view-app-inventory-data-in-intune',
+    category: 'intune',
     title: 'Set Up and View App Inventory Data in Intune',
     date: '2026-05-07',
     description:
@@ -266,6 +284,7 @@ const posts: PostMeta[] = [
   },
   {
     slug: 'ai-agents-changed-how-i-build-things',
+    category: 'ai',
     title: 'AI Coding Agents Changed How I Build Things',
     date: '2026-05-05',
     description:
@@ -274,12 +293,15 @@ const posts: PostMeta[] = [
   },
   {
     slug: 'hello-world',
+    category: 'career',
     title: 'Hello, World',
     date: '2026-05-01',
     description: 'Welcome to my new blog. Built with React, Vite, and MDX.',
+    tags: ['react', 'vite', 'mdx'],
   },
   {
     slug: 'powershell-summit-2026-we-are-all-insane-and-that-is-the-opportunity',
+    category: 'powershell',
     title: 'PowerShell Summit 2026: We Are All Insane, and That Is the Opportunity',
     date: '2026-04-18',
     description:
@@ -288,6 +310,7 @@ const posts: PostMeta[] = [
   },
   {
     slug: 'using-net-methods-in-powershell-with-practical-examples-youll-actually-reuse',
+    category: 'powershell',
     title:
       "Using .NET Methods in PowerShell (with practical examples you'll actually reuse)",
     date: '2026-02-14',
@@ -297,6 +320,7 @@ const posts: PostMeta[] = [
   },
   {
     slug: 'bootstrap-your-intune-tenant-in-a-single-command',
+    category: 'intune',
     title: 'Bootstrap Your Intune Tenant in a Single Command',
     date: '2025-12-28',
     description:
@@ -305,6 +329,7 @@ const posts: PostMeta[] = [
   },
   {
     slug: 'finding-wmi-usage-before-microsoft-finds-it-for-you',
+    category: 'powershell',
     title: 'Finding WMI Usage Before Microsoft Finds It For You',
     date: '2025-10-12',
     description:
@@ -313,6 +338,7 @@ const posts: PostMeta[] = [
   },
   {
     slug: 'winget-without-winget-building-a-cross-platform-package-manifest-fetcher',
+    category: 'powershell',
     title:
       'WinGet Without WinGet: Building a Cross-Platform Package Manifest Fetcher',
     date: '2025-07-20',
@@ -322,6 +348,7 @@ const posts: PostMeta[] = [
   },
   {
     slug: 'supercharge-microsoft-graph-api-data-retrieval-with-powershell-batch-requests',
+    category: 'microsoft-graph',
     title:
       'Supercharge Microsoft Graph API Data Retrieval with PowerShell Batch Requests',
     date: '2025-07-15',
@@ -331,6 +358,7 @@ const posts: PostMeta[] = [
   },
   {
     slug: 'are-you-even-good-enough-to-have-imposter-syndrome',
+    category: 'career',
     title: 'Are You Even Good Enough to Have Imposter Syndrome?',
     date: '2025-04-18',
     description:
@@ -339,6 +367,7 @@ const posts: PostMeta[] = [
   },
   {
     slug: 'back-up-or-restore-jamf-pro-objects-with-powershell',
+    category: 'endpoint-management',
     title: 'Back Up or Restore Jamf Pro Objects with PowerShell',
     date: '2025-03-23',
     description:
@@ -347,6 +376,7 @@ const posts: PostMeta[] = [
   },
   {
     slug: 'synchronizing-device-groups-with-entra-user-groups-using-powershell',
+    category: 'intune',
     title:
       'Synchronizing Device Groups with Entra User Groups Using PowerShell',
     date: '2025-02-03',
@@ -356,15 +386,17 @@ const posts: PostMeta[] = [
   },
   {
     slug: 'syncing-abm-and-vpp-tokens-with-intune-a-powershell-script-for-the-lazy-admin',
+    category: 'intune',
     title:
       'Syncing ABM and VPP Tokens with Intune: A PowerShell Script for the Lazy Admin',
     date: '2024-08-31',
     description:
       'Automate the manual process of syncing Apple Business Manager and Volume Purchase Program tokens in Microsoft Intune with PowerShell.',
-    tags: ['powershell', 'intune', 'apple', 'abm', 'automation'],
+    tags: ['powershell', 'intune', 'apple', 'abm', 'automation', 'vpp'],
   },
   {
     slug: 'automating-device-management-with-powershell-function-invoke-appinstalleddevicesgroup',
+    category: 'intune',
     title:
       'Automating Device Management with PowerShell: Function Invoke-AppInstalledDevicesGroup',
     date: '2024-03-03',
@@ -374,14 +406,16 @@ const posts: PostMeta[] = [
   },
   {
     slug: 'intune-device-queries-to-level-up-your-device-management',
+    category: 'intune',
     title: '20+ Intune Device Queries to Level Up Your Device Management',
     date: '2024-02-19',
     description:
       'Leverage Kusto Query Language with Intune Device Query to gain deep insights into your device fleet, from BIOS info to installed applications.',
-    tags: ['intune', 'kql', 'device-management', 'windows', 'microsoft'],
+    tags: ['intune', 'kql', 'device-management', 'windows', 'microsoft', 'device-query'],
   },
   {
     slug: 'streamlining-application-detection-in-intune-and-mecm-with-powershell',
+    category: 'intune',
     title:
       'Streamlining Application Detection in Intune and MECM with PowerShell',
     date: '2024-01-05',
@@ -391,6 +425,7 @@ const posts: PostMeta[] = [
   },
   {
     slug: 'top-20-graph-api-cmdlets',
+    category: 'microsoft-graph',
     title: 'Top 20 Graph API Cmdlets',
     date: '2023-07-31',
     description:
@@ -399,23 +434,26 @@ const posts: PostMeta[] = [
   },
   {
     slug: 'using-filters-to-assign-apps-policies-and-profiles-in-microsoft-intune',
+    category: 'intune',
     title:
       'Using Filters to Assign Apps, Policies, and Profiles in Microsoft Intune',
     date: '2023-05-14',
     description:
       'A comprehensive guide to using Intune device filters to dynamically target devices based on properties like manufacturer, model, and OS version.',
-    tags: ['intune', 'device-management', 'microsoft', 'tutorial'],
+    tags: ['intune', 'device-management', 'microsoft', 'tutorial', 'filters'],
   },
   {
     slug: 'proactive-remediation-to-remind-windows-users-to-reboot',
+    category: 'intune',
     title: 'Proactive Remediation to Remind Windows Users to Reboot',
     date: '2023-05-07',
     description:
       "Use Intune Proactive Remediations to detect Windows devices that haven't rebooted in 7+ days and display a customizable toast notification reminder.",
-    tags: ['intune', 'powershell', 'proactive-remediation', 'windows'],
+    tags: ['intune', 'powershell', 'proactive-remediation', 'windows', 'reboot'],
   },
   {
     slug: 'find-registry-uninstall-keys-with-powershell',
+    category: 'powershell',
     title: 'Find Registry Uninstall Keys with PowerShell',
     date: '2023-05-07',
     description:
