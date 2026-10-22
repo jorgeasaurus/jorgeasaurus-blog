@@ -8,6 +8,8 @@ export interface PostMeta {
   date: string
   description: string
   tags?: string[]
+  // Optional Q&A pairs, emitted as FAQPage structured data. Keep them identical to the visible FAQ in the MDX.
+  faq?: Array<{ question: string; answer: string }>
   socialImage?: {
     src: string
     width: number

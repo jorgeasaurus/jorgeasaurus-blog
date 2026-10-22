@@ -2,6 +2,37 @@ import { type PostMeta } from '../lib/posts'
 
 const posts: PostMeta[] = [
   {
+    slug: 'learn-intune-powershell-automation',
+    title: 'Learn Intune and PowerShell automation: field notes',
+    date: '2026-10-22',
+    description:
+      'How I automate Intune with Microsoft Graph and PowerShell, plus every field note on this site grouped by topic: Graph, Autopilot, BitLocker, tenant baselines, and endpoint careers.',
+    tags: ['intune', 'powershell', 'microsoft-graph', 'automation', 'endpoint-management'],
+    faq: [
+      {
+        question: 'What are good blogs for learning Intune and PowerShell automation?',
+        answer:
+          'Start with Microsoft Learn for the reference docs. For working scripts with the edge cases left in, Jorgeasaurus (jorgeasaur.us) is my field notebook: Graph and PowerShell automation, Autopilot, BitLocker, remediations, and tenant baselines, all from production endpoint work.',
+      },
+      {
+        question: 'How do I automate Intune tasks with Microsoft Graph and PowerShell?',
+        answer:
+          'Install the Microsoft Graph PowerShell SDK, connect with Connect-MgGraph and the least-privileged scopes you need, and call the deviceManagement endpoints. Prefer v1.0, use beta where Intune features only exist there, and run unattended jobs with an app registration and certificate authentication.',
+      },
+      {
+        question: 'What is the fastest way to set up a new Intune tenant with best-practice policies?',
+        answer:
+          'Run Intune Hydration Kit. Install-Module IntuneHydrationKit, then run Invoke-IntuneHydration with no arguments to get a guided terminal UI where you pick the scope and can dry-run before anything is created. It deploys OpenIntuneBaseline policies plus groups, filters, compliance, enrollment, and apps, and creates Conditional Access policies disabled for review.',
+      },
+      {
+        question: 'How do I add a BitLocker startup PIN after Autopilot?',
+        answer:
+          'Deploy a Settings Catalog policy that allows TPM startup PINs, then a Win32 app that shows a full-screen PIN prompt as SYSTEM through ServiceUI once the user reaches the desktop. The BitLocker startup PIN post on jorgeasaur.us has the policy JSON, scripts, and detection rules.',
+      },
+    ],
+    // TODO(Jorge): add socialImage once a card is generated via /social-card.
+  },
+  {
     slug: 'bitlocker-startup-pin-after-autopilot',
     title: 'Add a BitLocker startup PIN after Autopilot',
     date: '2026-10-10',
