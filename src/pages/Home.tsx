@@ -70,20 +70,50 @@ export default function Home() {
 
   const filtersKey = `${query}\0${category}\0${activeTag}`
   const scrollState = useRef({ page: currentPage, filters: filtersKey })
-  scrollState.current = { page: currentPage, filters: filtersKey }
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      scrollState.current = { page: currentPage, filters: filtersKey }
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [currentPage, filtersKey])
 
   useEffect(() => {
     window.scrollTo(0, 0)
+    let resetFrame = 0
+    let resetTimer = 0
+    let correctUntil = 0
+    const snapToTop = () => {
+      window.scrollTo(0, 0)
+    }
+    const onScroll = () => {
+      if (performance.now() > correctUntil || window.scrollY === 0) return
+      cancelAnimationFrame(resetFrame)
+      resetFrame = requestAnimationFrame(snapToTop)
+    }
     const onPopState = () => {
       const params = new URLSearchParams(window.location.search)
       const nextFilters = `${params.get('q') ?? ''}\0${params.get('category') ?? ''}\0${params.get('tag') ?? ''}`
       const requested = Number.parseInt(params.get('page') ?? '1', 10)
       const nextPage = Number.isFinite(requested) && requested > 0 ? requested : 1
       const previous = scrollState.current
-      if (previous.page !== nextPage && previous.filters === nextFilters) window.scrollTo(0, 0)
+      if (previous.page === nextPage || previous.filters !== nextFilters) return
+      correctUntil = performance.now() + 100
+      cancelAnimationFrame(resetFrame)
+      window.clearTimeout(resetTimer)
+      resetFrame = requestAnimationFrame(() => {
+        resetFrame = requestAnimationFrame(snapToTop)
+      })
+      resetTimer = window.setTimeout(snapToTop, 100)
     }
     window.addEventListener('popstate', onPopState, true)
-    return () => window.removeEventListener('popstate', onPopState, true)
+    window.addEventListener('scroll', onScroll, true)
+    return () => {
+      cancelAnimationFrame(resetFrame)
+      window.clearTimeout(resetTimer)
+      window.removeEventListener('popstate', onPopState, true)
+      window.removeEventListener('scroll', onScroll, true)
+    }
   }, [])
 
   return (

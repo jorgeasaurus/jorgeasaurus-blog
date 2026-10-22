@@ -103,6 +103,9 @@ test('filter edits keep the scroll position and pagination returns to the top', 
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(filterScroll - 40)
   await page.getByLabel('Category', { exact: true }).selectOption('powershell')
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(filterScroll - 40)
+  await page.getByRole('link', { name: 'Clear filter ×' }).click()
+  await expect(page).toHaveURL(/\/$/)
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(filterScroll - 40)
   await page.goto('/?category=intune')
   await page.evaluate(() => window.scrollTo(0, 700))
   await page.getByRole('link', { name: 'Older →', exact: true }).click()
@@ -139,6 +142,41 @@ test('a failed search index offers a retry instead of an empty result', async ({
   await page.getByRole('button', { name: 'Try again' }).click()
   await expect(page.getByRole('link', { name: 'Back Up or Restore Jamf Pro Objects with PowerShell' })).toBeVisible()
   await expect(status).toHaveText('1 post')
+})
+
+test('back and forward between pages starts the restored page at the top', async ({ page }) => {
+  await page.addInitScript(() => {
+    history.scrollRestoration = 'auto'
+  })
+  await page.goto('/?category=intune')
+  await page.getByRole('link', { name: 'Older →', exact: true }).click()
+  await expect(page).toHaveURL(/page=2/)
+  await page.evaluate(() => window.scrollTo(0, 700))
+  expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(40)
+  await page.goBack()
+  await expect(page).not.toHaveURL(/page=2/)
+  await page.goForward()
+  await expect(page).toHaveURL(/page=2/)
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThan(20)
+  await page.waitForTimeout(200)
+  expect(await page.evaluate(() => window.scrollY)).toBeLessThan(20)
+})
+
+test('home and brand links return a scrolled listing to the top', async ({ page }) => {
+  const navigation = page.getByRole('navigation', { name: 'Primary navigation' })
+  await page.goto('/?category=intune&page=2')
+  await page.evaluate(() => window.scrollTo(0, 700))
+  expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(40)
+  await navigation.getByRole('link', { name: 'Home', exact: true }).click()
+  await expect(page).toHaveURL(/\/$/)
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThan(20)
+
+  await page.goto('/?category=intune&page=2')
+  await page.evaluate(() => window.scrollTo(0, 700))
+  expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(40)
+  await navigation.getByRole('link', { name: 'Jorgeasaurus', exact: true }).click()
+  await expect(page).toHaveURL(/\/$/)
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThan(20)
 })
 
 test('opening home from a scrolled article starts at the top', async ({ page }) => {
