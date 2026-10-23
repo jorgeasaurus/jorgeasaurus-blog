@@ -9,6 +9,7 @@ import SocialIcon from '../components/SocialIcon'
 import WallpaperStage from '../components/WallpaperStage'
 import { sortPostsByDate } from '../lib/posts'
 import { categoryLabel, filterPosts, listingPath } from '../lib/postSearch.mjs'
+import { readingMinutes } from '../lib/readingTime'
 import posts from '../content/posts'
 import useLiquidGlassSurface from '../hooks/useLiquidGlassSurface'
 
@@ -35,6 +36,8 @@ export default function Home() {
   const category = searchParams.get('category') ?? ''
   const activeTag = searchParams.get('tag') ?? ''
   const sorted = sortPostsByDate(posts)
+  const latest = sorted[0]
+  const sequenceBySlug = new Map(sorted.map((post, index) => [post.slug, sorted.length - index]))
   const filtered = filterPosts(sorted, { category, tag: activeTag })
   const totalPages = Math.max(1, Math.ceil(filtered.length / POSTS_PER_PAGE))
   const requestedPage = Number.parseInt(searchParams.get('page') ?? '1', 10)
@@ -117,10 +120,20 @@ export default function Home() {
           </div>
           <div className="hero-intro">
             <p className="eyebrow">Field notes from automation work</p>
+            <p className="hero-ledger">
+              <strong>{posts.length} field notes</strong>
+              <span>Intune, PowerShell, Microsoft Graph, endpoint security</span>
+            </p>
             <p className="hero-copy">
               Practical engineering notes on PowerShell, endpoint management,
               Microsoft Graph, and building durable automation systems.
             </p>
+            {latest && (
+              <Link className="hero-latest" to={`/${latest.slug}`}>
+                <span className="eyebrow">Latest dispatch</span>
+                <strong>{latest.title}</strong>
+              </Link>
+            )}
             <div className="hero-links" aria-label="Profile links">
               <a href="https://github.com/jorgeasaurus" target="_blank" rel="noopener noreferrer">
                 <SocialIcon name="github" />
@@ -156,6 +169,8 @@ export default function Home() {
             key={post.slug}
             post={post}
             featured={index === 0 && currentPage === 1 && !filtersActive}
+            sequence={sequenceBySlug.get(post.slug) ?? 0}
+            minutes={readingMinutes(post.slug)}
           />
         ))}
         {totalPages > 1 && (

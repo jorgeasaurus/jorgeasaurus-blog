@@ -1,4 +1,5 @@
 import { Link, useSearchParams } from 'react-router-dom'
+import { IconArrow } from './Icons'
 import { formatDate, type PostMeta } from '../lib/posts'
 import { categoryLabel, listingPath } from '../lib/postSearch.mjs'
 import useLiquidGlassSurface from '../hooks/useLiquidGlassSurface'
@@ -6,9 +7,11 @@ import useLiquidGlassSurface from '../hooks/useLiquidGlassSurface'
 interface PostCardProps {
   post: PostMeta
   featured?: boolean
+  sequence?: number
+  minutes?: number
 }
 
-export default function PostCard({ post, featured = false }: PostCardProps) {
+export default function PostCard({ post, featured = false, sequence = 0, minutes = 0 }: PostCardProps) {
   const [searchParams] = useSearchParams()
   const glassRef = useLiquidGlassSurface<HTMLElement>({
     borderRadius: featured ? 34 : 24,
@@ -24,8 +27,12 @@ export default function PostCard({ post, featured = false }: PostCardProps) {
     >
       <div className="post-card-body">
         <div className="post-card-meta">
-          {featured && <span>Latest</span>}
-          <p className="post-card-date">{formatDate(post.date)}</p>
+          {featured && <span>Latest dispatch</span>}
+          <p className="post-card-date">
+            {sequence > 0 && <span>No. {String(sequence).padStart(2, '0')}</span>}
+            <time dateTime={post.date}>{formatDate(post.date)}</time>
+            {minutes > 0 && <span>{minutes} min read</span>}
+          </p>
         </div>
         <h3 className="post-card-title">
           <Link to={`/${post.slug}`} className="post-card-link">
@@ -35,7 +42,7 @@ export default function PostCard({ post, featured = false }: PostCardProps) {
         <p className="post-card-desc">{post.description}</p>
         <ul className="post-card-tags" aria-label="Category and keywords">
           <li>
-            <Link to={listingPath({ category: post.category })}>
+            <Link className="post-card__category" to={listingPath({ category: post.category })}>
               {categoryLabel(post.category)}
             </Link>
           </li>
@@ -49,7 +56,7 @@ export default function PostCard({ post, featured = false }: PostCardProps) {
         </ul>
         <span className="post-card-cta" aria-hidden="true">
           Read field note
-          <span>→</span>
+          <IconArrow className="icon post-card-cta__icon" />
         </span>
       </div>
     </article>
