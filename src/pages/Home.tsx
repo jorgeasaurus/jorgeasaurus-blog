@@ -7,6 +7,7 @@ import PostFilters from '../components/PostFilters'
 import NewsletterSignup from '../components/NewsletterSignup'
 import SocialIcon from '../components/SocialIcon'
 import WallpaperStage from '../components/WallpaperStage'
+import BackdropCredit from '../components/BackdropCredit'
 import { sortPostsByDate } from '../lib/posts'
 import { categoryLabel, filterPosts, listingPath } from '../lib/postSearch.mjs'
 import { readingMinutes } from '../lib/readingTime'
@@ -223,6 +224,7 @@ export default function Home() {
         )}
         <NewsletterSignup />
       </section>
+      <BackdropCredit />
     </main>
   )
 }

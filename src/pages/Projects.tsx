@@ -1,6 +1,7 @@
 import usePageMetadata from '../hooks/usePageMetadata'
 import Topbar from '../components/Topbar'
 import WallpaperStage from '../components/WallpaperStage'
+import BackdropCredit from '../components/BackdropCredit'
 import useLiquidGlassSurface from '../hooks/useLiquidGlassSurface'
 
 interface Project {
@@ -278,6 +279,7 @@ export default function Projects() {
           ))}
         </div>
       </section>
+      <BackdropCredit />
     </main>
   )
 }

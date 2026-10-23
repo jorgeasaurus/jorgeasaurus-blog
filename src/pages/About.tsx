@@ -1,6 +1,7 @@
 import usePageMetadata from '../hooks/usePageMetadata'
 import Topbar from '../components/Topbar'
 import WallpaperStage from '../components/WallpaperStage'
+import BackdropCredit from '../components/BackdropCredit'
 import SocialIcon from '../components/SocialIcon'
 import useLiquidGlassSurface from '../hooks/useLiquidGlassSurface'
 
@@ -109,6 +110,7 @@ export default function About() {
           </div>
         </div>
       </article>
+      <BackdropCredit />
     </main>
   )
 }
