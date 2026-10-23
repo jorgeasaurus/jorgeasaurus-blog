@@ -5,7 +5,6 @@ import remarkGfm from 'remark-gfm'
 import remarkFrontmatter from 'remark-frontmatter'
 import rehypeHighlight from 'rehype-highlight'
 import powershell from 'highlight.js/lib/languages/powershell'
-import { createPostSearchTextPlugin } from './scripts/post-search-index.mjs'
 
 export default defineConfig({
   plugins: [
@@ -17,7 +16,6 @@ export default defineConfig({
       }),
     },
     react(),
-    createPostSearchTextPlugin(),
   ],
   preview: { port: 3000 },
   server: { port: 4000, strictPort: true },

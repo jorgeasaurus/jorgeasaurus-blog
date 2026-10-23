@@ -1,97 +1,49 @@
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
 import test from 'node:test'
 import { loadPosts } from '../../scripts/lib/site.mjs'
-import { createPostSearchTextPlugin } from '../../scripts/post-search-index.mjs'
 import {
   categories,
   filterPosts,
   listingPath,
-  plainTextFromMdx,
 } from './postSearch.mjs'
 
 const categorySlugs = categories.map((category) => category.slug)
 
-test('plain text drops frontmatter and fenced code but keeps prose', () => {
-  const text = plainTextFromMdx(`---
-title: "Example"
-tags: ["hidden-frontmatter-token"]
----
-
-Visible phrase about BitLocker.
-
-\`\`\`powershell
-hidden-fence-token
-\`\`\`
-
-See [PsJamfBackupRestore](https://example.com/repo) for the tool.
-`)
-
-  assert.match(text, /visible phrase about bitlocker/)
-  assert.match(text, /psjamfbackuprestore/)
-  assert.doesNotMatch(text, /hidden-fence-token/)
-  assert.doesNotMatch(text, /hidden-frontmatter-token/)
-})
-
-test('search matches every term across title, description, tags, and body', () => {
+test('category and keyword filters combine', () => {
   const posts = [
     {
-      slug: 'jamf-backup',
       title: 'Back Up or Restore Jamf Pro Objects with PowerShell',
       description: 'A PowerShell tool for backing up and restoring Jamf Pro configurations.',
       category: 'endpoint-management',
       tags: ['powershell', 'jamf', 'mdm'],
     },
     {
-      slug: 'other',
       title: 'Intune Gotchas Every Admin Learns Eventually',
       description: 'The Microsoft Intune behaviors that surprise admins.',
       category: 'intune',
       tags: ['intune'],
     },
   ]
-  const bodyBySlug = {
-    'jamf-backup': 'enter psjamfbackuprestore a powershell tool set',
-  }
 
   assert.deepEqual(
-    filterPosts(posts, { query: 'PsJamfBackupRestore' }, bodyBySlug).map((post) => post.slug),
-    ['jamf-backup'],
+    filterPosts(posts, { category: 'endpoint-management', tag: 'jamf' }).map((post) => post.category),
+    ['endpoint-management'],
   )
   assert.deepEqual(
-    filterPosts(posts, { query: 'endpoint management' }).map((post) => post.slug),
-    ['jamf-backup'],
-  )
-  assert.deepEqual(
-    filterPosts(posts, { query: 'intune', category: 'endpoint-management', tag: 'jamf' }, bodyBySlug),
+    filterPosts(posts, { category: 'intune', tag: 'jamf' }),
     [],
   )
-  assert.deepEqual(
-    filterPosts(posts, { category: 'intune', tag: 'intune', query: 'gotchas' }).map((post) => post.slug),
-    ['other'],
-  )
+  assert.equal(filterPosts(posts, { category: 'intune' }).length, 1)
 })
 
-test('listing paths keep search, category, keyword, and page shareable', () => {
+test('listing paths keep category, keyword, and page shareable', () => {
   assert.equal(listingPath({}), '/')
   assert.equal(
-    listingPath({ q: 'bit locker', category: 'intune', tag: 'windows', page: 2 }),
-    '/?q=bit+locker&category=intune&tag=windows&page=2',
+    listingPath({ category: 'intune', tag: 'windows', page: 2 }),
+    '/?category=intune&tag=windows&page=2',
   )
-  assert.equal(listingPath({ q: '  ', category: '', tag: null, page: 1 }), '/')
-})
-
-test('build-time search text includes published prose', () => {
-  const plugin = createPostSearchTextPlugin()
-  const code = plugin.load.call({ addWatchFile() {} }, '\0virtual:post-search-text')
-  const source = readFileSync(
-    new URL('../content/back-up-or-restore-jamf-pro-objects-with-powershell.mdx', import.meta.url),
-    'utf8',
-  )
-
-  assert.match(code, /export default/)
-  assert.match(code, /psjamfbackuprestore/)
-  assert.match(plainTextFromMdx(source), /psjamfbackuprestore/)
+  assert.equal(listingPath({ category: '', tag: null, page: 1 }), '/')
+  assert.equal(listingPath({ category: 'ai' }), '/?category=ai')
 })
 
 const categoryBySlug = {

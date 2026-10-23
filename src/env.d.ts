@@ -1,10 +1,5 @@
 /// <reference types="vite/client" />
 
-declare module 'virtual:post-search-text' {
-  const textBySlug: Record<string, string>
-  export default textBySlug
-}
-
 declare module '*.mdx' {
   const component: React.ComponentType
   export default component

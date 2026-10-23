@@ -14,9 +14,7 @@ export default function PostCard({ post, featured = false }: PostCardProps) {
     borderRadius: featured ? 34 : 24,
     type: 'rounded',
   })
-  const q = searchParams.get('q')
   const category = searchParams.get('category')
-  const tag = searchParams.get('tag')
   const keywords = post.tags?.slice(0, 4) ?? []
 
   return (
@@ -37,13 +35,13 @@ export default function PostCard({ post, featured = false }: PostCardProps) {
         <p className="post-card-desc">{post.description}</p>
         <ul className="post-card-tags" aria-label="Category and keywords">
           <li>
-            <Link to={listingPath({ q, category: post.category, tag })}>
+            <Link to={listingPath({ category: post.category })}>
               {categoryLabel(post.category)}
             </Link>
           </li>
           {keywords.map((keyword) => (
             <li key={keyword}>
-              <Link to={listingPath({ q, category, tag: keyword })}>
+              <Link to={listingPath({ category, tag: keyword })}>
                 {keyword}
               </Link>
             </li>

@@ -1,6 +1,6 @@
 import usePageMetadata from '../hooks/usePageMetadata'
 import { Link, useSearchParams } from 'react-router-dom'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import Topbar from '../components/Topbar'
 import PostCard from '../components/PostCard'
 import PostFilters from '../components/PostFilters'
@@ -21,25 +21,17 @@ export default function Home() {
     type: 'rounded',
   })
 
-  const [searchText, setSearchText] = useState<Record<string, string>>()
-  const [searchFailed, setSearchFailed] = useState(false)
-  const query = searchParams.get('q') ?? ''
   const category = searchParams.get('category') ?? ''
   const activeTag = searchParams.get('tag') ?? ''
-  const queryActive = Boolean(query.trim())
-  const searchPending = queryActive && !searchText && !searchFailed
-  const searchUnavailable = queryActive && searchFailed
   const sorted = sortPostsByDate(posts)
-  const filtered = searchPending || searchUnavailable
-    ? []
-    : filterPosts(sorted, { query, category, tag: activeTag }, searchText ?? {})
+  const filtered = filterPosts(sorted, { category, tag: activeTag })
   const totalPages = Math.max(1, Math.ceil(filtered.length / POSTS_PER_PAGE))
   const requestedPage = Number.parseInt(searchParams.get('page') ?? '1', 10)
   const currentPage = Math.min(
     Math.max(Number.isFinite(requestedPage) ? requestedPage : 1, 1),
     totalPages
   )
-  const filtersActive = Boolean(query.trim() || category || activeTag)
+  const filtersActive = Boolean(category || activeTag)
   const isFiltered = filtersActive || currentPage > 1
   const pageStart = (currentPage - 1) * POSTS_PER_PAGE
   const visiblePosts = filtered.slice(pageStart, pageStart + POSTS_PER_PAGE)
@@ -47,28 +39,11 @@ export default function Home() {
     ? `Tagged: ${activeTag}`
     : category
       ? `Category: ${categoryLabel(category)}`
-      : query.trim()
-        ? 'Search results'
-        : 'Recent field notes'
+      : 'Recent field notes'
 
   usePageMetadata('home', { filtered: isFiltered })
 
-  useEffect(() => {
-    let canceled = false
-    void import('virtual:post-search-text').then(
-      (module) => {
-        if (!canceled) setSearchText(module.default)
-      },
-      () => {
-        if (!canceled) setSearchFailed(true)
-      },
-    )
-    return () => {
-      canceled = true
-    }
-  }, [])
-
-  const filtersKey = `${query}\0${category}\0${activeTag}`
+  const filtersKey = `${category}\0${activeTag}`
   const scrollState = useRef({ page: currentPage, filters: filtersKey })
 
   useEffect(() => {
@@ -93,7 +68,7 @@ export default function Home() {
     }
     const onPopState = () => {
       const params = new URLSearchParams(window.location.search)
-      const nextFilters = `${params.get('q') ?? ''}\0${params.get('category') ?? ''}\0${params.get('tag') ?? ''}`
+      const nextFilters = `${params.get('category') ?? ''}\0${params.get('tag') ?? ''}`
       const requested = Number.parseInt(params.get('page') ?? '1', 10)
       const nextPage = Number.isFinite(requested) && requested > 0 ? requested : 1
       const previous = scrollState.current
@@ -164,13 +139,7 @@ export default function Home() {
             </Link>
           )}
         </div>
-        <PostFilters
-          posts={posts}
-          matchCount={filtered.length}
-          pending={searchPending}
-          unavailable={searchUnavailable}
-          onRetry={() => window.location.reload()}
-        />
+        <PostFilters posts={posts} matchCount={filtered.length} />
         {visiblePosts.map((post, index) => (
           <PostCard
             key={post.slug}
@@ -181,7 +150,7 @@ export default function Home() {
         {totalPages > 1 && (
           <nav className="pagination" aria-label="Posts pagination">
             {currentPage > 1 ? (
-              <Link className="pagination-link pagination-link--wide" to={listingPath({ q: query, category, tag: activeTag, page: currentPage - 1 })} onClick={() => window.scrollTo(0, 0)}>
+              <Link className="pagination-link pagination-link--wide" to={listingPath({ category, tag: activeTag, page: currentPage - 1 })} onClick={() => window.scrollTo(0, 0)}>
                 ← Newer
               </Link>
             ) : (
@@ -203,14 +172,14 @@ export default function Home() {
                     {page}
                   </span>
                 ) : (
-                  <Link className="pagination-link" to={listingPath({ q: query, category, tag: activeTag, page })} key={page} onClick={() => window.scrollTo(0, 0)}>
+                  <Link className="pagination-link" to={listingPath({ category, tag: activeTag, page })} key={page} onClick={() => window.scrollTo(0, 0)}>
                     {page}
                   </Link>
                 )
               })}
             </div>
             {currentPage < totalPages ? (
-              <Link className="pagination-link pagination-link--wide" to={listingPath({ q: query, category, tag: activeTag, page: currentPage + 1 })} onClick={() => window.scrollTo(0, 0)}>
+              <Link className="pagination-link pagination-link--wide" to={listingPath({ category, tag: activeTag, page: currentPage + 1 })} onClick={() => window.scrollTo(0, 0)}>
                 Older →
               </Link>
             ) : (

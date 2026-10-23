@@ -1217,7 +1217,7 @@ h2 {
 
 .post-filters {
   display: grid;
-  grid-template-columns: minmax(0, 1.5fr) repeat(2, minmax(10rem, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px 14px;
   margin: 0;
   padding: 0 4px 6px;
@@ -1238,7 +1238,6 @@ h2 {
   text-transform: uppercase;
 }
 
-.post-filters__field input,
 .post-filters__field select {
   width: 100%;
   min-width: 0;
@@ -1255,11 +1254,6 @@ h2 {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-.post-filters__field input::placeholder {
-  color: rgba(238, 255, 244, 0.46);
-}
-
-.post-filters__field input:focus-visible,
 .post-filters__field select:focus-visible {
   border-color: rgba(215, 255, 227, 0.52);
   outline: 2px solid var(--sprout-bright);
@@ -1280,41 +1274,6 @@ h2 {
   color: #fff;
   font-size: 0.86rem;
   letter-spacing: 0;
-}
-
-.post-filter-recovery {
-  grid-column: 1 / -1;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 16px;
-}
-
-.post-filter-recovery .post-filter-status {
-  grid-column: auto;
-}
-
-.post-filter-retry {
-  border: 0;
-  background: transparent;
-  color: var(--sprout-bright);
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.74rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  padding: 8px 0;
-  cursor: pointer;
-}
-
-.post-filter-retry:hover {
-  text-decoration: underline;
-  text-underline-offset: 4px;
-}
-
-.post-filter-retry:focus-visible {
-  outline: 2px solid var(--sprout-bright);
-  outline-offset: 3px;
 }
 
 .tag-filter-empty {

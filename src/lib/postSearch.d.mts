@@ -9,35 +9,25 @@ export type PostCategory =
 export const categories: ReadonlyArray<{ slug: PostCategory; label: string }>
 
 export function categoryLabel(slug: string | null | undefined): string
-export function normalizeText(value: string | null | undefined): string
-export function plainTextFromMdx(source: string): string
-export function searchTerms(query: string | null | undefined): string[]
 
-export interface SearchablePost {
-  slug: string
-  title: string
-  description: string
+export interface FilterablePost {
   category?: string
   tags?: string[]
-  faq?: Array<{ question: string; answer: string }>
 }
 
-export interface PostSearchFilters {
-  query?: string
+export interface PostListFilters {
   category?: string
   tag?: string
 }
 
-export function filterPosts<T extends SearchablePost>(
+export function filterPosts<T extends FilterablePost>(
   posts: readonly T[],
-  filters?: PostSearchFilters,
-  bodyBySlug?: Record<string, string>,
+  filters?: PostListFilters,
 ): T[]
 
 export function keywordOptions(posts: readonly { tags?: string[] }[]): string[]
 
 export interface ListingPathInput {
-  q?: string | null
   category?: string | null
   tag?: string | null
   page?: number | null
