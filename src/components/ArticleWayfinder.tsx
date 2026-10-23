@@ -33,31 +33,45 @@ export default function ArticleWayfinder({ outline }: ArticleWayfinderProps) {
     if (nodes.length === 0) return
 
     const visible = new Set<string>()
-    const observer = new IntersectionObserver((entries) => {
-      for (const entry of entries) {
-        if (entry.isIntersecting) visible.add(entry.target.id)
-        else visible.delete(entry.target.id)
-      }
-      const intersecting = nodes
-        .filter((node) => visible.has(node.id))
-        .sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top)
-      if (intersecting[0]) {
-        setActiveId(intersecting[0].id)
-        return
-      }
-      const line = Math.min(180, window.innerHeight * 0.34)
-      let passed = nodes[0]
-      for (const node of nodes) {
-        if (node.getBoundingClientRect().top <= line) passed = node
-      }
-      setActiveId(passed.id)
-    }, {
-      rootMargin: '-12% 0px -68% 0px',
-      threshold: [0, 0.2, 1],
-    })
+    let observer: IntersectionObserver | null = null
 
-    for (const node of nodes) observer.observe(node)
-    return () => observer.disconnect()
+    const connect = () => {
+      observer?.disconnect()
+      visible.clear()
+      const height = window.innerHeight
+      const top = Math.round(height * 0.12)
+      const bottom = Math.round(height * 0.68)
+      observer = new IntersectionObserver((entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) visible.add(entry.target.id)
+          else visible.delete(entry.target.id)
+        }
+        const intersecting = nodes
+          .filter((node) => visible.has(node.id))
+          .sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top)
+        if (intersecting[0]) {
+          setActiveId(intersecting[0].id)
+          return
+        }
+        const line = Math.min(180, window.innerHeight * 0.34)
+        let passed = nodes[0]
+        for (const node of nodes) {
+          if (node.getBoundingClientRect().top <= line) passed = node
+        }
+        setActiveId(passed.id)
+      }, {
+        rootMargin: `-${top}px 0px -${bottom}px 0px`,
+        threshold: [0, 0.2, 1],
+      })
+      for (const node of nodes) observer.observe(node)
+    }
+
+    connect()
+    window.addEventListener('resize', connect)
+    return () => {
+      observer?.disconnect()
+      window.removeEventListener('resize', connect)
+    }
   }, [outline])
 
   if (outline.length < 2) return null

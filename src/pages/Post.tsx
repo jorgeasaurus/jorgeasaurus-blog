@@ -197,8 +197,19 @@ export default function Post() {
       return
     }
     const next = collectHeadings(root)
+    for (const list of root.querySelectorAll<HTMLOListElement>(':scope > ol')) {
+      const raw = list.getAttribute('start')
+      const start = raw === null ? 1 : Number(raw)
+      if (!Number.isFinite(start)) continue
+      list.style.counterReset = `post-step ${start - 1}`
+    }
     setOutline(next)
-    const hash = decodeURIComponent(window.location.hash.replace(/^#/, ''))
+    let hash: string
+    try {
+      hash = decodeURIComponent(window.location.hash.replace(/^#/, ''))
+    } catch {
+      return
+    }
     if (!hash) return
     const target = document.getElementById(hash)
     if (!target || !root.contains(target)) return

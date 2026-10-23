@@ -142,6 +142,54 @@ test('image lightbox shows the caption, locks scroll, and restores focus', async
   await expect(trigger).toBeFocused()
 })
 
+test('wayfinder tracks the section reached by scrolling', async ({ page }) => {
+  await page.goto('/ai-agents-changed-how-i-build-things')
+  const current = page.locator('.wayfinder a[aria-current="location"]')
+  await expect(current).toHaveText('The Problem Was Never Intelligence')
+  await page.locator('#the-real-change').evaluate((element) => {
+    const margin = Number.parseFloat(getComputedStyle(element).scrollMarginTop) || 0
+    const top = element.getBoundingClientRect().top + window.scrollY - margin
+    window.scrollTo(0, Math.max(0, top))
+  })
+  await expect(current).toHaveText('The Real Change')
+})
+
+test('a malformed fragment still renders the article', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', (error) => errors.push(error.message))
+  await page.goto('/hello-world#100%')
+  await expect(page.locator('.post-content')).toBeVisible()
+  await expect(page.getByRole('heading', { level: 1 })).not.toHaveText('Post Not Found')
+  expect(errors.join('\n')).not.toMatch(/URIError|URI malformed/)
+})
+
+test('continued ordered lists keep the authored start number', async ({ page }) => {
+  await page.goto('/manage-vs-code-extensions-with-intune-remediations')
+  const step = page.locator('.post-content > ol > li', { hasText: 'Before declaring retirement complete' })
+  await step.scrollIntoViewIfNeeded()
+  const marker = await step.evaluate((element) => {
+    const list = element.closest('ol')
+    return {
+      start: list?.getAttribute('start'),
+      reset: list instanceof HTMLElement ? list.style.counterReset : '',
+      content: getComputedStyle(element, '::before').content,
+    }
+  })
+  expect(marker).toEqual({ start: '6', reset: 'post-step 5', content: 'counter(post-step)' })
+})
+
+test('the narrow wayfinder paints above the wallpaper', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 })
+  await page.goto('/ai-agents-changed-how-i-build-things')
+  const toggle = page.getByRole('button', { name: /On this page/ })
+  const hit = await toggle.evaluate((element) => {
+    const bounds = element.getBoundingClientRect()
+    const target = document.elementFromPoint(bounds.left + bounds.width / 2, bounds.top + bounds.height / 2)
+    return Boolean(target && (target === element || element.contains(target)))
+  })
+  expect(hit).toBe(true)
+})
+
 test('wayfinder collapses on a narrow screen', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 })
   await page.goto('/ai-agents-changed-how-i-build-things')

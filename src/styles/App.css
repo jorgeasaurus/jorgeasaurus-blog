@@ -2831,6 +2831,7 @@ code {
 
 .post-frame {
   grid-area: content;
+  z-index: 1;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 16px;
@@ -3060,18 +3061,18 @@ code {
 
 .post-content > ol {
   list-style: none;
-  counter-reset: post-step;
   padding-left: 0;
+  counter-reset: post-step;
 }
 
 .post-content > ol > li {
   position: relative;
   padding-left: 2.5em;
+  counter-increment: post-step;
 }
 
 .post-content > ol > li::before {
   content: counter(post-step);
-  counter-increment: post-step;
   position: absolute;
   left: 0;
   top: 0.15em;
