@@ -225,6 +225,54 @@ test('a narrow wayfinder jump keeps the heading below the navigation', async ({ 
   })).toBe(true)
 })
 
+for (const width of [375, 1440]) {
+  test(`heading prompt stays on the first line at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto('/learn-intune-powershell-automation')
+    const heading = page.locator('.post-content h2', { hasText: 'Apps, remediations, and reporting' })
+    await heading.scrollIntoViewIfNeeded()
+    const alignment = await heading.evaluate((element) => {
+      const style = getComputedStyle(element)
+      const marker = getComputedStyle(element, '::before')
+      const borderTop = Number.parseFloat(style.borderTopWidth) || 0
+      const borderLeft = Number.parseFloat(style.borderLeftWidth) || 0
+      const bounds = element.getBoundingClientRect()
+      const markerTop = bounds.top + borderTop + Number.parseFloat(marker.top)
+      const markerHeight = Number.parseFloat(marker.height)
+      const markerLeft = bounds.left + borderLeft + Number.parseFloat(marker.left)
+      const markerRight = markerLeft + Number.parseFloat(marker.width)
+      const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT, {
+        acceptNode(node) {
+          return node.textContent?.trim() ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_SKIP
+        },
+      })
+      const text = walker.nextNode()
+      if (!text) return null
+      const range = document.createRange()
+      range.setStart(text, 0)
+      range.setEnd(text, 1)
+      const line = range.getClientRects()[0]
+      if (!line) return null
+      return {
+        content: marker.content,
+        markerTop,
+        markerBottom: markerTop + markerHeight,
+        markerMid: markerTop + markerHeight / 2,
+        markerRight,
+        lineTop: line.top,
+        lineBottom: line.bottom,
+        lineLeft: line.left,
+      }
+    })
+    expect(alignment).not.toBeNull()
+    expect(alignment?.content).toBe('">"')
+    expect(alignment!.markerMid).toBeGreaterThan(alignment!.lineTop)
+    expect(alignment!.markerMid).toBeLessThan(alignment!.lineBottom)
+    expect(alignment!.markerTop).toBeGreaterThanOrEqual(alignment!.lineTop - 2)
+    expect(alignment!.markerRight).toBeLessThanOrEqual(alignment!.lineLeft + 1)
+  })
+}
+
 test('wayfinder collapses on a narrow screen', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 })
   await page.goto('/ai-agents-changed-how-i-build-things')

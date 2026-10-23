@@ -1621,7 +1621,7 @@ h2 {
   position: relative;
   margin-top: 1.85em;
   padding-top: 0.75em;
-  padding-left: 18px;
+  padding-left: 1.15em;
   border-top: 1px solid rgba(215, 255, 227, 0.16);
   font-size: 1.6rem;
   letter-spacing: -0.028em;
@@ -1632,9 +1632,18 @@ h2 {
   content: '>';
   position: absolute;
   left: 0;
-  top: 0.02em;
+  top: 0.75em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.9em;
+  height: 1.15em;
   color: var(--sprout);
   font-family: 'IBM Plex Mono', monospace;
+  font-size: 1em;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
   text-shadow: 0 0 18px rgba(157, 240, 182, 0.28);
 }
 
