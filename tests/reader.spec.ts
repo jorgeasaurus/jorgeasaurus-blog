@@ -90,7 +90,8 @@ test('article wayfinder, progress, code copy, and continuity controls', async ({
   })).toBeGreaterThan(0.15)
   await expect(page.locator('.reading-status')).not.toHaveText('')
 
-  await page.getByRole('button', { name: 'Back to top' }).first().click()
+  await page.getByRole('button', { name: 'Back to top' }).last().click()
+  await expect(page.locator('.post__header h1')).toBeFocused()
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThan(20)
   await page.getByRole('button', { name: 'Copy link' }).first().click()
   await expect(page.getByRole('button', { name: 'Copy link' }).first()).toContainText('Copied')
@@ -152,6 +153,11 @@ test('wayfinder tracks the section reached by scrolling', async ({ page }) => {
     window.scrollTo(0, Math.max(0, top))
   })
   await expect(current).toHaveText('The Real Change')
+  await page.locator('#the-real-change').evaluate((element) => {
+    const top = element.getBoundingClientRect().top + window.scrollY - 16
+    window.scrollTo(0, Math.max(0, top))
+  })
+  await expect(current).toHaveText('The Real Change')
 })
 
 test('a malformed fragment still renders the article', async ({ page }) => {
@@ -188,6 +194,33 @@ test('the narrow wayfinder paints above the wallpaper', async ({ page }) => {
     return Boolean(target && (target === element || element.contains(target)))
   })
   expect(hit).toBe(true)
+})
+
+test('a shared section link lands below the fixed navigation', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 })
+  await page.goto('/ai-agents-changed-how-i-build-things#the-real-change')
+  await expect.poll(async () => page.locator('#the-real-change').evaluate((element) => element.getBoundingClientRect().top)).toBeGreaterThan(40)
+  expect(await page.locator('#the-real-change').evaluate((element) => element.getBoundingClientRect().top)).toBeLessThan(220)
+})
+
+test('a narrow wayfinder jump keeps the heading below the navigation', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' })
+  await page.setViewportSize({ width: 375, height: 812 })
+  await page.goto('/ai-agents-changed-how-i-build-things')
+  await page.getByRole('button', { name: /On this page/ }).click()
+  await page.getByRole('link', { name: 'The Real Change', exact: true }).click()
+  await expect(page.locator('#the-real-change')).toBeFocused()
+  await expect.poll(async () => page.evaluate(() => {
+    const element = document.getElementById('the-real-change')
+    if (!element) return false
+    const top = element.getBoundingClientRect().top
+    const y = window.scrollY
+    return new Promise<boolean>((resolve) => {
+      requestAnimationFrame(() => {
+        resolve(Math.abs(window.scrollY - y) < 0.5 && top > 40 && top < 220)
+      })
+    })
+  })).toBe(true)
 })
 
 test('wayfinder collapses on a narrow screen', async ({ page }) => {

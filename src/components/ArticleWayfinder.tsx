@@ -1,4 +1,4 @@
-import { useEffect, useState, useSyncExternalStore } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { scrollHeadingIntoView, type ArticleHeading } from '../lib/headings'
 import { IconChevron } from './Icons'
 
@@ -22,7 +22,24 @@ export default function ArticleWayfinder({ outline }: ArticleWayfinderProps) {
   const wide = useSyncExternalStore(subscribe, wideSnapshot, () => false)
   const [open, setOpen] = useState(false)
   const [activeId, setActiveId] = useState('')
+  const pendingJump = useRef<string | null>(null)
   const expanded = wide || open
+  const finishJump = useCallback((id: string) => {
+    const target = document.getElementById(id)
+    if (!target) return
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    scrollHeadingIntoView(target, reduced ? 'auto' : 'smooth')
+    target.focus({ preventScroll: true })
+    window.history.replaceState(null, '', `#${id}`)
+    setActiveId(id)
+  }, [])
+
+  useLayoutEffect(() => {
+    const id = pendingJump.current
+    if (!id || open) return
+    pendingJump.current = null
+    finishJump(id)
+  }, [finishJump, open])
   const currentId = outline.some((item) => item.id === activeId) ? activeId : outline[0]?.id ?? ''
   const current = outline.find((item) => item.id === currentId)
 
@@ -34,6 +51,29 @@ export default function ArticleWayfinder({ outline }: ArticleWayfinderProps) {
 
     const visible = new Set<string>()
     let observer: IntersectionObserver | null = null
+    let frame = 0
+
+    const syncActive = () => {
+      frame = 0
+      const intersecting = nodes
+        .filter((node) => visible.has(node.id))
+        .sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top)
+      if (intersecting[0]) {
+        setActiveId(intersecting[0].id)
+        return
+      }
+      const line = Math.min(180, window.innerHeight * 0.34)
+      let passed = nodes[0]
+      for (const node of nodes) {
+        if (node.getBoundingClientRect().top <= line) passed = node
+      }
+      setActiveId(passed.id)
+    }
+
+    const requestSync = () => {
+      if (frame) return
+      frame = window.requestAnimationFrame(syncActive)
+    }
 
     const connect = () => {
       observer?.disconnect()
@@ -46,44 +86,36 @@ export default function ArticleWayfinder({ outline }: ArticleWayfinderProps) {
           if (entry.isIntersecting) visible.add(entry.target.id)
           else visible.delete(entry.target.id)
         }
-        const intersecting = nodes
-          .filter((node) => visible.has(node.id))
-          .sort((a, b) => a.getBoundingClientRect().top - b.getBoundingClientRect().top)
-        if (intersecting[0]) {
-          setActiveId(intersecting[0].id)
-          return
-        }
-        const line = Math.min(180, window.innerHeight * 0.34)
-        let passed = nodes[0]
-        for (const node of nodes) {
-          if (node.getBoundingClientRect().top <= line) passed = node
-        }
-        setActiveId(passed.id)
+        requestSync()
       }, {
         rootMargin: `-${top}px 0px -${bottom}px 0px`,
         threshold: [0, 0.2, 1],
       })
       for (const node of nodes) observer.observe(node)
+      requestSync()
     }
 
     connect()
     window.addEventListener('resize', connect)
+    window.addEventListener('scroll', requestSync, { passive: true })
     return () => {
       observer?.disconnect()
+      window.cancelAnimationFrame(frame)
       window.removeEventListener('resize', connect)
+      window.removeEventListener('scroll', requestSync)
     }
   }, [outline])
 
   if (outline.length < 2) return null
 
   function jump(id: string) {
-    const target = document.getElementById(id)
-    if (!target) return
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    scrollHeadingIntoView(target, reduced ? 'auto' : 'smooth')
-    target.focus({ preventScroll: true })
-    window.history.replaceState(null, '', `#${id}`)
-    setActiveId(id)
+    if (!document.getElementById(id)) return
+    if (!wide && open) {
+      pendingJump.current = id
+      setOpen(false)
+      return
+    }
+    finishJump(id)
     if (!wide) setOpen(false)
   }
 

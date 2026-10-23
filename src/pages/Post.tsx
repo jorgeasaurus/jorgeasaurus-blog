@@ -211,9 +211,12 @@ export default function Post() {
       return
     }
     if (!hash) return
-    const target = document.getElementById(hash)
-    if (!target || !root.contains(target)) return
-    scrollHeadingIntoView(target)
+    const frame = window.requestAnimationFrame(() => {
+      const target = document.getElementById(hash)
+      if (!target || !root.contains(target)) return
+      scrollHeadingIntoView(target)
+    })
+    return () => window.cancelAnimationFrame(frame)
   }, [PostContent, slug])
 
   useEffect(() => {
@@ -285,7 +288,7 @@ export default function Post() {
               </li>
             </ul>
           </div>
-          <h1>{postMeta.title}</h1>
+          <h1 tabIndex={-1}>{postMeta.title}</h1>
           {postMeta.description && (
             <p className="hero-copy post__lede">{postMeta.description}</p>
           )}

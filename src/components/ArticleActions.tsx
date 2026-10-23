@@ -17,6 +17,8 @@ export default function ArticleActions() {
   }
 
   function backToTop() {
+    const heading = document.querySelector<HTMLElement>('.post__header h1')
+    heading?.focus({ preventScroll: true })
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' })
   }
