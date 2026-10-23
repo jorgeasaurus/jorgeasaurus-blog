@@ -1,6 +1,6 @@
 import usePageMetadata from '../hooks/usePageMetadata'
 import { Link, useSearchParams } from 'react-router-dom'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type MouseEvent } from 'react'
 import Topbar from '../components/Topbar'
 import PostCard from '../components/PostCard'
 import PostFilters from '../components/PostFilters'
@@ -13,6 +13,17 @@ import posts from '../content/posts'
 import useLiquidGlassSurface from '../hooks/useLiquidGlassSurface'
 
 const POSTS_PER_PAGE = 5
+
+function scrollToTopOnPrimaryClick(event: MouseEvent<HTMLAnchorElement>) {
+  if (
+    event.button !== 0 ||
+    event.metaKey ||
+    event.ctrlKey ||
+    event.shiftKey ||
+    event.altKey
+  ) return
+  window.scrollTo(0, 0)
+}
 
 export default function Home() {
   const [searchParams] = useSearchParams()
@@ -150,7 +161,7 @@ export default function Home() {
         {totalPages > 1 && (
           <nav className="pagination" aria-label="Posts pagination">
             {currentPage > 1 ? (
-              <Link className="pagination-link pagination-link--wide" to={listingPath({ category, tag: activeTag, page: currentPage - 1 })} onClick={() => window.scrollTo(0, 0)}>
+              <Link className="pagination-link pagination-link--wide" to={listingPath({ category, tag: activeTag, page: currentPage - 1 })} onClick={scrollToTopOnPrimaryClick}>
                 ← Newer
               </Link>
             ) : (
@@ -172,14 +183,14 @@ export default function Home() {
                     {page}
                   </span>
                 ) : (
-                  <Link className="pagination-link" to={listingPath({ category, tag: activeTag, page })} key={page} onClick={() => window.scrollTo(0, 0)}>
+                  <Link className="pagination-link" to={listingPath({ category, tag: activeTag, page })} key={page} onClick={scrollToTopOnPrimaryClick}>
                     {page}
                   </Link>
                 )
               })}
             </div>
             {currentPage < totalPages ? (
-              <Link className="pagination-link pagination-link--wide" to={listingPath({ category, tag: activeTag, page: currentPage + 1 })} onClick={() => window.scrollTo(0, 0)}>
+              <Link className="pagination-link pagination-link--wide" to={listingPath({ category, tag: activeTag, page: currentPage + 1 })} onClick={scrollToTopOnPrimaryClick}>
                 Older →
               </Link>
             ) : (

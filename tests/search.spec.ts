@@ -108,6 +108,18 @@ test('filter edits keep the scroll position and pagination returns to the top', 
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThan(20)
 })
 
+test('a modified pagination click keeps the current tab in place', async ({ page }) => {
+  await page.goto('/?category=intune')
+  await page.evaluate(() => window.scrollTo(0, 700))
+  expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(40)
+  const popup = page.context().waitForEvent('page', { timeout: 3000 }).catch(() => null)
+  await page.getByRole('link', { name: 'Older →', exact: true }).click({ modifiers: ['Control'] })
+  const opened = await popup
+  if (opened) await opened.close()
+  await expect(page).toHaveURL(/\/\?category=intune$/)
+  expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(40)
+})
+
 test('back and forward between pages starts the restored page at the top', async ({ page }) => {
   await page.addInitScript(() => {
     history.scrollRestoration = 'auto'
