@@ -995,7 +995,7 @@ h2 {
 }
 
 .post-card:active {
-  transform: scale(0.992);
+  scale: 0.992;
 }
 
 .nav-link:focus-visible,
