@@ -83,12 +83,14 @@ test('article wayfinder, progress, code copy, and continuity controls', async ({
   expect(top).toBeLessThan(220)
   await expect(link).toHaveAttribute('aria-current', 'location')
 
+  await expect(page.locator('.reading-status')).not.toHaveAttribute('aria-hidden', 'true')
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight * 0.45))
   await expect.poll(() => page.locator('.reading-progress').evaluate((element) => {
     const match = /scaleX\(([^)]+)\)/.exec(element.style.transform)
     return match ? Number(match[1]) : 0
   })).toBeGreaterThan(0.15)
-  await expect(page.locator('.reading-status')).not.toHaveText('')
+  await page.locator('.post-content').evaluate((element) => element.scrollIntoView({ block: 'end', behavior: 'auto' }))
+  await expect(page.locator('.reading-status')).toHaveText('Complete')
 
   await page.getByRole('button', { name: 'Back to top' }).last().click()
   await expect(page.locator('.post__header h1')).toBeFocused()

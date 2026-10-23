@@ -164,6 +164,7 @@ export default function Post() {
   useReadingProgress(
     progressRef,
     statusRef,
+    contentRef,
     minutes,
     postLoad.status === 'loaded' && Boolean(PostContent),
   )
@@ -271,7 +272,7 @@ export default function Post() {
         ref={progressRef}
         aria-hidden="true"
       />
-      <p className="reading-status" ref={statusRef} aria-hidden="true">
+      <p className="reading-status" ref={statusRef}>
         {readingStatus(minutes, 0)}
       </p>
       <div className={outline.length >= 2 ? 'post-frame post-frame--with-wayfinder' : 'post-frame'}>
