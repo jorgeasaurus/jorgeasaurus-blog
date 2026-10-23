@@ -7,6 +7,7 @@ import PostFilters from '../components/PostFilters'
 import NewsletterSignup from '../components/NewsletterSignup'
 import SocialIcon from '../components/SocialIcon'
 import WallpaperStage from '../components/WallpaperStage'
+import BackdropCredit from '../components/BackdropCredit'
 import { sortPostsByDate } from '../lib/posts'
 import { categoryLabel, filterPosts, listingPath } from '../lib/postSearch.mjs'
 import { readingMinutes } from '../lib/readingTime'
@@ -139,6 +140,10 @@ export default function Home() {
                 <SocialIcon name="github" />
                 GitHub
               </a>
+              <a href="https://www.youtube.com/@jorgeasaurus" target="_blank" rel="noopener noreferrer">
+                <SocialIcon name="youtube" />
+                YouTube
+              </a>
               <a
                 href="https://mvp.microsoft.com/en-US/MVP/profile/79a79af0-1218-4504-b4ee-082ae4ff75f6"
                 target="_blank"
@@ -152,18 +157,20 @@ export default function Home() {
         </div>
       </section>
       <section className="content-area">
-        <div className="content-heading">
-          <div>
-            <p className="eyebrow">Posts</p>
-            <h2>{heading}</h2>
+        <div className="listing-tools glass-panel frosted">
+          <div className="content-heading">
+            <div>
+              <p className="eyebrow">Posts</p>
+              <h2>{heading}</h2>
+            </div>
+            {filtersActive && (
+              <Link className="tag-filter-clear" to="/">
+                Clear filter ×
+              </Link>
+            )}
           </div>
-          {filtersActive && (
-            <Link className="tag-filter-clear" to="/">
-              Clear filter ×
-            </Link>
-          )}
+          <PostFilters posts={posts} matchCount={filtered.length} />
         </div>
-        <PostFilters posts={posts} matchCount={filtered.length} />
         {visiblePosts.map((post, index) => (
           <PostCard
             key={post.slug}
@@ -217,6 +224,7 @@ export default function Home() {
         )}
         <NewsletterSignup />
       </section>
+      <BackdropCredit />
     </main>
   )
 }

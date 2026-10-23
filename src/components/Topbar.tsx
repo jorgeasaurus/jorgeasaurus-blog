@@ -68,6 +68,16 @@ export default function Topbar() {
           <SocialIcon name="linkedin" />
           <span>LinkedIn</span>
         </a>
+        <a
+          href="https://www.youtube.com/@jorgeasaurus"
+          className="nav-link nav-link--icon nav-link--social"
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label="YouTube"
+        >
+          <SocialIcon name="youtube" />
+          <span>YouTube</span>
+        </a>
       </div>
     </nav>
   )

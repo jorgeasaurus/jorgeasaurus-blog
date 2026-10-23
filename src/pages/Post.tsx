@@ -13,6 +13,7 @@ import {
 import Topbar from '../components/Topbar'
 import NewsletterSignup from '../components/NewsletterSignup'
 import WallpaperStage from '../components/WallpaperStage'
+import BackdropCredit from '../components/BackdropCredit'
 import ArticleActions from '../components/ArticleActions'
 import ArticleWayfinder from '../components/ArticleWayfinder'
 import CodeBlock from '../components/CodeBlock'
@@ -239,6 +240,7 @@ export default function Post() {
             Loading&hellip;
           </div>
         </div>
+        <BackdropCredit />
       </main>
     )
   }
@@ -254,6 +256,7 @@ export default function Post() {
             The post you're looking for doesn't exist.
           </p>
         </div>
+        <BackdropCredit />
       </main>
     )
   }
@@ -325,7 +328,7 @@ export default function Post() {
             <PostContent components={mdxComponents} />
           </ExpandImageContext.Provider>
         </div>
-        <ArticleActions />
+        <ArticleActions showBackToTop />
         {related.length > 0 && (
           <section className="related-notes" aria-labelledby="related-notes-title">
             <h2 id="related-notes-title" className="article-section-title">Related field notes</h2>
@@ -367,6 +370,7 @@ export default function Post() {
       {expandedImage && (
         <LightboxDialog image={expandedImage} onClose={closeExpandedImage} />
       )}
+      <BackdropCredit />
     </main>
   )
 }

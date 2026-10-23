@@ -1,6 +1,7 @@
 import usePageMetadata from '../hooks/usePageMetadata'
 import Topbar from '../components/Topbar'
 import WallpaperStage from '../components/WallpaperStage'
+import BackdropCredit from '../components/BackdropCredit'
 import SocialIcon from '../components/SocialIcon'
 import useLiquidGlassSurface from '../hooks/useLiquidGlassSurface'
 
@@ -95,6 +96,10 @@ export default function About() {
               <SocialIcon name="linkedin" />
               LinkedIn
             </a>
+            <a href="https://www.youtube.com/@jorgeasaurus" target="_blank" rel="noopener noreferrer">
+              <SocialIcon name="youtube" />
+              YouTube
+            </a>
             <a href="https://buymeacoffee.com/jorgeasaurus" target="_blank" rel="noopener noreferrer">
               Buy Me a Coffee
             </a>
@@ -105,6 +110,7 @@ export default function About() {
           </div>
         </div>
       </article>
+      <BackdropCredit />
     </main>
   )
 }

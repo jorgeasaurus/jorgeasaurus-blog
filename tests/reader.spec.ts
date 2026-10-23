@@ -92,7 +92,10 @@ test('article wayfinder, progress, code copy, and continuity controls', async ({
   await page.locator('.post-content').evaluate((element) => element.scrollIntoView({ block: 'end', behavior: 'auto' }))
   await expect(page.locator('.reading-status')).toHaveText('Complete')
 
-  await page.getByRole('button', { name: 'Back to top' }).last().click()
+  await expect(page.locator('.post__header').getByRole('button', { name: 'Back to top' })).toHaveCount(0)
+  await expect(page.locator('.post__header').getByRole('button', { name: 'Copy link' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Back to top' })).toHaveCount(1)
+  await page.getByRole('button', { name: 'Back to top' }).click()
   await expect(page.locator('.post__header h1')).toBeFocused()
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThan(20)
   await page.getByRole('button', { name: 'Copy link' }).first().click()
@@ -285,6 +288,179 @@ test('wayfinder collapses on a narrow screen', async ({ page }) => {
   await expect(link).toBeVisible()
   await link.click()
   await expect(page.locator('#the-real-change')).toBeFocused()
+})
+
+test('backdrop credit follows navigation and page content in tab order', async ({ page }) => {
+  let releaseChunk = () => {}
+  const chunkGate = new Promise<void>((resolve) => {
+    releaseChunk = resolve
+  })
+  await page.route(/ai-agents-changed-how-i-build-things-[^/?#]+\.js/, async (route) => {
+    await chunkGate
+    await route.continue()
+  })
+
+  try {
+    await page.goto('/ai-agents-changed-how-i-build-things', { waitUntil: 'domcontentloaded' })
+    await expect(page.locator('.loading-inline')).toBeVisible()
+    await expectCreditFollowsPage(page)
+    releaseChunk()
+    await expect(page.locator('.post-content')).toBeVisible()
+    await expectCreditFollowsPage(page)
+
+    for (const path of ['/', '/about', '/projects', '/missing/seo/route', '/missing-seo-regression-post']) {
+      await page.goto(path)
+      await expectCreditFollowsPage(page)
+    }
+
+    await page.goto('/social-card')
+    await expect(page.locator('.backdrop-credit')).toHaveCount(0)
+    await expect(page.locator('.wallpaper-stage')).toHaveCount(1)
+  } finally {
+    releaseChunk()
+  }
+})
+
+async function expectCreditFollowsPage(page: Page) {
+  await expect(page.locator('.backdrop-credit')).toHaveCount(1)
+  await page.evaluate(() => {
+    const probe = document.createElement('button')
+    probe.type = 'button'
+    probe.tabIndex = 0
+    probe.dataset.tabProbe = 'true'
+    probe.style.position = 'absolute'
+    probe.style.left = '-9999px'
+    document.body.insertBefore(probe, document.body.firstChild)
+    probe.focus()
+  })
+  await page.keyboard.press('Tab')
+  await expect(page.locator('nav[aria-label="Primary navigation"] .brand-link')).toBeFocused()
+  await expect(page.locator('.backdrop-credit :focus')).toHaveCount(0)
+  await page.evaluate(() => document.querySelector('[data-tab-probe]')?.remove())
+
+  const order = await page.evaluate(() => {
+    const credit = document.querySelector('.backdrop-credit')
+    const nav = document.querySelector('nav[aria-label="Primary navigation"]')
+    const main = document.querySelector('main.blog-shell')
+    if (!credit || !nav || !main) return null
+    const following = Node.DOCUMENT_POSITION_FOLLOWING
+    const content = [...main.children].filter((child) =>
+      child !== credit
+      && !child.classList.contains('wallpaper-stage')
+      && !child.classList.contains('topbar')
+      && !child.classList.contains('reading-progress')
+      && !child.classList.contains('reading-status')
+    )
+    const nodes = [...document.querySelectorAll<HTMLElement>('a[href], button, input, select, textarea, [tabindex]')]
+    const visible = nodes.filter((element) => {
+      if (element.tabIndex < 0) return false
+      if ('disabled' in element && element.disabled) return false
+      if (element.closest('[aria-hidden="true"]')) return false
+      const style = getComputedStyle(element)
+      return style.display !== 'none' && style.visibility !== 'hidden'
+    })
+    const positive = visible
+      .map((element, index) => ({ element, index, tab: element.tabIndex }))
+      .filter((item) => item.tab > 0)
+      .sort((a, b) => a.tab - b.tab || a.index - b.index)
+      .map((item) => item.element)
+    const sequence = [...positive, ...visible.filter((element) => element.tabIndex === 0)]
+    const label = (element: HTMLElement) => {
+      const group = element.closest('.backdrop-credit')
+        ? 'credit'
+        : element.closest('nav[aria-label="Primary navigation"]')
+          ? 'nav'
+          : 'content'
+      const name = (element.getAttribute('aria-label') || element.textContent || element.tagName).replace(/\s+/g, ' ').trim()
+      return `${group}:${name}`
+    }
+    return {
+      contentPrecedes: content.length > 0 && content.every((child) => Boolean(child.compareDocumentPosition(credit) & following)),
+      navPrecedes: Boolean(nav.compareDocumentPosition(credit) & following),
+      sequence: sequence.map(label),
+    }
+  })
+
+  expect(order).not.toBeNull()
+  expect(order!.navPrecedes).toBe(true)
+  expect(order!.contentPrecedes).toBe(true)
+  const creditAt = order!.sequence.findIndex((item) => item.startsWith('credit:'))
+  const lastNavAt = order!.sequence.map((item, index) => (item.startsWith('nav:') ? index : -1)).filter((index) => index >= 0).at(-1) ?? -1
+  const contentStops = order!.sequence
+    .map((item, index) => (item.startsWith('content:') ? index : -1))
+    .filter((index) => index >= 0)
+  expect(creditAt).toBeGreaterThan(lastNavAt)
+  expect(contentStops.length === 0 || Math.max(...contentStops) < creditAt).toBe(true)
+  expect(order!.sequence.slice(creditAt)).toEqual([
+    'credit:Colchuck Lake',
+    'credit:Buidhe',
+    'credit:CC BY-SA 4.0',
+  ])
+
+  await page.evaluate(() => {
+    const creditLink = document.querySelector<HTMLElement>('.backdrop-credit a')
+    const nodes = [...document.querySelectorAll<HTMLElement>('a[href], button, input, select, textarea, [tabindex]')]
+    const visible = nodes.filter((element) => {
+      if (element.tabIndex < 0) return false
+      if ('disabled' in element && element.disabled) return false
+      if (element.closest('[aria-hidden="true"]')) return false
+      const style = getComputedStyle(element)
+      return style.display !== 'none' && style.visibility !== 'hidden'
+    })
+    const sequence = [
+      ...visible.filter((element) => element.tabIndex > 0),
+      ...visible.filter((element) => element.tabIndex === 0),
+    ]
+    sequence[sequence.indexOf(creditLink!) - 1]?.focus()
+  })
+  await page.keyboard.press('Tab')
+  await expect(page.getByRole('link', { name: 'Colchuck Lake', exact: true })).toBeFocused()
+}
+
+test('publishes the Colchuck Lake backdrop credit', async ({ page }) => {
+  await page.goto('/')
+  const credit = page.locator('.backdrop-credit')
+  await expect(credit).toBeVisible()
+  await expect(credit).toContainText('Backdrop:')
+  await expect(credit).toContainText('(cropped to 16:9, WebP)')
+
+  const links = [
+    ['Colchuck Lake', 'https://commons.wikimedia.org/wiki/File:Colchuck_Lake_(11_October_2024)_10.jpg'],
+    ['Buidhe', 'https://commons.wikimedia.org/wiki/User:Buidhe'],
+    ['CC BY-SA 4.0', 'https://creativecommons.org/licenses/by-sa/4.0/'],
+  ] as const
+
+  for (const [name, href] of links) {
+    const link = credit.getByRole('link', { name, exact: true })
+    await expect(link).toHaveAttribute('href', href)
+    await expect(link).toHaveAttribute('target', '_blank')
+    await expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+  }
+
+  await page.goto('/ai-agents-changed-how-i-build-things')
+  await expect(page.locator('.reading-status')).toBeVisible()
+  await credit.scrollIntoViewIfNeeded()
+  const separated = await page.evaluate(() => {
+    const creditBox = document.querySelector('.backdrop-credit')?.getBoundingClientRect()
+    const statusBox = document.querySelector('.reading-status')?.getBoundingClientRect()
+    if (!creditBox || !statusBox) return false
+    const hits = (a: DOMRect, b: DOMRect) =>
+      a.left < b.right - 1 && a.right > b.left + 1 && a.top < b.bottom - 1 && a.bottom > b.top + 1
+    const coversControl = [...document.querySelectorAll('.wayfinder a, .article-action, .pagination-link')]
+      .some((element) => hits(creditBox, element.getBoundingClientRect()))
+    return !hits(creditBox, statusBox) && !coversControl && getComputedStyle(document.querySelector('.backdrop-credit')!).position !== 'fixed'
+  })
+  expect(separated).toBe(true)
+  await expectNoHorizontalOverflow(page)
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+  await expect(page.locator('.backdrop-credit')).toBeVisible()
+  await expectNoHorizontalOverflow(page)
+
+  await page.goto('/social-card')
+  await expect(page.locator('.backdrop-credit')).toHaveCount(0)
+  await expect(page.locator('.wallpaper-stage')).toHaveCount(1)
 })
 
 for (const width of [375, 768, 1024, 1440]) {

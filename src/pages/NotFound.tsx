@@ -2,6 +2,7 @@ import usePageMetadata from '../hooks/usePageMetadata'
 import { Link } from 'react-router-dom'
 import Topbar from '../components/Topbar'
 import WallpaperStage from '../components/WallpaperStage'
+import BackdropCredit from '../components/BackdropCredit'
 import useLiquidGlassSurface from '../hooks/useLiquidGlassSurface'
 
 export default function NotFound() {
@@ -25,6 +26,7 @@ export default function NotFound() {
           <Link to="/">Back to home</Link>
         </p>
       </div>
+      <BackdropCredit />
     </main>
   )
 }

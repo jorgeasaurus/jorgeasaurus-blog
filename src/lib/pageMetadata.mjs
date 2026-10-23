@@ -51,6 +51,7 @@ function siteGraph(page, url) {
         sameAs: [
           'https://github.com/jorgeasaurus',
           'https://mvp.microsoft.com/en-US/MVP/profile/79a79af0-1218-4504-b4ee-082ae4ff75f6',
+          'https://www.youtube.com/@jorgeasaurus',
         ],
       },
       {

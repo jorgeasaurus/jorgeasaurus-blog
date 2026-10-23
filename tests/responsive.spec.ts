@@ -95,7 +95,17 @@ for (const width of [320, 390]) {
       await nav.getByRole('link', { name: 'About', exact: true }).tap()
       await expect(page).toHaveURL(/\/about$/)
       await page.getByRole('link', { name: 'Jorgeasaurus', exact: true }).tap()
-      await page.getByRole('link', { name: 'Older →', exact: true }).tap()
+      await expect(page.getByRole('heading', { name: 'Recent field notes' })).toBeVisible()
+      const older = page.getByRole('link', { name: 'Older →', exact: true })
+      await older.scrollIntoViewIfNeeded()
+      let olderTop = null
+      await expect.poll(async () => {
+        const top = await older.evaluate((element) => Math.round(element.getBoundingClientRect().top))
+        const stable = top === olderTop
+        olderTop = top
+        return stable
+      }).toBe(true)
+      await older.tap()
       await expect(page.locator('.pagination [aria-current="page"]')).toHaveText('2')
       await page.getByRole('link', { name: '← Newer', exact: true }).tap()
       await expect(page.locator('.pagination [aria-current="page"]')).toHaveText('1')
