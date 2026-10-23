@@ -6,13 +6,23 @@ import {
   use,
   useCallback,
   useEffect,
+  useLayoutEffect,
+  useRef,
   useState,
 } from 'react'
 import Topbar from '../components/Topbar'
 import NewsletterSignup from '../components/NewsletterSignup'
 import WallpaperStage from '../components/WallpaperStage'
+import ArticleActions from '../components/ArticleActions'
+import ArticleWayfinder from '../components/ArticleWayfinder'
+import CodeBlock from '../components/CodeBlock'
+import { IconClose } from '../components/Icons'
+import useReadingProgress from '../components/ReadingProgress'
 import { formatDate, sortPostsByDate } from '../lib/posts'
 import { categoryLabel, listingPath } from '../lib/postSearch.mjs'
+import { collectHeadings, scrollHeadingIntoView, type ArticleHeading } from '../lib/headings'
+import { readingMinutes, readingStatus } from '../lib/readingTime'
+import { relatedFieldNotes } from '../lib/relatedPosts'
 import postImages from '../content/postImages'
 import imageMetadata from '../content/imageMetadata'
 import posts from '../content/posts'
@@ -24,6 +34,7 @@ type MdxImageProps = React.ComponentPropsWithoutRef<'img'>
 interface MdxComponents {
   img?: React.ComponentType<MdxImageProps>
   table?: React.ComponentType<React.ComponentPropsWithoutRef<'table'>>
+  pre?: React.ComponentType<React.ComponentPropsWithoutRef<'pre'>>
 }
 
 interface MdxContentProps {
@@ -37,9 +48,10 @@ interface MdxModule {
 interface ExpandedImage {
   src: string
   alt: string
+  caption?: string
 }
 
-type OpenExpandedImage = (image: ExpandedImage) => void
+type OpenExpandedImage = (image: ExpandedImage, trigger?: HTMLElement | null) => void
 
 interface LightboxDialogProps {
   image: ExpandedImage
@@ -47,6 +59,11 @@ interface LightboxDialogProps {
 }
 
 const ExpandImageContext = createContext<OpenExpandedImage | null>(null)
+
+function captionFrom(trigger: HTMLElement) {
+  const caption = trigger.closest('figure')?.querySelector('figcaption')?.textContent?.replace(/\s+/g, ' ').trim()
+  return caption || undefined
+}
 
 function ExpandablePostImage({ alt = '', src, ...props }: MdxImageProps) {
   const expandImage = use(ExpandImageContext)
@@ -60,7 +77,10 @@ function ExpandablePostImage({ alt = '', src, ...props }: MdxImageProps) {
     <button
       className="image-expand-trigger image-expand-trigger--content"
       type="button"
-      onClick={() => expandImage({ src, alt })}
+      onClick={(event) => expandImage(
+        { src, alt, caption: captionFrom(event.currentTarget) },
+        event.currentTarget,
+      )}
       aria-label={alt ? `Open image: ${alt}` : 'Open image'}
     >
       <img loading="lazy" {...metadata} {...props} src={src} alt={alt} />
@@ -79,6 +99,7 @@ function ScrollableTable(props: React.ComponentPropsWithoutRef<'table'>) {
 const mdxComponents: MdxComponents = {
   img: ExpandablePostImage,
   table: ScrollableTable,
+  pre: CodeBlock,
 }
 
 function LightboxDialog({ image, onClose }: LightboxDialogProps) {
@@ -88,6 +109,8 @@ function LightboxDialog({ image, onClose }: LightboxDialogProps) {
     <dialog
       ref={dialogRef}
       className="glass-dialog image-lightbox"
+      role="dialog"
+      aria-modal="true"
       aria-label="Expanded image preview"
     >
       <button
@@ -96,13 +119,18 @@ function LightboxDialog({ image, onClose }: LightboxDialogProps) {
         onClick={onClose}
         aria-label="Close expanded image"
       >
-        x
+        <IconClose />
       </button>
-      <img
-        className="image-lightbox__image"
-        src={image.src}
-        alt={image.alt}
-      />
+      <figure className="image-lightbox__figure">
+        <img
+          className="image-lightbox__image"
+          src={image.src}
+          alt={image.alt}
+        />
+        {image.caption && (
+          <figcaption className="image-lightbox__caption">{image.caption}</figcaption>
+        )}
+      </figure>
     </dialog>
   )
 }
@@ -125,15 +153,28 @@ export default function Post() {
       ? sortedPosts[postIndex + 1]
       : null
   const postLoad = usePostContent(slug, postModules[`../content/${slug}.mdx`])
-  const [readingProgress, setReadingProgress] = useState(0)
+  const [outline, setOutline] = useState<ArticleHeading[]>([])
   const [expandedImage, setExpandedImage] = useState<ExpandedImage | null>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
+  const focusReturnRef = useRef<HTMLElement | null>(null)
+  const progressRef = useRef<HTMLDivElement>(null)
+  const statusRef = useRef<HTMLParagraphElement>(null)
   const PostContent = postLoad.status === 'loaded' ? postLoad.content : null
-  const openExpandedImage = useCallback((image: ExpandedImage) => {
+  const minutes = readingMinutes(slug ?? '')
+  useReadingProgress(
+    progressRef,
+    statusRef,
+    contentRef,
+    minutes,
+    postLoad.status === 'loaded' && Boolean(PostContent),
+  )
+  const openExpandedImage = useCallback((image: ExpandedImage, trigger?: HTMLElement | null) => {
+    focusReturnRef.current = trigger ?? null
     setExpandedImage(image)
-  }, [setExpandedImage])
+  }, [])
   const closeExpandedImage = useCallback(() => {
     setExpandedImage(null)
-  }, [setExpandedImage])
+  }, [])
   const loadingGlassRef = useLiquidGlassSurface<HTMLDivElement>({
     borderRadius: 30,
     type: 'rounded',
@@ -146,43 +187,53 @@ export default function Post() {
     borderRadius: 30,
     type: 'rounded',
   })
+  const related = postMeta ? relatedFieldNotes(postMeta, posts) : []
 
   usePageMetadata(!postMeta || postLoad.status === 'failed' ? 'not-found' : 'post', { post: postMeta })
 
+  useLayoutEffect(() => {
+    const root = contentRef.current
+    if (!root) {
+      setOutline([])
+      return
+    }
+    const next = collectHeadings(root)
+    for (const list of root.querySelectorAll<HTMLOListElement>(':scope > ol')) {
+      const raw = list.getAttribute('start')
+      const start = raw === null ? 1 : Number(raw)
+      if (!Number.isFinite(start)) continue
+      list.style.counterReset = `post-step ${start - 1}`
+    }
+    setOutline(next)
+    let hash: string
+    try {
+      hash = decodeURIComponent(window.location.hash.replace(/^#/, ''))
+    } catch {
+      return
+    }
+    if (!hash) return
+    const frame = window.requestAnimationFrame(() => {
+      const target = document.getElementById(hash)
+      if (!target || !root.contains(target)) return
+      scrollHeadingIntoView(target)
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [PostContent, slug])
+
   useEffect(() => {
-    function updateReadingProgress() {
-      const scrollableHeight =
-        document.documentElement.scrollHeight - window.innerHeight
-
-      if (scrollableHeight <= 0) {
-        setReadingProgress(0)
-        return
-      }
-
-      const progress = Math.min(
-        1,
-        Math.max(0, window.scrollY / scrollableHeight)
-      )
-
-      setReadingProgress(progress)
-    }
-
-    updateReadingProgress()
-    window.addEventListener('scroll', updateReadingProgress, { passive: true })
-    window.addEventListener('resize', updateReadingProgress)
-
-    return () => {
-      window.removeEventListener('scroll', updateReadingProgress)
-      window.removeEventListener('resize', updateReadingProgress)
-    }
-  }, [PostContent])
+    if (expandedImage) return
+    const target = focusReturnRef.current
+    if (!target) return
+    focusReturnRef.current = null
+    target.focus()
+  }, [expandedImage])
 
   if (postLoad.status === 'loading') {
     return (
       <main className="blog-shell">
         <WallpaperStage />
         <Topbar />
-        <div className="content-panel glass-panel" ref={loadingGlassRef}>
+        <div key="loading" className="content-panel glass-panel" ref={loadingGlassRef}>
           <div className="loading-inline">
             <div className="spinner" />
             Loading&hellip;
@@ -197,7 +248,7 @@ export default function Post() {
       <main className="blog-shell">
         <WallpaperStage />
         <Topbar />
-        <div className="content-panel glass-panel" ref={errorGlassRef}>
+        <div key="missing" className="content-panel glass-panel" ref={errorGlassRef}>
           <h1>Post Not Found</h1>
           <p className="hero-copy">
             The post you're looking for doesn't exist.
@@ -216,35 +267,45 @@ export default function Post() {
       <WallpaperStage />
       <Topbar />
       <div
+        key="progress"
         className="reading-progress"
-        style={{ transform: `scaleX(${readingProgress})` }}
+        ref={progressRef}
         aria-hidden="true"
       />
-      <article className="content-panel glass-panel" ref={articleGlassRef}>
-        <header>
-          <p className="post-card-date">{formatDate(postMeta.date)}</p>
-          <ul className="post-card-tags" aria-label="Post category">
-            <li>
-              <Link to={listingPath({ category: postMeta.category })}>
-                {categoryLabel(postMeta.category)}
-              </Link>
-            </li>
-          </ul>
-          <h1>{postMeta.title}</h1>
+      <p className="reading-status" ref={statusRef}>
+        {readingStatus(minutes, 0)}
+      </p>
+      <div className={outline.length >= 2 ? 'post-frame post-frame--with-wayfinder' : 'post-frame'}>
+      <ArticleWayfinder key={slug} outline={outline} />
+      <article key="article" className="content-panel glass-panel" ref={articleGlassRef}>
+        <header className="post__header">
+          <div className="post__kicker">
+            <p className="post-card-date">{formatDate(postMeta.date)}</p>
+            <ul className="post-card-tags" aria-label="Post category">
+              <li>
+                <Link className="post__category" to={listingPath({ category: postMeta.category })}>
+                  {categoryLabel(postMeta.category)}
+                </Link>
+              </li>
+            </ul>
+          </div>
+          <h1 tabIndex={-1}>{postMeta.title}</h1>
           {postMeta.description && (
-            <p className="hero-copy">{postMeta.description}</p>
+            <p className="hero-copy post__lede">{postMeta.description}</p>
           )}
+          <ArticleActions />
         </header>
         {hasArticleHero && (
           <figure className="post-hero-figure">
             <button
               className="image-expand-trigger image-expand-trigger--hero"
               type="button"
-              onClick={() =>
-                setExpandedImage({
+              onClick={(event) =>
+                openExpandedImage({
                   src: heroImage.src,
                   alt: heroImage.alt,
-                })
+                  caption: heroImage.caption,
+                }, event.currentTarget)
               }
               aria-label={`Open image: ${heroImage.alt || 'Article illustration'}`}
             >
@@ -259,25 +320,41 @@ export default function Post() {
             {heroImage.caption && <figcaption>{heroImage.caption}</figcaption>}
           </figure>
         )}
-        <div className="post-content">
+        <div className="post-content" ref={contentRef}>
           <ExpandImageContext.Provider value={openExpandedImage}>
             <PostContent components={mdxComponents} />
           </ExpandImageContext.Provider>
         </div>
+        <ArticleActions />
+        {related.length > 0 && (
+          <section className="related-notes" aria-labelledby="related-notes-title">
+            <h2 id="related-notes-title" className="article-section-title">Related field notes</h2>
+            <ul>
+              {related.map((post) => (
+                <li key={post.slug}>
+                  <Link to={`/${post.slug}`}>
+                    <span>{categoryLabel(post.category)}</span>
+                    <strong>{post.title}</strong>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
         {(newerPost || olderPost) && (
           <nav className="article-nav" aria-label="Adjacent field notes">
-            {newerPost ? (
-              <Link className="article-nav-link" to={`/${newerPost.slug}`}>
-                <span>Newer field note</span>
-                <strong>{newerPost.title}</strong>
+            {olderPost ? (
+              <Link className="article-nav-link" to={`/${olderPost.slug}`}>
+                <span>Previous field note</span>
+                <strong>{olderPost.title}</strong>
               </Link>
             ) : (
               <span className="article-nav-link article-nav-link--empty" />
             )}
-            {olderPost ? (
-              <Link className="article-nav-link article-nav-link--next" to={`/${olderPost.slug}`}>
-                <span>Older field note</span>
-                <strong>{olderPost.title}</strong>
+            {newerPost ? (
+              <Link className="article-nav-link article-nav-link--next" to={`/${newerPost.slug}`}>
+                <span>Next field note</span>
+                <strong>{newerPost.title}</strong>
               </Link>
             ) : (
               <span className="article-nav-link article-nav-link--empty" />
@@ -286,6 +363,7 @@ export default function Post() {
         )}
         <NewsletterSignup surface="inline" />
       </article>
+      </div>
       {expandedImage && (
         <LightboxDialog image={expandedImage} onClose={closeExpandedImage} />
       )}
