@@ -1,3 +1,4 @@
+import type { MouseEvent } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import SocialIcon from './SocialIcon'
 import useLiquidGlassSurface from '../hooks/useLiquidGlassSurface'
@@ -9,9 +10,21 @@ export default function Topbar() {
     type: 'pill',
   })
 
+  function scrollListingToTop(event: MouseEvent<HTMLAnchorElement>) {
+    if (
+      pathname !== '/' ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) return
+    window.scrollTo(0, 0)
+  }
+
   return (
     <nav className="topbar glass-panel" aria-label="Primary navigation" ref={glassRef}>
-      <Link to="/" className="brand-link">
+      <Link to="/" className="brand-link" onClick={scrollListingToTop}>
         <span className="brand-prompt" aria-hidden="true">&gt;</span>
         <span className="brand-name">Jorgeasaurus</span>
       </Link>
@@ -19,6 +32,7 @@ export default function Topbar() {
         <Link
           to="/"
           className={`nav-link nav-link--home ${pathname === '/' ? 'nav-link--active' : ''}`}
+          onClick={scrollListingToTop}
         >
           Home
         </Link>

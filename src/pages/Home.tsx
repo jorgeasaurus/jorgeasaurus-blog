@@ -1,23 +1,28 @@
 import usePageMetadata from '../hooks/usePageMetadata'
 import { Link, useSearchParams } from 'react-router-dom'
-import { useEffect } from 'react'
+import { useEffect, useRef, type MouseEvent } from 'react'
 import Topbar from '../components/Topbar'
 import PostCard from '../components/PostCard'
+import PostFilters from '../components/PostFilters'
 import NewsletterSignup from '../components/NewsletterSignup'
 import SocialIcon from '../components/SocialIcon'
 import WallpaperStage from '../components/WallpaperStage'
 import { sortPostsByDate } from '../lib/posts'
+import { categoryLabel, filterPosts, listingPath } from '../lib/postSearch.mjs'
 import posts from '../content/posts'
 import useLiquidGlassSurface from '../hooks/useLiquidGlassSurface'
 
 const POSTS_PER_PAGE = 5
 
-function getPagePath(page: number, tag: string | null) {
-  const params = new URLSearchParams()
-  if (tag) params.set('tag', tag)
-  if (page > 1) params.set('page', String(page))
-  const query = params.toString()
-  return query ? `/?${query}` : '/'
+function scrollToTopOnPrimaryClick(event: MouseEvent<HTMLAnchorElement>) {
+  if (
+    event.button !== 0 ||
+    event.metaKey ||
+    event.ctrlKey ||
+    event.shiftKey ||
+    event.altKey
+  ) return
+  window.scrollTo(0, 0)
 }
 
 export default function Home() {
@@ -27,26 +32,75 @@ export default function Home() {
     type: 'rounded',
   })
 
-  const activeTag = searchParams.get('tag')
+  const category = searchParams.get('category') ?? ''
+  const activeTag = searchParams.get('tag') ?? ''
   const sorted = sortPostsByDate(posts)
-  const filtered = activeTag
-    ? sorted.filter((post) => post.tags?.includes(activeTag))
-    : sorted
+  const filtered = filterPosts(sorted, { category, tag: activeTag })
   const totalPages = Math.max(1, Math.ceil(filtered.length / POSTS_PER_PAGE))
   const requestedPage = Number.parseInt(searchParams.get('page') ?? '1', 10)
   const currentPage = Math.min(
     Math.max(Number.isFinite(requestedPage) ? requestedPage : 1, 1),
     totalPages
   )
-  const isFiltered = Boolean(activeTag) || currentPage > 1
+  const filtersActive = Boolean(category || activeTag)
+  const isFiltered = filtersActive || currentPage > 1
   const pageStart = (currentPage - 1) * POSTS_PER_PAGE
   const visiblePosts = filtered.slice(pageStart, pageStart + POSTS_PER_PAGE)
+  const heading = activeTag
+    ? `Tagged: ${activeTag}`
+    : category
+      ? `Category: ${categoryLabel(category)}`
+      : 'Recent field notes'
 
   usePageMetadata('home', { filtered: isFiltered })
 
+  const filtersKey = `${category}\0${activeTag}`
+  const scrollState = useRef({ page: currentPage, filters: filtersKey })
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      scrollState.current = { page: currentPage, filters: filtersKey }
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [currentPage, filtersKey])
+
   useEffect(() => {
     window.scrollTo(0, 0)
-  }, [currentPage, activeTag])
+    let resetFrame = 0
+    let resetTimer = 0
+    let correctUntil = 0
+    const snapToTop = () => {
+      window.scrollTo(0, 0)
+    }
+    const onScroll = () => {
+      if (performance.now() > correctUntil || window.scrollY === 0) return
+      cancelAnimationFrame(resetFrame)
+      resetFrame = requestAnimationFrame(snapToTop)
+    }
+    const onPopState = () => {
+      const params = new URLSearchParams(window.location.search)
+      const nextFilters = `${params.get('category') ?? ''}\0${params.get('tag') ?? ''}`
+      const requested = Number.parseInt(params.get('page') ?? '1', 10)
+      const nextPage = Number.isFinite(requested) && requested > 0 ? requested : 1
+      const previous = scrollState.current
+      if (previous.page === nextPage || previous.filters !== nextFilters) return
+      correctUntil = performance.now() + 100
+      cancelAnimationFrame(resetFrame)
+      window.clearTimeout(resetTimer)
+      resetFrame = requestAnimationFrame(() => {
+        resetFrame = requestAnimationFrame(snapToTop)
+      })
+      resetTimer = window.setTimeout(snapToTop, 100)
+    }
+    window.addEventListener('popstate', onPopState, true)
+    window.addEventListener('scroll', onScroll, true)
+    return () => {
+      cancelAnimationFrame(resetFrame)
+      window.clearTimeout(resetTimer)
+      window.removeEventListener('popstate', onPopState, true)
+      window.removeEventListener('scroll', onScroll, true)
+    }
+  }, [])
 
   return (
     <main className="blog-shell">
@@ -88,28 +142,26 @@ export default function Home() {
         <div className="content-heading">
           <div>
             <p className="eyebrow">Posts</p>
-            <h2>{activeTag ? `Tagged: ${activeTag}` : 'Recent field notes'}</h2>
+            <h2>{heading}</h2>
           </div>
-          {activeTag && (
+          {filtersActive && (
             <Link className="tag-filter-clear" to="/">
               Clear filter ×
             </Link>
           )}
         </div>
-        {visiblePosts.length === 0 && (
-          <p className="tag-filter-empty">No posts tagged “{activeTag}”.</p>
-        )}
+        <PostFilters posts={posts} matchCount={filtered.length} />
         {visiblePosts.map((post, index) => (
           <PostCard
             key={post.slug}
             post={post}
-            featured={index === 0 && currentPage === 1 && !activeTag}
+            featured={index === 0 && currentPage === 1 && !filtersActive}
           />
         ))}
         {totalPages > 1 && (
           <nav className="pagination" aria-label="Posts pagination">
             {currentPage > 1 ? (
-              <Link className="pagination-link pagination-link--wide" to={getPagePath(currentPage - 1, activeTag)}>
+              <Link className="pagination-link pagination-link--wide" to={listingPath({ category, tag: activeTag, page: currentPage - 1 })} onClick={scrollToTopOnPrimaryClick}>
                 ← Newer
               </Link>
             ) : (
@@ -131,14 +183,14 @@ export default function Home() {
                     {page}
                   </span>
                 ) : (
-                  <Link className="pagination-link" to={getPagePath(page, activeTag)} key={page}>
+                  <Link className="pagination-link" to={listingPath({ category, tag: activeTag, page })} key={page} onClick={scrollToTopOnPrimaryClick}>
                     {page}
                   </Link>
                 )
               })}
             </div>
             {currentPage < totalPages ? (
-              <Link className="pagination-link pagination-link--wide" to={getPagePath(currentPage + 1, activeTag)}>
+              <Link className="pagination-link pagination-link--wide" to={listingPath({ category, tag: activeTag, page: currentPage + 1 })} onClick={scrollToTopOnPrimaryClick}>
                 Older →
               </Link>
             ) : (

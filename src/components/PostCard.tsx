@@ -1,5 +1,6 @@
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { formatDate, type PostMeta } from '../lib/posts'
+import { categoryLabel, listingPath } from '../lib/postSearch.mjs'
 import useLiquidGlassSurface from '../hooks/useLiquidGlassSurface'
 
 interface PostCardProps {
@@ -8,10 +9,13 @@ interface PostCardProps {
 }
 
 export default function PostCard({ post, featured = false }: PostCardProps) {
+  const [searchParams] = useSearchParams()
   const glassRef = useLiquidGlassSurface<HTMLElement>({
     borderRadius: featured ? 34 : 24,
     type: 'rounded',
   })
+  const category = searchParams.get('category')
+  const keywords = post.tags?.slice(0, 4) ?? []
 
   return (
     <article
@@ -29,15 +33,20 @@ export default function PostCard({ post, featured = false }: PostCardProps) {
           </Link>
         </h3>
         <p className="post-card-desc">{post.description}</p>
-        {post.tags && post.tags.length > 0 && (
-          <div className="post-card-tags" aria-label="Tags">
-            {post.tags.slice(0, 4).map((tag) => (
-              <Link key={tag} to={`/?tag=${encodeURIComponent(tag)}`}>
-                {tag}
+        <ul className="post-card-tags" aria-label="Category and keywords">
+          <li>
+            <Link to={listingPath({ category: post.category })}>
+              {categoryLabel(post.category)}
+            </Link>
+          </li>
+          {keywords.map((keyword) => (
+            <li key={keyword}>
+              <Link to={listingPath({ category, tag: keyword })}>
+                {keyword}
               </Link>
-            ))}
-          </div>
-        )}
+            </li>
+          ))}
+        </ul>
         <span className="post-card-cta" aria-hidden="true">
           Read field note
           <span>→</span>

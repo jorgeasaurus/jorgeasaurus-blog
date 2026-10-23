@@ -1,5 +1,6 @@
 // Post metadata and loading utilities
 // MDX posts are imported directly where needed
+import type { PostCategory } from './postSearch.mjs'
 import { comparePostDatesDesc, formatPostDate } from './postDates.mjs'
 
 export interface PostMeta {
@@ -7,6 +8,7 @@ export interface PostMeta {
   title: string
   date: string
   description: string
+  category: PostCategory
   tags?: string[]
   // Optional Q&A pairs, emitted as FAQPage structured data. Keep them identical to the visible FAQ in the MDX.
   faq?: Array<{ question: string; answer: string }>

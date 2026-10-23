@@ -12,6 +12,7 @@ import Topbar from '../components/Topbar'
 import NewsletterSignup from '../components/NewsletterSignup'
 import WallpaperStage from '../components/WallpaperStage'
 import { formatDate, sortPostsByDate } from '../lib/posts'
+import { categoryLabel, listingPath } from '../lib/postSearch.mjs'
 import postImages from '../content/postImages'
 import imageMetadata from '../content/imageMetadata'
 import posts from '../content/posts'
@@ -222,6 +223,13 @@ export default function Post() {
       <article className="content-panel glass-panel" ref={articleGlassRef}>
         <header>
           <p className="post-card-date">{formatDate(postMeta.date)}</p>
+          <ul className="post-card-tags" aria-label="Post category">
+            <li>
+              <Link to={listingPath({ category: postMeta.category })}>
+                {categoryLabel(postMeta.category)}
+              </Link>
+            </li>
+          </ul>
           <h1>{postMeta.title}</h1>
           {postMeta.description && (
             <p className="hero-copy">{postMeta.description}</p>
