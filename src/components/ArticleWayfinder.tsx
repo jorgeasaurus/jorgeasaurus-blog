@@ -120,7 +120,7 @@ export default function ArticleWayfinder({ outline }: ArticleWayfinderProps) {
   }
 
   return (
-    <nav className={`wayfinder${wide ? ' wayfinder--dock' : ''}`} aria-label="On this page">
+    <nav className={`wayfinder frosted${wide ? ' wayfinder--dock' : ''}`} aria-label="On this page">
       {wide ? (
         <p className="wayfinder__label">On this page</p>
       ) : (

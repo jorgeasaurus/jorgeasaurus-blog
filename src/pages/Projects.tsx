@@ -255,7 +255,7 @@ export default function Projects() {
         </div>
       </section>
       <section className="content-area projects-area">
-        <div className="content-heading">
+        <div className="content-heading frosted">
           <div>
             <p className="eyebrow">Featured</p>
             <h2>Live projects</h2>
@@ -266,7 +266,7 @@ export default function Projects() {
             <ProjectCard project={project} featured key={project.name} />
           ))}
         </div>
-        <div className="content-heading">
+        <div className="content-heading frosted">
           <div>
             <p className="eyebrow">Open source</p>
             <h2>Repos and experiments</h2>

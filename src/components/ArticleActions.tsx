@@ -2,7 +2,11 @@ import { useEffect, useRef, useState } from 'react'
 import { IconCheck, IconLink, IconUp } from './Icons'
 import { copyText } from '../lib/copyText'
 
-export default function ArticleActions() {
+interface ArticleActionsProps {
+  showBackToTop?: boolean
+}
+
+export default function ArticleActions({ showBackToTop = false }: ArticleActionsProps) {
   const [copied, setCopied] = useState(false)
   const timer = useRef(0)
 
@@ -29,10 +33,12 @@ export default function ArticleActions() {
         {copied ? <IconCheck /> : <IconLink />}
         <span>{copied ? 'Copied' : 'Copy link'}</span>
       </button>
-      <button className="article-action" type="button" onClick={backToTop}>
-        <IconUp />
-        <span>Back to top</span>
-      </button>
+      {showBackToTop && (
+        <button className="article-action" type="button" onClick={backToTop}>
+          <IconUp />
+          <span>Back to top</span>
+        </button>
+      )}
       <span className="visually-hidden" aria-live="polite">{copied ? 'Copied' : ''}</span>
     </div>
   )

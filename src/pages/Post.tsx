@@ -325,7 +325,7 @@ export default function Post() {
             <PostContent components={mdxComponents} />
           </ExpandImageContext.Provider>
         </div>
-        <ArticleActions />
+        <ArticleActions showBackToTop />
         {related.length > 0 && (
           <section className="related-notes" aria-labelledby="related-notes-title">
             <h2 id="related-notes-title" className="article-section-title">Related field notes</h2>

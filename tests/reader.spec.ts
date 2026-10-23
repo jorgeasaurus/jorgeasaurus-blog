@@ -92,7 +92,10 @@ test('article wayfinder, progress, code copy, and continuity controls', async ({
   await page.locator('.post-content').evaluate((element) => element.scrollIntoView({ block: 'end', behavior: 'auto' }))
   await expect(page.locator('.reading-status')).toHaveText('Complete')
 
-  await page.getByRole('button', { name: 'Back to top' }).last().click()
+  await expect(page.locator('.post__header').getByRole('button', { name: 'Back to top' })).toHaveCount(0)
+  await expect(page.locator('.post__header').getByRole('button', { name: 'Copy link' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Back to top' })).toHaveCount(1)
+  await page.getByRole('button', { name: 'Back to top' }).click()
   await expect(page.locator('.post__header h1')).toBeFocused()
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThan(20)
   await page.getByRole('button', { name: 'Copy link' }).first().click()

@@ -156,18 +156,20 @@ export default function Home() {
         </div>
       </section>
       <section className="content-area">
-        <div className="content-heading">
-          <div>
-            <p className="eyebrow">Posts</p>
-            <h2>{heading}</h2>
+        <div className="listing-tools glass-panel frosted">
+          <div className="content-heading">
+            <div>
+              <p className="eyebrow">Posts</p>
+              <h2>{heading}</h2>
+            </div>
+            {filtersActive && (
+              <Link className="tag-filter-clear" to="/">
+                Clear filter ×
+              </Link>
+            )}
           </div>
-          {filtersActive && (
-            <Link className="tag-filter-clear" to="/">
-              Clear filter ×
-            </Link>
-          )}
+          <PostFilters posts={posts} matchCount={filtered.length} />
         </div>
-        <PostFilters posts={posts} matchCount={filtered.length} />
         {visiblePosts.map((post, index) => (
           <PostCard
             key={post.slug}
