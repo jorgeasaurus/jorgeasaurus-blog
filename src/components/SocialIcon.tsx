@@ -1,4 +1,4 @@
-type SocialIconName = 'github' | 'linkedin' | 'microsoft' | 'rss'
+type SocialIconName = 'github' | 'linkedin' | 'youtube' | 'microsoft' | 'rss'
 
 interface SocialIconProps {
   name: SocialIconName
@@ -22,6 +22,17 @@ export default function SocialIcon({ name }: SocialIconProps) {
         <path
           fill="currentColor"
           d="M6.94 8.98H3.75v10.27h3.19V8.98ZM5.34 4a1.85 1.85 0 1 0 0 3.7 1.85 1.85 0 0 0 0-3.7Zm13.91 9.36c0-3.1-1.66-4.54-3.87-4.54a3.34 3.34 0 0 0-3.01 1.65h-.04V8.98H9.27v10.27h3.19v-5.08c0-1.34.25-2.64 1.91-2.64 1.64 0 1.66 1.54 1.66 2.73v4.99h3.19l.03-5.89Z"
+        />
+      </svg>
+    )
+  }
+
+  if (name === 'youtube') {
+    return (
+      <svg className="social-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          fill="currentColor"
+          d="M23.5 6.19a3.02 3.02 0 0 0-2.12-2.14C19.54 3.6 12 3.6 12 3.6s-7.54 0-9.38.45A3.02 3.02 0 0 0 .5 6.19 31.7 31.7 0 0 0 0 12a31.7 31.7 0 0 0 .5 5.81 3.02 3.02 0 0 0 2.12 2.14c1.84.45 9.38.45 9.38.45s7.54 0 9.38-.45a3.02 3.02 0 0 0 2.12-2.14A31.7 31.7 0 0 0 24 12a31.7 31.7 0 0 0-.5-5.81ZM9.75 15.57V8.43L15.84 12l-6.09 3.57Z"
         />
       </svg>
     )

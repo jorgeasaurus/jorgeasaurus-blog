@@ -95,6 +95,10 @@ export default function About() {
               <SocialIcon name="linkedin" />
               LinkedIn
             </a>
+            <a href="https://www.youtube.com/@jorgeasaurus" target="_blank" rel="noopener noreferrer">
+              <SocialIcon name="youtube" />
+              YouTube
+            </a>
             <a href="https://buymeacoffee.com/jorgeasaurus" target="_blank" rel="noopener noreferrer">
               Buy Me a Coffee
             </a>
