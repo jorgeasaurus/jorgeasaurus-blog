@@ -290,6 +290,52 @@ test('wayfinder collapses on a narrow screen', async ({ page }) => {
   await expect(page.locator('#the-real-change')).toBeFocused()
 })
 
+test('publishes the Colchuck Lake backdrop credit', async ({ page }) => {
+  await page.goto('/')
+  const credit = page.locator('.backdrop-credit')
+  await expect(credit).toBeVisible()
+  await expect(credit).toContainText('Backdrop:')
+  await expect(credit).toContainText('(cropped to 16:9, WebP)')
+
+  const links = [
+    ['Colchuck Lake', 'https://commons.wikimedia.org/wiki/File:Colchuck_Lake_(11_October_2024)_10.jpg'],
+    ['Buidhe', 'https://commons.wikimedia.org/wiki/User:Buidhe'],
+    ['CC BY-SA 4.0', 'https://creativecommons.org/licenses/by-sa/4.0/'],
+  ] as const
+
+  for (const [name, href] of links) {
+    const link = credit.getByRole('link', { name, exact: true })
+    await expect(link).toHaveAttribute('href', href)
+    await expect(link).toHaveAttribute('target', '_blank')
+    await expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+  }
+
+  await page.goto('/ai-agents-changed-how-i-build-things')
+  await expect(page.locator('.reading-status')).toBeVisible()
+  await credit.scrollIntoViewIfNeeded()
+  const separated = await page.evaluate(() => {
+    const creditBox = document.querySelector('.backdrop-credit')?.getBoundingClientRect()
+    const statusBox = document.querySelector('.reading-status')?.getBoundingClientRect()
+    if (!creditBox || !statusBox) return false
+    const hits = (a: DOMRect, b: DOMRect) =>
+      a.left < b.right - 1 && a.right > b.left + 1 && a.top < b.bottom - 1 && a.bottom > b.top + 1
+    const coversControl = [...document.querySelectorAll('.wayfinder a, .article-action, .pagination-link')]
+      .some((element) => hits(creditBox, element.getBoundingClientRect()))
+    return !hits(creditBox, statusBox) && !coversControl && getComputedStyle(document.querySelector('.backdrop-credit')!).position !== 'fixed'
+  })
+  expect(separated).toBe(true)
+  await expectNoHorizontalOverflow(page)
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.goto('/')
+  await expect(page.locator('.backdrop-credit')).toBeVisible()
+  await expectNoHorizontalOverflow(page)
+
+  await page.goto('/social-card')
+  await expect(page.locator('.backdrop-credit')).toHaveCount(0)
+  await expect(page.locator('.wallpaper-stage')).toHaveCount(1)
+})
+
 for (const width of [375, 768, 1024, 1440]) {
   test(`reader layout stays inside ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 })
