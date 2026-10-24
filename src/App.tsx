@@ -6,7 +6,6 @@ import About from './pages/About.tsx'
 import Projects from './pages/Projects.tsx'
 import SocialCard from './pages/SocialCard.tsx'
 import NotFound from './pages/NotFound.tsx'
-import NewsletterPopup from './components/NewsletterPopup.tsx'
 
 function App() {
   return (
@@ -30,7 +29,6 @@ function App() {
           <Route path="/:slug" element={<Post />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
-        <NewsletterPopup />
       </BrowserRouter>
       <Analytics />
     </>

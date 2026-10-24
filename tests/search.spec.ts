@@ -6,9 +6,8 @@ async function blockExternalRequests(context: BrowserContext, baseURL: string) {
   await context.route('**/api/subscribe', (route) => route.abort())
 }
 
-test.beforeEach(async ({ page, context, baseURL }) => {
+test.beforeEach(async ({ context, baseURL }) => {
   await blockExternalRequests(context, baseURL!)
-  await page.addInitScript(() => localStorage.setItem('newsletter-popup-subscribed', 'true'))
 })
 
 function resultStatus(page: Page) {
@@ -18,13 +17,14 @@ function resultStatus(page: Page) {
 test('category and keyword filters combine, share, and restore with history', async ({ page }) => {
   await page.goto('/')
   await expect(page.getByRole('searchbox')).toHaveCount(0)
-  const category = page.getByLabel('Category', { exact: true })
+  await expect(page.locator('#field-note-category')).toHaveCount(0)
+  const category = page.getByRole('button', { name: /^Endpoint management\b/ })
   await category.focus()
   await expect(category).toBeFocused()
   const outline = await category.evaluate((element) => getComputedStyle(element).outlineStyle)
   expect(outline).not.toBe('none')
 
-  await category.selectOption('endpoint-management')
+  await category.click()
   await expect(page).toHaveURL(/category=endpoint-management/)
   await expect(page.getByRole('heading', { name: 'Category: Endpoint management' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Back Up or Restore Jamf Pro Objects with PowerShell' })).toBeVisible()
@@ -37,14 +37,14 @@ test('category and keyword filters combine, share, and restore with history', as
 
   await page.goBack()
   await expect(page.getByLabel('Keyword', { exact: true })).toHaveValue('')
-  await expect(category).toHaveValue('endpoint-management')
+  await expect(category).toHaveAttribute('aria-pressed', 'true')
 
   await page.goForward()
   await expect(page.getByLabel('Keyword', { exact: true })).toHaveValue('jamf')
   await expect(page.getByRole('heading', { name: 'Tagged: jamf' })).toBeVisible()
 
   await page.goto('/?category=intune&tag=reboot')
-  await expect(category).toHaveValue('intune')
+  await expect(page.getByRole('button', { name: /^Intune\b/ })).toHaveAttribute('aria-pressed', 'true')
   await expect(page.getByLabel('Keyword', { exact: true })).toHaveValue('reboot')
   await expect(page.getByRole('link', { name: 'Proactive Remediation to Remind Windows Users to Reboot' })).toBeVisible()
   await expect(resultStatus(page)).toHaveText('1 post')
@@ -61,7 +61,7 @@ test('category and keyword filters combine, share, and restore with history', as
   await page.getByRole('link', { name: 'Clear filter ×' }).click()
   await expect(page).toHaveURL(/\/$/)
   await expect(page.getByRole('heading', { name: 'Recent field notes' })).toBeVisible()
-  await expect(category).toHaveValue('')
+  await expect(page.getByRole('button', { name: /^All\b/ })).toHaveAttribute('aria-pressed', 'true')
   await expect(page.getByLabel('Keyword', { exact: true })).toHaveValue('')
 })
 
@@ -70,16 +70,17 @@ test('a category badge filters the listing and selects that category', async ({ 
   const cardCategory = page.locator('.post-card').first().locator('.post-card-tags a').first()
   const href = await cardCategory.getAttribute('href')
   const slug = new URL(href ?? '/', 'http://127.0.0.1').searchParams.get('category')
+  const label = (await cardCategory.textContent())?.trim() ?? ''
   await cardCategory.click()
   await expect(page).toHaveURL(new RegExp(`category=${slug}`))
-  await expect(page.getByLabel('Category', { exact: true })).toHaveValue(slug ?? '')
+  await expect(page.getByRole('button', { name: new RegExp(`^${label}\\b`) })).toHaveAttribute('aria-pressed', 'true')
   await expect(page).not.toHaveURL(/[?&]tag=/)
 
   await page.goto('/use-cpm-with-openrouter-models')
   await expect(page.getByRole('heading', { name: 'Use GitHub Copilot with Third-Party LLM Models' })).toBeVisible()
   await page.locator('article header').getByRole('link', { name: 'AI', exact: true }).click()
   await expect(page).toHaveURL(/\/\?category=ai$/)
-  await expect(page.getByLabel('Category', { exact: true })).toHaveValue('ai')
+  await expect(page.getByRole('button', { name: /^AI\b/ })).toHaveAttribute('aria-pressed', 'true')
   await expect(page.getByRole('heading', { name: 'Category: AI' })).toBeVisible()
   await expect(page.getByRole('link', { name: 'Use GitHub Copilot with Third-Party LLM Models' })).toBeVisible()
   await expect(page.getByRole('link', { name: "Intune assignments: Do's and don'ts" })).toHaveCount(0)
@@ -88,19 +89,39 @@ test('a category badge filters the listing and selects that category', async ({ 
 
 test('filter edits keep the scroll position and pagination returns to the top', async ({ page }) => {
   await page.goto('/?category=intune&page=2')
-  const form = page.getByRole('search', { name: 'Filter posts' })
-  await form.scrollIntoViewIfNeeded()
+  await page.evaluate(() => document.fonts.ready)
+  const clear = page.getByRole('link', { name: 'Clear filter ×' })
+  await clear.evaluate((element) => {
+    const navBottom = document.querySelector('.topbar')?.getBoundingClientRect().bottom ?? 0
+    const rect = element.getBoundingClientRect()
+    const center = rect.top + rect.height / 2 + window.scrollY
+    window.scrollTo(0, Math.max(0, center - navBottom - 96))
+  })
   const filterScroll = await page.evaluate(() => window.scrollY)
   expect(filterScroll).toBeGreaterThan(40)
-  await page.getByLabel('Keyword', { exact: true }).selectOption('windows')
+  const keptScroll = () => page.evaluate(() => window.scrollY)
+  // Playwright retries a covered or shifting control by scrolling it into view.
+  // Drive the controls in the page so this assertion measures the listing, not that retry.
+  await page.getByLabel('Keyword', { exact: true }).evaluate((element) => {
+    const select = element as HTMLSelectElement
+    select.value = 'windows'
+    select.dispatchEvent(new Event('change', { bubbles: true }))
+  })
   await expect(page).not.toHaveURL(/[?&]page=/)
   await expect(page).toHaveURL(/category=intune/)
-  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(filterScroll - 40)
-  await page.getByLabel('Category', { exact: true }).selectOption('powershell')
-  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(filterScroll - 40)
-  await page.getByRole('link', { name: 'Clear filter ×' }).click()
+  await expect.poll(keptScroll).toBeGreaterThan(filterScroll - 40)
+  await expect.poll(keptScroll).toBeLessThan(filterScroll + 40)
+  await page.getByRole('button', { name: /^PowerShell\b/ }).evaluate((element) => {
+    element.click()
+  })
+  await expect.poll(keptScroll).toBeGreaterThan(filterScroll - 40)
+  await expect.poll(keptScroll).toBeLessThan(filterScroll + 40)
+  await clear.evaluate((element) => {
+    element.click()
+  })
   await expect(page).toHaveURL(/\/$/)
-  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(filterScroll - 40)
+  await expect.poll(keptScroll).toBeGreaterThan(filterScroll - 40)
+  await expect.poll(keptScroll).toBeLessThan(filterScroll + 40)
   await page.goto('/?category=intune')
   await page.evaluate(() => window.scrollTo(0, 700))
   await page.getByRole('link', { name: 'Older →', exact: true }).click()
@@ -236,16 +257,16 @@ test('filter panel shares the post card glass surface', async ({ page }) => {
   expect(desktop.select.borderTopColor).toBe(desktop.tag.borderTopColor)
   expect(desktop.select.borderRadius).toBe(desktop.tag.borderRadius)
   expect(desktop.select.color).toBe('rgb(255, 255, 255)')
-  expect(desktop.label.color).toBe('rgb(215, 255, 227)')
+  expect(desktop.label.color).toBe('rgb(243, 255, 246)')
   expect(desktop.active.backgroundColor).not.toBe(desktop.pill.backgroundColor)
   expect(desktop.active.borderTopColor).not.toBe(desktop.pill.borderTopColor)
 
   const all = page.getByRole('button', { name: /^All\b/ })
   await all.focus()
   expect(await all.evaluate((element) => getComputedStyle(element).outlineStyle)).not.toBe('none')
-  const category = page.getByLabel('Category', { exact: true })
-  await category.focus()
-  expect(await category.evaluate((element) => getComputedStyle(element).outlineStyle)).not.toBe('none')
+  const keyword = page.getByLabel('Keyword', { exact: true })
+  await keyword.focus()
+  expect(await keyword.evaluate((element) => getComputedStyle(element).outlineStyle)).not.toBe('none')
 
   await page.setViewportSize({ width: 390, height: 844 })
   const mobile = await readSurfaces()

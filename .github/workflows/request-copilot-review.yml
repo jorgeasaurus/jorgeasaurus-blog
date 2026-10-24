@@ -9,11 +9,11 @@ permissions:
 
 jobs:
   request:
-    if: github.event.pull_request.number == 46 && github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event.pull_request.number == 47 && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
       - name: Request Copilot pull request review
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh api --method POST "repos/jorgeasaurus/jorgeasaurus-blog/pulls/46/requested_reviewers" --input - <<< '{"reviewers":["copilot-pull-request-reviewer[bot]"]}'
+          gh api --method POST "repos/jorgeasaurus/jorgeasaurus-blog/pulls/47/requested_reviewers" --input - <<< '{"reviewers":["copilot-pull-request-reviewer[bot]"]}'

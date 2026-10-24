@@ -27,6 +27,11 @@ export function filterPosts<T extends FilterablePost>(
 
 export function keywordOptions(posts: readonly { tags?: string[] }[]): string[]
 
+export function cardKeywords(
+  post: { category?: string | null; tags?: readonly string[] | null } | null | undefined,
+  limit?: number,
+): string[]
+
 export interface ListingPathInput {
   category?: string | null
   tag?: string | null

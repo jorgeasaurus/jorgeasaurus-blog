@@ -77,21 +77,6 @@ export default function PostFilters({ posts, matchCount }: PostFiltersProps) {
         })}
       </div>
       <div className="post-filters__field">
-        <label htmlFor="field-note-category">Category</label>
-        <select
-          id="field-note-category"
-          name="category"
-          aria-label="Category"
-          value={category}
-          onChange={(event) => update('category', event.target.value)}
-        >
-          <option value="">All categories</option>
-          {categoryChoices.map((item) => (
-            <option key={item.slug} value={item.slug}>{item.label}</option>
-          ))}
-        </select>
-      </div>
-      <div className="post-filters__field">
         <label htmlFor="field-note-tag">Keyword</label>
         <select
           id="field-note-tag"
