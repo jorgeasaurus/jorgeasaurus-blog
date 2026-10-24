@@ -2479,7 +2479,7 @@ code {
   }
 }
 
-@media (max-width: 840px) {
+@media (max-width: 900px) {
   .nav-link--icon {
     width: 38px;
     min-width: 38px;

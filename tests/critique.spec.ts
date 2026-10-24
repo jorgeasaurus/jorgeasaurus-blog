@@ -77,6 +77,23 @@ test('page 1 hides the disabled newer control', async ({ page }) => {
   await expect(page.getByRole('link', { name: '← Newer', exact: true })).toBeVisible()
 })
 
+test('social links stay inside the nav just above 840px', async ({ page }) => {
+  await page.setViewportSize({ width: 841, height: 800 })
+  await page.goto('/')
+  const nav = page.getByRole('navigation', { name: 'Primary navigation' })
+  const navBox = await nav.boundingBox()
+  expect(navBox).not.toBeNull()
+  for (const name of ['GitHub', 'LinkedIn', 'YouTube', 'RSS']) {
+    const link = nav.getByRole('link', { name, exact: true })
+    await expect(link).toBeVisible()
+    const box = await link.boundingBox()
+    expect(box).not.toBeNull()
+    expect(box!.x).toBeGreaterThanOrEqual(navBox!.x - 1)
+    expect(box!.x + box!.width).toBeLessThanOrEqual(navBox!.x + navBox!.width + 1)
+  }
+  expect(await nav.evaluate((element) => element.scrollWidth - element.clientWidth)).toBeLessThanOrEqual(1)
+})
+
 test('mobile nav keeps the social and rss links', async ({ page }) => {
   for (const width of [390, 320]) {
     await page.setViewportSize({ width, height: 800 })
