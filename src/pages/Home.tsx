@@ -33,6 +33,10 @@ export default function Home() {
     borderRadius: 44,
     type: 'rounded',
   })
+  const listingGlassRef = useLiquidGlassSurface<HTMLDivElement>({
+    borderRadius: 34,
+    type: 'rounded',
+  })
 
   const category = searchParams.get('category') ?? ''
   const activeTag = searchParams.get('tag') ?? ''
@@ -157,7 +161,7 @@ export default function Home() {
         </div>
       </section>
       <section className="content-area">
-        <div className="listing-tools glass-panel frosted">
+        <div className="listing-tools glass-panel" ref={listingGlassRef}>
           <div className="content-heading">
             <div>
               <p className="eyebrow">Posts</p>

@@ -173,6 +173,125 @@ test('filtered listing keeps the homepage canonical and noindex', async ({ page 
   await expect(page.locator('head link[rel="canonical"]')).toHaveAttribute('href', 'https://www.jorgeasaur.us/')
 })
 
+test('filter panel shares the post card glass surface', async ({ page }) => {
+  async function readSurfaces() {
+    return page.evaluate(() => {
+      const read = (selector: string) => {
+        const element = document.querySelector(selector)
+        if (!element) throw new Error(`Missing ${selector}`)
+        const style = getComputedStyle(element)
+        const rim = getComputedStyle(element, '::before')
+        return {
+          backgroundColor: style.backgroundColor,
+          backgroundImage: style.backgroundImage,
+          backgroundBlendMode: style.backgroundBlendMode,
+          backdropFilter: style.backdropFilter,
+          boxShadow: style.boxShadow,
+          borderRadius: style.borderRadius,
+          borderTopColor: style.borderTopColor,
+          color: style.color,
+          rimImage: rim.backgroundImage,
+          rimPadding: rim.padding,
+        }
+      }
+      return {
+        panel: read('.listing-tools'),
+        featured: read('.post-card--featured'),
+        card: read('.post-card:not(.post-card--featured)'),
+        tag: read('.post-card-tags a'),
+        pill: read('.category-pill:not(.category-pill--active)'),
+        active: read('.category-pill--active'),
+        select: read('.post-filters__field select'),
+        label: read('.post-filters__field label'),
+      }
+    })
+  }
+
+  function expectSharedSurface(panel: Awaited<ReturnType<typeof readSurfaces>>['panel'], card: Awaited<ReturnType<typeof readSurfaces>>['featured']) {
+    expect(panel.backgroundColor).toBe(card.backgroundColor)
+    expect(panel.backgroundImage).toBe(card.backgroundImage)
+    expect(panel.backgroundBlendMode).toBe(card.backgroundBlendMode)
+    expect(panel.backdropFilter).toBe(card.backdropFilter)
+    expect(panel.boxShadow).toBe(card.boxShadow)
+    expect(panel.color).toBe(card.color)
+    expect(panel.rimImage).toBe(card.rimImage)
+    expect(panel.rimPadding).toBe(card.rimPadding)
+  }
+
+  await page.setViewportSize({ width: 1280, height: 900 })
+  await page.goto('/')
+  const panel = page.locator('.listing-tools')
+  await expect(panel).toBeVisible()
+  await expect(panel).not.toHaveClass(/frosted/)
+  await expect(panel).toHaveClass(/liquid-glass-surface/)
+
+  const desktop = await readSurfaces()
+  expectSharedSurface(desktop.panel, desktop.featured)
+  expectSharedSurface(desktop.panel, desktop.card)
+  expect(desktop.panel.borderRadius).toBe(desktop.featured.borderRadius)
+  expect(desktop.panel.backdropFilter).toContain('blur')
+  expect(desktop.pill.backgroundColor).toBe(desktop.tag.backgroundColor)
+  expect(desktop.pill.borderTopColor).toBe(desktop.tag.borderTopColor)
+  expect(desktop.select.backgroundColor).toBe(desktop.tag.backgroundColor)
+  expect(desktop.select.borderTopColor).toBe(desktop.tag.borderTopColor)
+  expect(desktop.select.borderRadius).toBe(desktop.tag.borderRadius)
+  expect(desktop.select.color).toBe('rgb(255, 255, 255)')
+  expect(desktop.label.color).toBe('rgb(215, 255, 227)')
+  expect(desktop.active.backgroundColor).not.toBe(desktop.pill.backgroundColor)
+  expect(desktop.active.borderTopColor).not.toBe(desktop.pill.borderTopColor)
+
+  const all = page.getByRole('button', { name: /^All\b/ })
+  await all.focus()
+  expect(await all.evaluate((element) => getComputedStyle(element).outlineStyle)).not.toBe('none')
+  const category = page.getByLabel('Category', { exact: true })
+  await category.focus()
+  expect(await category.evaluate((element) => getComputedStyle(element).outlineStyle)).not.toBe('none')
+
+  await page.setViewportSize({ width: 390, height: 844 })
+  const mobile = await readSurfaces()
+  expectSharedSurface(mobile.panel, mobile.featured)
+  expect(mobile.panel.borderRadius).toBe(mobile.featured.borderRadius)
+  const bounds = await panel.evaluate((element) => {
+    const rect = element.getBoundingClientRect()
+    const viewport = window.innerWidth
+    const outside = [...element.querySelectorAll('.category-pill, select, label')].flatMap((control) => {
+      const box = control.getBoundingClientRect()
+      return box.width > 0 && (box.left < -1 || box.right > viewport + 1)
+        ? [control.textContent?.trim() || control.tagName]
+        : []
+    })
+    return {
+      left: rect.left,
+      right: rect.right,
+      overflow: element.scrollWidth > element.clientWidth + 1,
+      outside,
+      viewport,
+    }
+  })
+  expect(bounds.left).toBeGreaterThanOrEqual(-1)
+  expect(bounds.right).toBeLessThanOrEqual(bounds.viewport + 1)
+  expect(bounds.overflow).toBe(false)
+  expect(bounds.outside).toEqual([])
+
+  await page.emulateMedia({ reducedMotion: 'reduce', contrast: 'no-preference' })
+  await page.reload()
+  await expect(panel).toBeVisible()
+  const reduced = await readSurfaces()
+  expect(reduced.panel.backdropFilter).toBe('none')
+  expectSharedSurface(reduced.panel, reduced.featured)
+  expect(reduced.active.backgroundColor).not.toBe(reduced.pill.backgroundColor)
+
+  await page.emulateMedia({ reducedMotion: 'no-preference', contrast: 'more' })
+  await page.reload()
+  await expect(panel).toBeVisible()
+  const contrast = await readSurfaces()
+  expect(contrast.panel.backdropFilter).toContain('blur')
+  expectSharedSurface(contrast.panel, contrast.featured)
+  expect(contrast.pill.borderTopColor).toBe('rgba(215, 255, 227, 0.9)')
+  expect(contrast.select.borderTopColor).toBe('rgba(215, 255, 227, 0.9)')
+  expect(contrast.active.backgroundColor).not.toBe(contrast.pill.backgroundColor)
+})
+
 test('filters stay inside a narrow viewport', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 800 })
   await page.goto('/?category=intune&tag=bitlocker')
