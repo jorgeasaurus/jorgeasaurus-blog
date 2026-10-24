@@ -1,7 +1,7 @@
 import { Link, useSearchParams } from 'react-router-dom'
 import { IconArrow } from './Icons'
 import { formatDate, type PostMeta } from '../lib/posts'
-import { categoryLabel, listingPath } from '../lib/postSearch.mjs'
+import { cardKeywords, categoryLabel, listingPath } from '../lib/postSearch.mjs'
 import useLiquidGlassSurface from '../hooks/useLiquidGlassSurface'
 
 interface PostCardProps {
@@ -18,7 +18,7 @@ export default function PostCard({ post, featured = false, sequence = 0, minutes
     type: 'rounded',
   })
   const category = searchParams.get('category')
-  const keywords = post.tags?.slice(0, 4) ?? []
+  const keywords = cardKeywords(post)
 
   return (
     <article

@@ -1,7 +1,7 @@
 import { useId, useState, type FormEvent } from 'react'
 import useLiquidGlassSurface from '../hooks/useLiquidGlassSurface'
 
-type NewsletterSurface = 'panel' | 'inline' | 'popup'
+type NewsletterSurface = 'panel' | 'inline'
 type SubmitStatus = 'idle' | 'submitting' | 'success' | 'error'
 
 interface NewsletterSignupProps {

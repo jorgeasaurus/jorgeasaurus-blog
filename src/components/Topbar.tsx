@@ -48,36 +48,47 @@ export default function Topbar() {
         >
           About
         </Link>
-        <a
-          href="https://github.com/jorgeasaurus"
-          className="nav-link nav-link--icon nav-link--social"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="GitHub"
-        >
-          <SocialIcon name="github" />
-          <span>GitHub</span>
-        </a>
-        <a
-          href="https://www.linkedin.com/in/jorgeasaurus/"
-          className="nav-link nav-link--icon nav-link--social"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="LinkedIn"
-        >
-          <SocialIcon name="linkedin" />
-          <span>LinkedIn</span>
-        </a>
-        <a
-          href="https://www.youtube.com/@jorgeasaurus"
-          className="nav-link nav-link--icon nav-link--social"
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="YouTube"
-        >
-          <SocialIcon name="youtube" />
-          <span>YouTube</span>
-        </a>
+        <div className="topbar-social">
+          <a
+            href="https://github.com/jorgeasaurus"
+            className="nav-link nav-link--icon nav-link--social"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="GitHub"
+          >
+            <SocialIcon name="github" />
+            <span>GitHub</span>
+          </a>
+          <a
+            href="https://www.linkedin.com/in/jorgeasaurus/"
+            className="nav-link nav-link--icon nav-link--social"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="LinkedIn"
+          >
+            <SocialIcon name="linkedin" />
+            <span>LinkedIn</span>
+          </a>
+          <a
+            href="https://www.youtube.com/@jorgeasaurus"
+            className="nav-link nav-link--icon nav-link--social"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="YouTube"
+          >
+            <SocialIcon name="youtube" />
+            <span>YouTube</span>
+          </a>
+          <a
+            href="/rss.xml"
+            className="nav-link nav-link--icon nav-link--social"
+            type="application/rss+xml"
+            aria-label="RSS"
+          >
+            <SocialIcon name="rss" />
+            <span>RSS</span>
+          </a>
+        </div>
       </div>
     </nav>
   )

@@ -25,6 +25,26 @@ export function keywordOptions(posts) {
     .sort((a, b) => a.localeCompare(b, 'en'))
 }
 
+// Category is already shown as its own chip. Skip it, and skip repeated keywords.
+export function cardKeywords(post, limit = 4) {
+  const seen = new Set()
+  const categorySlug = String(post?.category ?? '').trim().toLowerCase()
+  const categoryName = categoryLabel(post?.category).trim().toLowerCase()
+  if (categorySlug) seen.add(categorySlug)
+  if (categoryName) seen.add(categoryName)
+
+  const keywords = []
+  for (const tag of post?.tags ?? []) {
+    const value = String(tag).trim()
+    const key = value.toLowerCase()
+    if (!key || seen.has(key)) continue
+    seen.add(key)
+    keywords.push(value)
+    if (keywords.length >= limit) break
+  }
+  return keywords
+}
+
 export function listingPath({ category, tag, page } = {}) {
   const params = new URLSearchParams()
   if (category) params.set('category', category)

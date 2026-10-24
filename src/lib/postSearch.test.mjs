@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { loadPosts } from '../../scripts/lib/site.mjs'
 import {
+  cardKeywords,
   categories,
   filterPosts,
   listingPath,
@@ -100,4 +101,43 @@ test('every published post keeps its backfilled category and title keywords', as
   assert.ok(bySlug['bitlocker-startup-pin-after-autopilot'].tags.includes('autopilot'))
   assert.ok(bySlug['hello-world'].tags.includes('mdx'))
   assert.ok(bySlug['using-filters-to-assign-apps-policies-and-profiles-in-microsoft-intune'].tags.includes('filters'))
+})
+
+test('card keywords drop case-insensitive repeats and the category chip', () => {
+  assert.deepEqual(
+    cardKeywords({
+      category: 'intune',
+      tags: ['Intune', 'intune', 'PowerShell', 'powershell', 'Windows'],
+    }),
+    ['PowerShell', 'Windows'],
+  )
+  assert.deepEqual(
+    cardKeywords({
+      category: 'microsoft-graph',
+      tags: ['Microsoft Graph', 'microsoft-graph', 'batch', 'powershell', 'api', 'automation'],
+    }),
+    ['batch', 'powershell', 'api', 'automation'],
+  )
+  assert.deepEqual(cardKeywords({ category: 'career', tags: [] }), [])
+})
+
+test('published tag lists have no case-insensitive duplicates', async () => {
+  const posts = await loadPosts()
+  for (const post of posts) {
+    const seen = new Set()
+    for (const tag of post.tags ?? []) {
+      const key = String(tag).trim().toLowerCase()
+      assert.equal(seen.has(key), false, `${post.slug} repeats ${tag}`)
+      seen.add(key)
+    }
+  }
+
+  const repeated = ['33', '34', '35']
+  const sorted = [...posts].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
+  for (const number of repeated) {
+    const post = sorted[sorted.length - Number(number)]
+    const labels = [post.category, ...cardKeywords(post)].map((value) => String(value).toLowerCase())
+    assert.equal(new Set(labels).size, labels.length, `No. ${number} ${post.slug}`)
+    assert.equal(labels.filter((label) => label === 'intune').length, 1)
+  }
 })

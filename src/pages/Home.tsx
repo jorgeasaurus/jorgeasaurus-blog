@@ -41,7 +41,6 @@ export default function Home() {
   const category = searchParams.get('category') ?? ''
   const activeTag = searchParams.get('tag') ?? ''
   const sorted = sortPostsByDate(posts)
-  const latest = sorted[0]
   const sequenceBySlug = new Map(sorted.map((post, index) => [post.slug, sorted.length - index]))
   const filtered = filterPosts(sorted, { category, tag: activeTag })
   const totalPages = Math.max(1, Math.ceil(filtered.length / POSTS_PER_PAGE))
@@ -124,21 +123,10 @@ export default function Home() {
             <p className="hero-signal">Learn. Build. Automate.</p>
           </div>
           <div className="hero-intro">
-            <p className="eyebrow">Field notes from automation work</p>
-            <p className="hero-ledger">
-              <strong>{posts.length} field notes</strong>
-              <span>Intune, PowerShell, Microsoft Graph, endpoint security</span>
-            </p>
             <p className="hero-copy">
               Practical engineering notes on PowerShell, endpoint management,
               Microsoft Graph, and building durable automation systems.
             </p>
-            {latest && (
-              <Link className="hero-latest" to={`/${latest.slug}`}>
-                <span className="eyebrow">Latest dispatch</span>
-                <strong>{latest.title}</strong>
-              </Link>
-            )}
             <div className="hero-links" aria-label="Profile links">
               <a href="https://github.com/jorgeasaurus" target="_blank" rel="noopener noreferrer">
                 <SocialIcon name="github" />
@@ -191,9 +179,7 @@ export default function Home() {
                 ← Newer
               </Link>
             ) : (
-              <span className="pagination-link pagination-link--wide pagination-link--disabled">
-                ← Newer
-              </span>
+              <span className="pagination-slot" aria-hidden="true" />
             )}
             <div className="pagination-pages">
               {Array.from({ length: totalPages }, (_, index) => {

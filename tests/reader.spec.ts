@@ -12,15 +12,14 @@ test.beforeEach(async ({ page, context, baseURL }) => {
   const localOrigin = new URL(baseURL!).origin
   await context.route((url) => url.origin !== localOrigin, (route) => route.abort())
   await context.route('**/api/subscribe', (route) => route.abort())
-  await page.addInitScript(() => localStorage.setItem('newsletter-popup-subscribed', 'true'))
   await page.emulateMedia({ reducedMotion: 'reduce' })
 })
 
-test('category quick pills stay aligned with the category and keyword selects', async ({ page }) => {
+test('category chips and the keyword select filter without a category dropdown', async ({ page }) => {
   await page.goto('/')
   await expect(page.locator('input[type="search"]')).toHaveCount(0)
   await expect(page.getByRole('searchbox')).toHaveCount(0)
-  await expect(page.locator('#field-note-category')).toBeVisible()
+  await expect(page.locator('#field-note-category')).toHaveCount(0)
   await expect(page.locator('#field-note-tag')).toBeVisible()
   const all = page.getByRole('button', { name: /^All\b/ })
   await all.focus()
@@ -30,7 +29,6 @@ test('category quick pills stay aligned with the category and keyword selects', 
   await intune.click()
   await expect(page).toHaveURL(/category=intune/)
   await expect(page).not.toHaveURL(/[?&]q=/)
-  await expect(page.locator('#field-note-category')).toHaveValue('intune')
   await expect(intune).toHaveAttribute('aria-pressed', 'true')
   await expect(page.getByRole('heading', { name: 'Category: Intune' })).toBeVisible()
 
@@ -40,29 +38,29 @@ test('category quick pills stay aligned with the category and keyword selects', 
   await expect(page).toHaveURL(/category=intune/)
   await expect(page).not.toHaveURL(/[?&]page=/)
 
-  await page.locator('#field-note-category').selectOption('powershell')
+  await page.getByRole('button', { name: /^PowerShell\b/ }).click()
   await expect(page.getByRole('button', { name: /^PowerShell\b/ })).toHaveAttribute('aria-pressed', 'true')
   await expect(page).toHaveURL(/tag=windows/)
   await page.getByRole('button', { name: /^All\b/ }).click()
-  await expect(page.locator('#field-note-category')).toHaveValue('')
+  await expect(page.getByRole('button', { name: /^All\b/ })).toHaveAttribute('aria-pressed', 'true')
   await expect(page).toHaveURL(/tag=windows/)
   await expect(page).not.toHaveURL(/category=/)
 })
 
-test('homepage signals the notebook and the latest dispatch', async ({ page }) => {
+test('homepage keeps the name, tagline, and one sentence', async ({ page }) => {
   await page.goto('/')
-  await expect(page.locator('.hero-ledger')).toContainText('field notes')
-  await expect(page.locator('.hero-ledger')).toContainText('Intune')
-  const latest = page.locator('.hero-latest')
-  await expect(latest).toContainText('Latest dispatch')
-  await latest.click()
-  await expect(page).toHaveURL(/\/learn-intune-powershell-automation$/)
-  await page.goto('/')
+  await expect(page.getByRole('heading', { level: 1, name: 'Jorgeasaurus' })).toBeVisible()
+  await expect(page.locator('.hero-signal')).toHaveText('Learn. Build. Automate.')
+  await expect(page.locator('.hero-panel .hero-copy')).toContainText('Practical engineering notes')
+  await expect(page.locator('.hero-ledger')).toHaveCount(0)
+  await expect(page.locator('.hero-latest')).toHaveCount(0)
+  await expect(page.locator('.hero-panel .eyebrow')).toHaveCount(0)
   const card = page.locator('.post-card--featured')
   await expect(card).toContainText('Latest dispatch')
   await expect(card).toContainText(/No\. \d+/)
   await expect(card).toContainText('min read')
-  await expect(card).toContainText('Read field note')
+  await expect(card.locator('.post-card-cta')).toHaveText(/Read field note/)
+  expect(await card.locator('.post-card-cta').evaluate((element) => getComputedStyle(element).textTransform)).toBe('none')
   await expect(card.locator('.post-card__category')).toBeVisible()
 })
 
