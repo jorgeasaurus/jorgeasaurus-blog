@@ -1,5 +1,9 @@
 /// <reference types="vite/client" />
 
+interface Window {
+  __BLOG_THEME__?: 'classic' | 'admin'
+}
+
 declare module '*.mdx' {
   const component: React.ComponentType
   export default component

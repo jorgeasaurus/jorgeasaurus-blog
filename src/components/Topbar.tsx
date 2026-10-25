@@ -2,6 +2,7 @@ import type { MouseEvent } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import SocialIcon from './SocialIcon'
 import useLiquidGlassSurface from '../hooks/useLiquidGlassSurface'
+import ThemeSwitcher from '../theme/ThemeSwitcher'
 
 export default function Topbar() {
   const { pathname } = useLocation()
@@ -28,6 +29,7 @@ export default function Topbar() {
         <span className="brand-prompt" aria-hidden="true">&gt;</span>
         <span className="brand-name">Jorgeasaurus</span>
       </Link>
+      <ThemeSwitcher />
       <div className="topbar-links">
         <Link
           to="/"
