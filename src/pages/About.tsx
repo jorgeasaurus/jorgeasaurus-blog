@@ -1,23 +1,24 @@
 import usePageMetadata from '../hooks/usePageMetadata'
-import Topbar from '../components/Topbar'
-import WallpaperStage from '../components/WallpaperStage'
-import BackdropCredit from '../components/BackdropCredit'
 import SocialIcon from '../components/SocialIcon'
-import useLiquidGlassSurface from '../hooks/useLiquidGlassSurface'
+import AdminShell from '../admin/AdminShell'
+import Breadcrumbs from '../admin/Breadcrumbs'
+import CommandBar from '../admin/CommandBar'
+import AdminIcon from '../admin/icons'
 
 export default function About() {
   usePageMetadata('about')
 
-  const aboutGlassRef = useLiquidGlassSurface<HTMLElement>({
-    borderRadius: 34,
-    type: 'rounded',
-  })
-
   return (
-    <main className="blog-shell blog-shell--about">
-      <WallpaperStage />
-      <Topbar />
-      <article className="about-panel glass-panel" ref={aboutGlassRef}>
+    <AdminShell>
+      <Breadcrumbs items={[{ label: 'Home', to: '/' }, { label: 'About' }]} />
+      <CommandBar />
+      <article className="about-panel ac-blade">
+        <div className="ac-post-title">
+          <span className="ac-blade-icon" aria-hidden="true">
+            <AdminIcon name="info" />
+          </span>
+          <p className="ac-blade-kicker">Profile</p>
+        </div>
         <div className="about-header">
           <div className="about-heading">
             <p className="eyebrow">About</p>
@@ -110,7 +111,6 @@ export default function About() {
           </div>
         </div>
       </article>
-      <BackdropCredit />
-    </main>
+    </AdminShell>
   )
 }

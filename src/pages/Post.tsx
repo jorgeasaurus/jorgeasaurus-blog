@@ -10,11 +10,12 @@ import {
   useRef,
   useState,
 } from 'react'
-import Topbar from '../components/Topbar'
 import NewsletterSignup from '../components/NewsletterSignup'
-import WallpaperStage from '../components/WallpaperStage'
-import BackdropCredit from '../components/BackdropCredit'
 import ArticleActions from '../components/ArticleActions'
+import AdminShell from '../admin/AdminShell'
+import Breadcrumbs from '../admin/Breadcrumbs'
+import CommandBar from '../admin/CommandBar'
+import AdminIcon from '../admin/icons'
 import ArticleWayfinder from '../components/ArticleWayfinder'
 import CodeBlock from '../components/CodeBlock'
 import { IconClose } from '../components/Icons'
@@ -27,7 +28,6 @@ import { relatedFieldNotes } from '../lib/relatedPosts'
 import postImages from '../content/postImages'
 import imageMetadata from '../content/imageMetadata'
 import posts from '../content/posts'
-import useLiquidGlassSurface from '../hooks/useLiquidGlassSurface'
 import useModalDialog from '../hooks/useModalDialog'
 
 type MdxImageProps = React.ComponentPropsWithoutRef<'img'>
@@ -176,18 +176,6 @@ export default function Post() {
   const closeExpandedImage = useCallback(() => {
     setExpandedImage(null)
   }, [])
-  const loadingGlassRef = useLiquidGlassSurface<HTMLDivElement>({
-    borderRadius: 30,
-    type: 'rounded',
-  })
-  const errorGlassRef = useLiquidGlassSurface<HTMLDivElement>({
-    borderRadius: 30,
-    type: 'rounded',
-  })
-  const articleGlassRef = useLiquidGlassSurface<HTMLElement>({
-    borderRadius: 30,
-    type: 'rounded',
-  })
   const related = postMeta ? relatedFieldNotes(postMeta, posts) : []
 
   usePageMetadata(!postMeta || postLoad.status === 'failed' ? 'not-found' : 'post', { post: postMeta })
@@ -231,33 +219,29 @@ export default function Post() {
 
   if (postLoad.status === 'loading') {
     return (
-      <main className="blog-shell">
-        <WallpaperStage />
-        <Topbar />
-        <div key="loading" className="content-panel glass-panel" ref={loadingGlassRef}>
+      <AdminShell>
+        <Breadcrumbs items={[{ label: 'Home', to: '/' }, { label: 'Posts', to: '/#posts' }, { label: 'Loading' }]} />
+        <div key="loading" className="content-panel ac-blade">
           <div className="loading-inline">
             <div className="spinner" />
             Loading&hellip;
           </div>
         </div>
-        <BackdropCredit />
-      </main>
+      </AdminShell>
     )
   }
 
   if (!postMeta || !PostContent) {
     return (
-      <main className="blog-shell">
-        <WallpaperStage />
-        <Topbar />
-        <div key="missing" className="content-panel glass-panel" ref={errorGlassRef}>
+      <AdminShell>
+        <Breadcrumbs items={[{ label: 'Home', to: '/' }, { label: 'Posts', to: '/#posts' }, { label: 'Post Not Found' }]} />
+        <div key="missing" className="content-panel ac-blade">
           <h1>Post Not Found</h1>
           <p className="hero-copy">
             The post you're looking for doesn't exist.
           </p>
         </div>
-        <BackdropCredit />
-      </main>
+      </AdminShell>
     )
   }
 
@@ -266,9 +250,7 @@ export default function Post() {
   const hasArticleHero = images.length === 1 && heroImage
 
   return (
-    <main className="blog-shell">
-      <WallpaperStage />
-      <Topbar />
+    <AdminShell>
       <div
         key="progress"
         className="reading-progress"
@@ -278,24 +260,53 @@ export default function Post() {
       <p className="reading-status" ref={statusRef}>
         {readingStatus(minutes, 0)}
       </p>
+      <Breadcrumbs
+        items={[
+          { label: 'Home', to: '/' },
+          { label: 'Posts', to: '/#posts' },
+          { label: postMeta.title },
+        ]}
+      />
+      <CommandBar />
       <div className={outline.length >= 2 ? 'post-frame post-frame--with-wayfinder' : 'post-frame'}>
       <ArticleWayfinder key={slug} outline={outline} />
-      <article key="article" className="content-panel glass-panel" ref={articleGlassRef}>
+      <article key="article" className="content-panel ac-blade">
         <header className="post__header">
-          <div className="post__kicker">
-            <p className="post-card-date">{formatDate(postMeta.date)}</p>
-            <ul className="post-card-tags" aria-label="Post category">
-              <li>
-                <Link className="post__category" to={listingPath({ category: postMeta.category })}>
-                  {categoryLabel(postMeta.category)}
-                </Link>
-              </li>
-            </ul>
+          <div className="ac-post-title">
+            <span className="ac-blade-icon" aria-hidden="true">
+              <AdminIcon name="document" />
+            </span>
+            <div>
+              <div className="post__kicker">
+                <p className="post-card-date">{formatDate(postMeta.date)}</p>
+                <ul className="post-card-tags" aria-label="Post category">
+                  <li>
+                    <Link className="post__category" to={listingPath({ category: postMeta.category })}>
+                      {categoryLabel(postMeta.category)}
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+              <h1 tabIndex={-1}>{postMeta.title}</h1>
+            </div>
           </div>
-          <h1 tabIndex={-1}>{postMeta.title}</h1>
           {postMeta.description && (
             <p className="hero-copy post__lede">{postMeta.description}</p>
           )}
+          <dl className="ac-essentials">
+            <div>
+              <dt>Published</dt>
+              <dd><time dateTime={postMeta.date}>{formatDate(postMeta.date)}</time></dd>
+            </div>
+            <div>
+              <dt>Category</dt>
+              <dd>{categoryLabel(postMeta.category)}</dd>
+            </div>
+            <div>
+              <dt>Reading time</dt>
+              <dd>{minutes > 0 ? `${minutes} min read` : 'Short note'}</dd>
+            </div>
+          </dl>
           <ArticleActions />
         </header>
         {hasArticleHero && (
@@ -370,7 +381,6 @@ export default function Post() {
       {expandedImage && (
         <LightboxDialog image={expandedImage} onClose={closeExpandedImage} />
       )}
-      <BackdropCredit />
-    </main>
+    </AdminShell>
   )
 }

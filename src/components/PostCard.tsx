@@ -2,7 +2,6 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { IconArrow } from './Icons'
 import { formatDate, type PostMeta } from '../lib/posts'
 import { cardKeywords, categoryLabel, listingPath } from '../lib/postSearch.mjs'
-import useLiquidGlassSurface from '../hooks/useLiquidGlassSurface'
 
 interface PostCardProps {
   post: PostMeta
@@ -13,19 +12,15 @@ interface PostCardProps {
 
 export default function PostCard({ post, featured = false, sequence = 0, minutes = 0 }: PostCardProps) {
   const [searchParams] = useSearchParams()
-  const glassRef = useLiquidGlassSurface<HTMLElement>({
-    borderRadius: featured ? 34 : 24,
-    type: 'rounded',
-  })
   const category = searchParams.get('category')
   const keywords = cardKeywords(post)
 
   return (
     <article
-      className={`post-card glass-panel ${featured ? 'post-card--featured' : ''}`}
-      ref={glassRef}
+      className={`post-card${featured ? ' post-card--featured' : ''}`}
+      role="row"
     >
-      <div className="post-card-body">
+      <div className="ac-name" role="cell">
         <div className="post-card-meta">
           {featured && <span>Latest dispatch</span>}
           <p className="post-card-date">
@@ -40,24 +35,30 @@ export default function PostCard({ post, featured = false, sequence = 0, minutes
           </Link>
         </h3>
         <p className="post-card-desc">{post.description}</p>
-        <ul className="post-card-tags" aria-label="Category and keywords">
-          <li>
-            <Link className="post-card__category" to={listingPath({ category: post.category })}>
-              {categoryLabel(post.category)}
-            </Link>
-          </li>
-          {keywords.map((keyword) => (
-            <li key={keyword}>
-              <Link to={listingPath({ category, tag: keyword })}>
-                {keyword}
-              </Link>
-            </li>
-          ))}
-        </ul>
         <span className="post-card-cta" aria-hidden="true">
           Read field note
           <IconArrow className="icon post-card-cta__icon" />
         </span>
+      </div>
+      <ul className="post-card-tags" aria-label="Category and keywords" role="cell">
+        <li>
+          <Link className="post-card__category" to={listingPath({ category: post.category })}>
+            {categoryLabel(post.category)}
+          </Link>
+        </li>
+        {keywords.map((keyword) => (
+          <li key={keyword}>
+            <Link to={listingPath({ category, tag: keyword })}>
+              {keyword}
+            </Link>
+          </li>
+        ))}
+      </ul>
+      <div className="ac-published" role="cell">
+        <time dateTime={post.date}>{formatDate(post.date)}</time>
+      </div>
+      <div className="ac-reading" role="cell">
+        {minutes > 0 ? `${minutes} min` : '—'}
       </div>
     </article>
   )
