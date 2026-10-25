@@ -18,7 +18,12 @@ import posts from '../../content/posts'
 const POSTS_PER_PAGE = 5
 
 function scrollToAdminHash(hash: string) {
-  const id = decodeURIComponent(hash.replace(/^#/, ''))
+  let id: string
+  try {
+    id = decodeURIComponent(hash.replace(/^#/, ''))
+  } catch {
+    return false
+  }
   if (!id) return false
   const target = document.getElementById(id)
   if (!target) return false

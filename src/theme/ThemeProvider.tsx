@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, type ReactNode } from 'react'
+import { useCallback, useEffect, useLayoutEffect, useMemo, type ReactNode } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { applyTheme, resolveTheme, themeFromSearch, writeStoredTheme, type BlogTheme } from './theme'
 import { ThemeContext } from './themeContext'
@@ -10,12 +10,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const urlTheme = themeFromSearch(search)
   const theme = resolveTheme(search)
 
-  if (document.documentElement.dataset.theme !== theme) applyTheme(theme)
+  useLayoutEffect(() => {
+    applyTheme(theme)
+  }, [theme])
 
   useEffect(() => {
     if (urlTheme) writeStoredTheme(urlTheme)
-    applyTheme(theme)
-  }, [theme, urlTheme])
+  }, [urlTheme])
 
   const setTheme = useCallback((next: BlogTheme) => {
     writeStoredTheme(next)

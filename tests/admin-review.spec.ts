@@ -31,6 +31,16 @@ test('an admin-center article renders its post body', async ({ page }) => {
   await expect(page.getByRole('heading', { name: 'Post Not Found' })).toHaveCount(0)
 })
 
+test('a malformed admin hash still renders the home page', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', (error) => errors.push(error.message))
+  await page.goto('/?theme=admin#%E0%A4%A')
+  await expect(page.locator('.admin-center')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Jorgeasaurus', level: 1 })).toBeVisible()
+  await expect(page.getByRole('table', { name: 'Posts' })).toBeVisible()
+  expect(errors.join('\n')).not.toMatch(/URIError|URI malformed/)
+})
+
 test('admin hash links scroll below the fixed header and home returns to the top', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 })
   await page.goto('/?theme=admin')
