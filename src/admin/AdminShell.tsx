@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { useLocation } from 'react-router-dom'
 import BackdropCredit from '../components/BackdropCredit'
-import Topbar from '../components/Topbar'
+import AdminTopbar from './AdminTopbar'
 import WallpaperStage from '../components/WallpaperStage'
 import { AdminNavContext } from './adminNavContext'
 import AdminRail from './AdminRail'
@@ -29,7 +29,7 @@ export default function AdminShell({ children }: { children: ReactNode }) {
     <AdminNavContext.Provider value={{ mobileOpen, setMobileOpen, collapsed, setCollapsed }}>
       <main className={shellClass}>
         <WallpaperStage />
-        <Topbar />
+        <AdminTopbar />
         <AdminRail />
         {mobileOpen && (
           <button

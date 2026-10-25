@@ -2,6 +2,30 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      (function () {
+        var key = 'blog-theme'
+        var theme = 'classic'
+        try {
+          var requested = new URLSearchParams(location.search).get('theme')
+          if (requested === 'admin' || requested === 'classic') {
+            theme = requested
+            try { localStorage.setItem(key, theme) } catch (error) { /* storage may be blocked */ }
+            document.cookie = key + '=' + theme + '; Path=/; Max-Age=31536000; SameSite=Lax'
+          } else {
+            var stored = null
+            try { stored = localStorage.getItem(key) } catch (error) { /* storage may be blocked */ }
+            if (stored === 'admin' || stored === 'classic') theme = stored
+            else {
+              var match = document.cookie.match(/(?:^|; )blog-theme=(admin|classic)(?:;|$)/)
+              if (match) theme = match[1]
+            }
+          }
+        } catch (error) { /* keep classic */ }
+        document.documentElement.dataset.theme = theme
+        window.__BLOG_THEME__ = theme
+      })()
+    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&amp;family=Instrument+Sans:wght@400;500;600;700&amp;display=swap" />

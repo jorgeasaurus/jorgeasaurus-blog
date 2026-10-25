@@ -1,19 +1,18 @@
 import usePageMetadata from '../hooks/usePageMetadata'
 import { Link, useSearchParams } from 'react-router-dom'
-import { useEffect, useRef, useState, type MouseEvent } from 'react'
+import { useEffect, useRef, type MouseEvent } from 'react'
+import Topbar from '../components/Topbar'
 import PostCard from '../components/PostCard'
 import PostFilters from '../components/PostFilters'
 import NewsletterSignup from '../components/NewsletterSignup'
 import SocialIcon from '../components/SocialIcon'
-import AdminShell from '../admin/AdminShell'
-import Breadcrumbs from '../admin/Breadcrumbs'
-import CommandBar from '../admin/CommandBar'
-import Dashboard from '../admin/Dashboard'
-import { sortColumns, sortListing, type SortDirection, type SortKey } from '../admin/sortListing'
+import WallpaperStage from '../components/WallpaperStage'
+import BackdropCredit from '../components/BackdropCredit'
 import { sortPostsByDate } from '../lib/posts'
 import { categoryLabel, filterPosts, listingPath } from '../lib/postSearch.mjs'
 import { readingMinutes } from '../lib/readingTime'
 import posts from '../content/posts'
+import useLiquidGlassSurface from '../hooks/useLiquidGlassSurface'
 
 const POSTS_PER_PAGE = 5
 
@@ -30,16 +29,21 @@ function scrollToTopOnPrimaryClick(event: MouseEvent<HTMLAnchorElement>) {
 
 export default function Home() {
   const [searchParams] = useSearchParams()
-  const [sortKey, setSortKey] = useState<SortKey>('date')
-  const [sortDirection, setSortDirection] = useState<SortDirection>('descending')
+  const heroGlassRef = useLiquidGlassSurface<HTMLElement>({
+    borderRadius: 44,
+    type: 'rounded',
+  })
+  const listingGlassRef = useLiquidGlassSurface<HTMLDivElement>({
+    borderRadius: 34,
+    type: 'rounded',
+  })
 
   const category = searchParams.get('category') ?? ''
   const activeTag = searchParams.get('tag') ?? ''
   const sorted = sortPostsByDate(posts)
   const sequenceBySlug = new Map(sorted.map((post, index) => [post.slug, sorted.length - index]))
   const filtered = filterPosts(sorted, { category, tag: activeTag })
-  const ordered = sortListing(filtered, sortKey, sortDirection)
-  const totalPages = Math.max(1, Math.ceil(ordered.length / POSTS_PER_PAGE))
+  const totalPages = Math.max(1, Math.ceil(filtered.length / POSTS_PER_PAGE))
   const requestedPage = Number.parseInt(searchParams.get('page') ?? '1', 10)
   const currentPage = Math.min(
     Math.max(Number.isFinite(requestedPage) ? requestedPage : 1, 1),
@@ -48,20 +52,12 @@ export default function Home() {
   const filtersActive = Boolean(category || activeTag)
   const isFiltered = filtersActive || currentPage > 1
   const pageStart = (currentPage - 1) * POSTS_PER_PAGE
-  const visiblePosts = ordered.slice(pageStart, pageStart + POSTS_PER_PAGE)
+  const visiblePosts = filtered.slice(pageStart, pageStart + POSTS_PER_PAGE)
   const heading = activeTag
     ? `Tagged: ${activeTag}`
     : category
       ? `Category: ${categoryLabel(category)}`
       : 'Recent field notes'
-  const showOverview = !filtersActive && currentPage === 1 && sortKey === 'date' && sortDirection === 'descending'
-  const crumbs = filtersActive
-    ? [
-        { label: 'Home', to: '/' },
-        { label: 'Posts', to: '/#posts' },
-        { label: activeTag ? `Tagged: ${activeTag}` : categoryLabel(category) },
-      ]
-    : [{ label: 'Home', to: '/' }, { label: 'Posts' }]
 
   usePageMetadata('home', { filtered: isFiltered })
 
@@ -113,22 +109,17 @@ export default function Home() {
     }
   }, [])
 
-  function toggleSort(key: SortKey) {
-    if (key === sortKey) {
-      setSortDirection((direction) => (direction === 'ascending' ? 'descending' : 'ascending'))
-      return
-    }
-    setSortKey(key)
-    setSortDirection(key === 'title' || key === 'category' ? 'ascending' : 'descending')
-  }
-
   return (
-    <AdminShell>
-      <Breadcrumbs items={crumbs} />
-      <section className="hero-panel" aria-labelledby="home-title">
+    <main className="blog-shell">
+      <WallpaperStage />
+      <Topbar />
+      <section className="hero-panel glass-panel" ref={heroGlassRef}>
         <div className="hero-layout">
           <div className="hero-title-block">
-            <h1 id="home-title">Jorgeasaurus</h1>
+            <h1>
+              <span aria-hidden="true">&gt;</span>
+              Jorgeasaurus
+            </h1>
             <p className="hero-signal">Learn. Build. Automate.</p>
           </div>
           <div className="hero-intro">
@@ -157,10 +148,8 @@ export default function Home() {
           </div>
         </div>
       </section>
-      <CommandBar mode="list" />
-      {showOverview && <Dashboard posts={posts} />}
-      <section className="content-area" id="posts">
-        <div className="listing-tools">
+      <section className="content-area">
+        <div className="listing-tools glass-panel" ref={listingGlassRef}>
           <div className="content-heading">
             <div>
               <p className="eyebrow">Posts</p>
@@ -174,38 +163,15 @@ export default function Home() {
           </div>
           <PostFilters posts={posts} matchCount={filtered.length} />
         </div>
-        <div className="ac-grid-scroll">
-          <div className="ac-grid" role="table" aria-label="Posts" aria-rowcount={ordered.length}>
-            <div className="ac-grid-head" role="row">
-              {sortColumns.map((column) => {
-                const active = sortKey === column.key
-                return (
-                  <div
-                    key={column.key}
-                    role="columnheader"
-                    aria-sort={active ? sortDirection : 'none'}
-                  >
-                    <button type="button" onClick={() => toggleSort(column.key)}>
-                      {column.label}
-                      {active && (
-                        <span aria-hidden="true">{sortDirection === 'ascending' ? ' ↑' : ' ↓'}</span>
-                      )}
-                    </button>
-                  </div>
-                )
-              })}
-            </div>
-            {visiblePosts.map((post, index) => (
-              <PostCard
-                key={post.slug}
-                post={post}
-                featured={index === 0 && showOverview}
-                sequence={sequenceBySlug.get(post.slug) ?? 0}
-                minutes={readingMinutes(post.slug)}
-              />
-            ))}
-          </div>
-        </div>
+        {visiblePosts.map((post, index) => (
+          <PostCard
+            key={post.slug}
+            post={post}
+            featured={index === 0 && currentPage === 1 && !filtersActive}
+            sequence={sequenceBySlug.get(post.slug) ?? 0}
+            minutes={readingMinutes(post.slug)}
+          />
+        ))}
         {totalPages > 1 && (
           <nav className="pagination" aria-label="Posts pagination">
             {currentPage > 1 ? (
@@ -248,6 +214,7 @@ export default function Home() {
         )}
         <NewsletterSignup />
       </section>
-    </AdminShell>
+      <BackdropCredit />
+    </main>
   )
 }

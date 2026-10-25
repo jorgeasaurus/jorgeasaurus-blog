@@ -1,4 +1,10 @@
-/* Intune-inspired admin center layer. Revert by removing this import and src/admin/. */
+/* Intune-inspired admin center layer. Remove this import, src/admin/, and the theme switch to drop it. */
+
+html[data-theme='admin'] body {
+  background: #faf9f8;
+  color: #242424;
+  color-scheme: light;
+}
 
 body:has(.admin-center) {
   background: #faf9f8;
@@ -147,6 +153,23 @@ body:has(.admin-center) {
   gap: 8px;
   color: #fff;
   border-radius: 4px;
+}
+
+.admin-center .theme-switch {
+  order: 1;
+  color: #fff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.admin-center .theme-switch select {
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 4px;
+  background: #fff;
+  color: #242424;
+  color-scheme: light;
 }
 
 .admin-center .ac-nav-toggle {
@@ -1468,7 +1491,7 @@ body:has(.admin-center) {
 
 @media (max-width: 720px) {
   .admin-center.blog-shell {
-    --fixed-nav-block-size: 96px;
+    --fixed-nav-block-size: 120px;
   }
 }
 

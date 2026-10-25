@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { contrastRatio, decodePng, maxChannelDelta, parseCssColor } from './contrast.mjs'
+import { decodePng, maxChannelDelta, measureBrightestGlass } from './contrast.mjs'
 
 const minimumContrast = 4.5
 
@@ -111,52 +111,48 @@ test('mobile nav keeps the social and rss links', async ({ page }) => {
   }
 })
 
-test('admin center text clears WCAG AA', async ({ page }) => {
+test('small glass text clears WCAG AA on the brightest backdrop', async ({ page }) => {
   await page.goto('/')
-  const selectors = [
-    '.post-card-date',
-    '.post-card-tags a',
-    '.post-card-cta',
-    '.listing-tools .eyebrow',
-    '.post-filters__field label',
-    '.hero-signal',
-    '.hero-copy',
-    '.ac-homage',
-    '.brand-name',
-  ]
-  for (const selector of selectors) {
-    const sample = await page.locator(selector).first().evaluate((element, name) => {
+  await page.evaluate(async () => {
+    const image = getComputedStyle(document.querySelector('.wallpaper-stage')!).backgroundImage
+    const match = image.match(/url\(["']?(.*?)["']?\)/)
+    if (!match) return
+    await new Promise<void>((resolve, reject) => {
+      const loader = new Image()
+      loader.onload = () => resolve()
+      loader.onerror = () => reject(new Error('wallpaper failed'))
+      loader.src = match[1]
+    })
+  })
+
+  for (const selector of ['.post-card-date', '.post-card-tags a', '.post-card-cta', '.listing-tools .eyebrow', '.post-filters__field label']) {
+    const metrics = await page.locator(selector).first().evaluate((element) => {
       const style = getComputedStyle(element)
-      let node: Element | null = element
-      let background = 'rgb(255, 255, 255)'
-      while (node instanceof Element) {
-        const color = getComputedStyle(node).backgroundColor
-        const match = color.match(/rgba?\(([^)]+)\)/)
-        const alpha = match ? Number(match[1].split(/[,\s/]+/).filter(Boolean)[3] ?? 1) : 1
-        if (alpha >= 0.99 && color !== 'rgba(0, 0, 0, 0)') {
-          background = color
-          break
-        }
-        node = node.parentElement
-      }
       return {
         fontSize: Number.parseFloat(style.fontSize),
         letterSpacing: style.letterSpacing === 'normal' ? 0 : Number.parseFloat(style.letterSpacing),
-        color: style.color,
-        background,
-        name,
       }
-    }, selector)
-    if (['.post-card-date', '.post-card-tags a', '.post-card-cta', '.listing-tools .eyebrow', '.post-filters__field label'].includes(selector)) {
-      expect(sample.fontSize).toBeGreaterThanOrEqual(12)
-      expect(sample.fontSize).toBeLessThanOrEqual(13)
-      expect(sample.letterSpacing).toBeLessThanOrEqual(1)
-    }
-    const ratio = contrastRatio(parseCssColor(sample.color), parseCssColor(sample.background))
-    expect(ratio, `${selector} ${sample.color} on ${sample.background}`).toBeGreaterThanOrEqual(minimumContrast)
+    })
+    expect(metrics.fontSize).toBeGreaterThanOrEqual(12)
+    expect(metrics.fontSize).toBeLessThanOrEqual(13)
+    expect(metrics.letterSpacing).toBeLessThanOrEqual(1)
   }
   expect(await page.locator('.post-card-cta').first().evaluate((element) => getComputedStyle(element).textTransform)).toBe('none')
-  await expect(page.getByRole('searchbox')).toHaveCount(0)
+
+  const reading = await measureBrightestGlass(page)
+  const described = [...reading.card, ...reading.hero]
+    .map((sample) => `${sample.name} ${sample.ratio.toFixed(2)}:1 on rgb(${sample.background.join(',')})`)
+    .join('; ')
+  test.info().annotations.push({
+    type: 'contrast',
+    description: `scrims card ${reading.scrims.card} hero ${reading.scrims.hero} nav ${reading.scrims.nav}; bright window ${reading.bright.x},${reading.bright.y} L=${reading.bright.luminance.toFixed(3)}; ${described}`,
+  })
+  console.log(test.info().annotations.at(-1)?.description)
+  expect(reading.scrims.card).toBeLessThanOrEqual(0.85)
+  expect(reading.scrims.card).toBeGreaterThan(0)
+  expect(reading.scrims.hero).toBeLessThanOrEqual(0.85)
+  for (const sample of reading.card) expect(sample.ratio).toBeGreaterThanOrEqual(minimumContrast)
+  for (const sample of reading.hero) expect(sample.ratio).toBeGreaterThanOrEqual(minimumContrast)
 })
 
 test('sticky nav hides card text scrolling underneath', async ({ page }) => {

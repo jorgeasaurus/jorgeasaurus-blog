@@ -1,12 +1,15 @@
 import type { MouseEvent } from 'react'
 import { Link, useLocation } from 'react-router-dom'
-import { useAdminNav } from '../admin/adminNavContext'
-import AdminIcon from '../admin/icons'
 import SocialIcon from './SocialIcon'
+import useLiquidGlassSurface from '../hooks/useLiquidGlassSurface'
+import ThemeSwitcher from '../theme/ThemeSwitcher'
 
 export default function Topbar() {
   const { pathname } = useLocation()
-  const { mobileOpen, setMobileOpen } = useAdminNav()
+  const glassRef = useLiquidGlassSurface<HTMLElement>({
+    borderRadius: 999,
+    type: 'pill',
+  })
 
   function scrollListingToTop(event: MouseEvent<HTMLAnchorElement>) {
     if (
@@ -21,21 +24,12 @@ export default function Topbar() {
   }
 
   return (
-    <nav className="topbar" aria-label="Primary navigation">
-      <Link to="/" className="brand-link" aria-label="Jorgeasaurus" onClick={scrollListingToTop}>
-        <span className="ac-mark" aria-hidden="true">J</span>
-        <span className="brand-name">jorgeasaurus admin center</span>
+    <nav className="topbar glass-panel" aria-label="Primary navigation" ref={glassRef}>
+      <Link to="/" className="brand-link" onClick={scrollListingToTop}>
+        <span className="brand-prompt" aria-hidden="true">&gt;</span>
+        <span className="brand-name">Jorgeasaurus</span>
       </Link>
-      <button
-        className="ac-nav-toggle"
-        type="button"
-        aria-expanded={mobileOpen}
-        aria-controls="admin-rail"
-        onClick={() => setMobileOpen(!mobileOpen)}
-      >
-        <AdminIcon name={mobileOpen ? 'dismiss' : 'menu'} />
-        <span className="visually-hidden">{mobileOpen ? 'Close navigation' : 'Open navigation'}</span>
-      </button>
+      <ThemeSwitcher />
       <div className="topbar-links">
         <Link
           to="/"

@@ -194,19 +194,25 @@ test('filtered listing keeps the homepage canonical and noindex', async ({ page 
   await expect(page.locator('head link[rel="canonical"]')).toHaveAttribute('href', 'https://www.jorgeasaur.us/')
 })
 
-test('filter panel shares the admin center surface', async ({ page }) => {
+test('filter panel shares the post card glass surface', async ({ page }) => {
   async function readSurfaces() {
     return page.evaluate(() => {
       const read = (selector: string) => {
         const element = document.querySelector(selector)
         if (!element) throw new Error(`Missing ${selector}`)
         const style = getComputedStyle(element)
+        const rim = getComputedStyle(element, '::before')
         return {
           backgroundColor: style.backgroundColor,
+          backgroundImage: style.backgroundImage,
+          backgroundBlendMode: style.backgroundBlendMode,
           backdropFilter: style.backdropFilter,
+          boxShadow: style.boxShadow,
           borderRadius: style.borderRadius,
           borderTopColor: style.borderTopColor,
           color: style.color,
+          rimImage: rim.backgroundImage,
+          rimPadding: rim.padding,
         }
       }
       return {
@@ -222,24 +228,38 @@ test('filter panel shares the admin center surface', async ({ page }) => {
     })
   }
 
+  function expectSharedSurface(panel: Awaited<ReturnType<typeof readSurfaces>>['panel'], card: Awaited<ReturnType<typeof readSurfaces>>['featured']) {
+    expect(panel.backgroundColor).toBe(card.backgroundColor)
+    expect(panel.backgroundImage).toBe(card.backgroundImage)
+    expect(panel.backgroundBlendMode).toBe(card.backgroundBlendMode)
+    expect(panel.backdropFilter).toBe(card.backdropFilter)
+    expect(panel.boxShadow).toBe(card.boxShadow)
+    expect(panel.color).toBe(card.color)
+    expect(panel.rimImage).toBe(card.rimImage)
+    expect(panel.rimPadding).toBe(card.rimPadding)
+  }
+
   await page.setViewportSize({ width: 1280, height: 900 })
   await page.goto('/')
   const panel = page.locator('.listing-tools')
   await expect(panel).toBeVisible()
   await expect(panel).not.toHaveClass(/frosted/)
-  await expect(page.locator('.ac-grid')).toBeVisible()
-  await expect(page.getByRole('columnheader', { name: 'Title' })).toBeVisible()
+  await expect(panel).toHaveClass(/liquid-glass-surface/)
 
   const desktop = await readSurfaces()
-  expect(desktop.panel.backgroundColor).toBe(desktop.featured.backgroundColor)
-  expect(desktop.panel.backgroundColor).toBe('rgb(255, 255, 255)')
-  expect(desktop.panel.backdropFilter).toBe('none')
-  expect(desktop.featured.backdropFilter).toBe('none')
-  expect(desktop.card.backdropFilter).toBe('none')
-  expect(Number.parseFloat(desktop.panel.borderRadius)).toBeLessThanOrEqual(4)
+  expectSharedSurface(desktop.panel, desktop.featured)
+  expectSharedSurface(desktop.panel, desktop.card)
+  expect(desktop.panel.borderRadius).toBe(desktop.featured.borderRadius)
+  expect(desktop.panel.backdropFilter).toContain('blur')
+  expect(desktop.pill.backgroundColor).toBe(desktop.tag.backgroundColor)
+  expect(desktop.pill.borderTopColor).toBe(desktop.tag.borderTopColor)
+  expect(desktop.select.backgroundColor).toBe(desktop.tag.backgroundColor)
+  expect(desktop.select.borderTopColor).toBe(desktop.tag.borderTopColor)
+  expect(desktop.select.borderRadius).toBe(desktop.tag.borderRadius)
+  expect(desktop.select.color).toBe('rgb(255, 255, 255)')
+  expect(desktop.label.color).toBe('rgb(243, 255, 246)')
   expect(desktop.active.backgroundColor).not.toBe(desktop.pill.backgroundColor)
-  expect(desktop.label.color).not.toBe('rgb(255, 255, 255)')
-  expect(desktop.select.color).not.toBe('rgb(255, 255, 255)')
+  expect(desktop.active.borderTopColor).not.toBe(desktop.pill.borderTopColor)
 
   const all = page.getByRole('button', { name: /^All\b/ })
   await all.focus()
@@ -249,6 +269,9 @@ test('filter panel shares the admin center surface', async ({ page }) => {
   expect(await keyword.evaluate((element) => getComputedStyle(element).outlineStyle)).not.toBe('none')
 
   await page.setViewportSize({ width: 390, height: 844 })
+  const mobile = await readSurfaces()
+  expectSharedSurface(mobile.panel, mobile.featured)
+  expect(mobile.panel.borderRadius).toBe(mobile.featured.borderRadius)
   const bounds = await panel.evaluate((element) => {
     const rect = element.getBoundingClientRect()
     const viewport = window.innerWidth
@@ -276,17 +299,18 @@ test('filter panel shares the admin center surface', async ({ page }) => {
   await expect(panel).toBeVisible()
   const reduced = await readSurfaces()
   expect(reduced.panel.backdropFilter).toBe('none')
-  expect(reduced.panel.backgroundColor).toBe(reduced.featured.backgroundColor)
+  expectSharedSurface(reduced.panel, reduced.featured)
   expect(reduced.active.backgroundColor).not.toBe(reduced.pill.backgroundColor)
 
   await page.emulateMedia({ reducedMotion: 'no-preference', contrast: 'more' })
   await page.reload()
   await expect(panel).toBeVisible()
   const contrast = await readSurfaces()
-  expect(contrast.panel.backdropFilter).toBe('none')
-  expect(contrast.panel.backgroundColor).toBe('rgb(255, 255, 255)')
+  expect(contrast.panel.backdropFilter).toContain('blur')
+  expectSharedSurface(contrast.panel, contrast.featured)
+  expect(contrast.pill.borderTopColor).toBe('rgba(215, 255, 227, 0.9)')
+  expect(contrast.select.borderTopColor).toBe('rgba(215, 255, 227, 0.9)')
   expect(contrast.active.backgroundColor).not.toBe(contrast.pill.backgroundColor)
-  expect(contrast.active.borderTopColor).not.toBe(contrast.pill.borderTopColor)
 })
 
 test('filters stay inside a narrow viewport', async ({ page }) => {

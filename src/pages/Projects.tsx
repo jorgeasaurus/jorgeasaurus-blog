@@ -1,8 +1,8 @@
 import usePageMetadata from '../hooks/usePageMetadata'
-import AdminShell from '../admin/AdminShell'
-import Breadcrumbs from '../admin/Breadcrumbs'
-import CommandBar from '../admin/CommandBar'
-import AdminIcon from '../admin/icons'
+import Topbar from '../components/Topbar'
+import WallpaperStage from '../components/WallpaperStage'
+import BackdropCredit from '../components/BackdropCredit'
+import useLiquidGlassSurface from '../hooks/useLiquidGlassSurface'
 
 interface Project {
   name: string
@@ -233,18 +233,19 @@ function ProjectCard({ project, featured = false }: { project: Project; featured
 }
 
 export default function Projects() {
+  const heroGlassRef = useLiquidGlassSurface<HTMLElement>({
+    borderRadius: 38,
+    type: 'rounded',
+  })
+
   usePageMetadata('projects')
 
   return (
-    <AdminShell>
-      <Breadcrumbs items={[{ label: 'Home', to: '/' }, { label: 'Projects' }]} />
-      <CommandBar />
-      <section className="projects-hero ac-blade">
-        <div className="ac-post-title">
-          <span className="ac-blade-icon" aria-hidden="true">
-            <AdminIcon name="folder" />
-          </span>
-          <div className="projects-hero-copy">
+    <main className="blog-shell blog-shell--projects">
+      <WallpaperStage />
+      <Topbar />
+      <section className="projects-hero glass-panel" ref={heroGlassRef}>
+        <div className="projects-hero-copy">
           <p className="eyebrow">Projects</p>
           <h1>Tools for endpoint work</h1>
           <p className="hero-copy">
@@ -252,7 +253,6 @@ export default function Projects() {
             Intune, Microsoft Graph, PowerShell, Jamf, packaging, and endpoint
             operations.
           </p>
-          </div>
         </div>
       </section>
       <section className="content-area projects-area">
@@ -279,6 +279,7 @@ export default function Projects() {
           ))}
         </div>
       </section>
-    </AdminShell>
+      <BackdropCredit />
+    </main>
   )
 }
