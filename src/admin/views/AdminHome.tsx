@@ -67,6 +67,9 @@ export default function AdminHome() {
       ? `Category: ${categoryLabel(category)}`
       : 'Recent field notes'
   const defaultListing = !filtersActive && currentPage === 1 && sortKey === 'date' && sortDirection === 'descending'
+  const chronological = sortKey === 'date' && sortDirection === 'descending'
+  const backLabel = chronological ? '← Newer' : '← Previous'
+  const forwardLabel = chronological ? 'Older →' : 'Next →'
   const showOverview = defaultListing || hash === '#overview'
   const homeCrumb = { label: 'Home', to: '/', onClick: scrollToTopOnPrimaryClick }
   const crumbs = filtersActive
@@ -253,7 +256,7 @@ export default function AdminHome() {
           <nav className="pagination" aria-label="Posts pagination">
             {currentPage > 1 ? (
               <Link className="pagination-link pagination-link--wide" to={listingPath({ category, tag: activeTag, page: currentPage - 1 })} onClick={scrollToTopOnPrimaryClick}>
-                ← Newer
+                {backLabel}
               </Link>
             ) : (
               <span className="pagination-slot" aria-hidden="true" />
@@ -280,11 +283,11 @@ export default function AdminHome() {
             </div>
             {currentPage < totalPages ? (
               <Link className="pagination-link pagination-link--wide" to={listingPath({ category, tag: activeTag, page: currentPage + 1 })} onClick={scrollToTopOnPrimaryClick}>
-                Older →
+                {forwardLabel}
               </Link>
             ) : (
               <span className="pagination-link pagination-link--wide pagination-link--disabled">
-                Older →
+                {forwardLabel}
               </span>
             )}
           </nav>

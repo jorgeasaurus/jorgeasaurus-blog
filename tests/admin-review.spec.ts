@@ -491,3 +491,150 @@ test('a wayfinder fragment survives the theme switch and history', async ({ page
   await expect(page).toHaveURL(new RegExp(`${href}$`))
   await expect(page).toHaveURL(/learn-intune-powershell-automation/)
 })
+
+function parseRgb(input: string) {
+  const match = input.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/)
+  if (!match) throw new Error(`Unparsed color: ${input}`)
+  return [Number(match[1]), Number(match[2]), Number(match[3])] as const
+}
+
+function contrastRatio(foreground: string, background: string) {
+  const channel = (value: number) => {
+    const srgb = value / 255
+    return srgb <= 0.04045 ? srgb / 12.92 : ((srgb + 0.055) / 1.055) ** 2.4
+  }
+  const luminance = (color: readonly [number, number, number]) => (
+    0.2126 * channel(color[0]) + 0.7152 * channel(color[1]) + 0.0722 * channel(color[2])
+  )
+  const lighter = Math.max(luminance(parseRgb(foreground)), luminance(parseRgb(background)))
+  const darker = Math.min(luminance(parseRgb(foreground)), luminance(parseRgb(background)))
+  return (lighter + 0.05) / (darker + 0.05)
+}
+
+test('pagination labels follow the active sort', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await page.goto('/?theme=admin')
+  const firstTitle = () => page.locator('.ac-grid [role="row"]').nth(1).locator('.post-card-title').innerText()
+  const newest = await firstTitle()
+  await expect(page.getByRole('link', { name: 'Older →', exact: true })).toBeVisible()
+  await expect(page.getByText('← Newer', { exact: true })).toHaveCount(0)
+  await expect(page.getByText('Next →', { exact: true })).toHaveCount(0)
+
+  await page.getByRole('columnheader', { name: 'Published' }).getByRole('button').click()
+  await expect.poll(firstTitle).not.toBe(newest)
+  await expect(page.getByRole('link', { name: 'Next →', exact: true })).toBeVisible()
+  await expect(page.getByText('Older →', { exact: true })).toHaveCount(0)
+  await expect(page.getByText('← Newer', { exact: true })).toHaveCount(0)
+
+  for (const label of ['Title', 'Category', 'Read time']) {
+    await page.getByRole('columnheader', { name: label }).getByRole('button').click()
+    await expect(page.getByRole('link', { name: 'Next →', exact: true })).toBeVisible()
+    await expect(page.getByText('Older →', { exact: true })).toHaveCount(0)
+  }
+
+  await page.locator('.pagination-pages').getByRole('link').last().click()
+  await expect(page).toHaveURL(/page=/)
+  await expect(page.locator('.pagination-link--disabled')).toHaveText('Next →')
+  await expect(page.getByRole('link', { name: '← Previous', exact: true })).toBeVisible()
+  await expect(page.getByText('Older →', { exact: true })).toHaveCount(0)
+
+  await page.getByRole('columnheader', { name: 'Published' }).getByRole('button').click()
+  await expect(page.locator('.pagination-link--disabled')).toHaveText('Older →')
+  await expect(page.getByRole('link', { name: '← Newer', exact: true })).toBeVisible()
+  await expect(page.getByText('Next →', { exact: true })).toHaveCount(0)
+
+  await page.goto('/?theme=classic')
+  await expect(page.getByRole('link', { name: 'Older →', exact: true })).toBeVisible()
+  await expect(page.getByText('Next →', { exact: true })).toHaveCount(0)
+})
+
+test('classic header controls stay inside the pill from 901 to 1080px', async ({ page }) => {
+  for (const width of [901, 960, 1000, 1040, 1080]) {
+    await page.setViewportSize({ width, height: 800 })
+    await page.goto('/?theme=classic')
+    const nav = page.getByRole('navigation', { name: 'Primary navigation' })
+    const navBox = await nav.boundingBox()
+    expect(navBox, `nav at ${width}`).not.toBeNull()
+    for (const name of ['Home', 'Projects', 'About', 'GitHub', 'LinkedIn', 'YouTube', 'RSS']) {
+      const link = nav.getByRole('link', { name, exact: true })
+      await expect(link).toBeVisible()
+      const box = await link.boundingBox()
+      expect(box, `${name} at ${width}`).not.toBeNull()
+      expect(box!.x).toBeGreaterThanOrEqual(navBox!.x - 1)
+      expect(box!.x + box!.width).toBeLessThanOrEqual(navBox!.x + navBox!.width + 1)
+      expect(box!.y).toBeGreaterThanOrEqual(navBox!.y - 1)
+      expect(box!.y + box!.height).toBeLessThanOrEqual(navBox!.y + navBox!.height + 1)
+    }
+    const theme = page.getByRole('combobox', { name: 'Theme' })
+    const themeBox = await theme.boundingBox()
+    expect(themeBox, `theme at ${width}`).not.toBeNull()
+    expect(themeBox!.x).toBeGreaterThanOrEqual(navBox!.x - 1)
+    expect(themeBox!.x + themeBox!.width).toBeLessThanOrEqual(navBox!.x + navBox!.width + 1)
+    expect(themeBox!.y).toBeGreaterThanOrEqual(navBox!.y - 1)
+    expect(themeBox!.y + themeBox!.height).toBeLessThanOrEqual(navBox!.y + navBox!.height + 1)
+    expect(await nav.evaluate((element) => element.scrollWidth - element.clientWidth)).toBeLessThanOrEqual(1)
+    await expect.poll(() => nav.getByRole('link', { name: 'GitHub', exact: true }).locator('span').evaluate((element) => getComputedStyle(element).position)).toBe('absolute')
+  }
+})
+
+test('admin header controls stay inside the bar from 901 to 1080px', async ({ page }) => {
+  for (const width of [901, 960, 1000, 1040, 1080]) {
+    await page.setViewportSize({ width, height: 800 })
+    await page.goto('/?theme=admin')
+    const bar = page.locator('.admin-center .topbar')
+    const barBox = await bar.boundingBox()
+    expect(barBox, `admin bar at ${width}`).not.toBeNull()
+    for (const name of ['Home', 'Projects', 'About', 'GitHub', 'LinkedIn', 'YouTube', 'RSS']) {
+      const link = bar.getByRole('link', { name, exact: true })
+      await expect(link).toBeVisible()
+      const box = await link.boundingBox()
+      expect(box, `${name} at ${width}`).not.toBeNull()
+      expect(box!.x).toBeGreaterThanOrEqual(barBox!.x - 1)
+      expect(box!.x + box!.width).toBeLessThanOrEqual(barBox!.x + barBox!.width + 1)
+      expect(box!.y).toBeGreaterThanOrEqual(barBox!.y - 1)
+      expect(box!.y + box!.height).toBeLessThanOrEqual(barBox!.y + barBox!.height + 1)
+    }
+    const theme = page.getByRole('combobox', { name: 'Theme' })
+    const themeBox = await theme.boundingBox()
+    expect(themeBox, `theme at ${width}`).not.toBeNull()
+    expect(themeBox!.x + themeBox!.width).toBeLessThanOrEqual(barBox!.x + barBox!.width + 1)
+    expect(await bar.evaluate((element) => element.scrollWidth - element.clientWidth)).toBeLessThanOrEqual(1)
+  }
+})
+
+test('admin video captions clear contrast on the light article surface', async ({ page }) => {
+  await page.goto('/intune-hydration-kit-has-a-tui-now?theme=admin')
+  const caption = page.locator('.post-video-figure figcaption')
+  await expect(caption).toContainText('dry-run')
+  const colors = await caption.evaluate((element) => {
+    const style = getComputedStyle(element)
+    const label = getComputedStyle(element, '::before')
+    return {
+      text: style.color,
+      background: style.backgroundColor,
+      label: label.color,
+      labelText: label.content,
+    }
+  })
+  expect(colors.labelText).toContain('VIDEO')
+  expect(contrastRatio(colors.text, colors.background)).toBeGreaterThanOrEqual(4.5)
+  expect(contrastRatio(colors.label, colors.background)).toBeGreaterThanOrEqual(4.5)
+
+  const inline = page.locator('.post-inline-figure figcaption').first()
+  await expect(inline).toBeVisible()
+  const inlineColors = await inline.evaluate((element) => {
+    const style = getComputedStyle(element)
+    return { text: style.color, background: style.backgroundColor }
+  })
+  expect(contrastRatio(inlineColors.text, inlineColors.background)).toBeGreaterThanOrEqual(4.5)
+
+  await page.goto('/intune-hydration-kit-has-a-tui-now?theme=classic')
+  const classic = await page.locator('.post-video-figure figcaption').evaluate((element) => {
+    const style = getComputedStyle(element)
+    const label = getComputedStyle(element, '::before')
+    return { text: style.color, background: style.backgroundColor, label: label.color }
+  })
+  expect(classic.background).not.toBe('rgb(250, 249, 248)')
+  expect(classic.text).not.toBe('rgb(66, 66, 66)')
+  expect(classic.label).not.toBe('rgb(15, 108, 189)')
+})

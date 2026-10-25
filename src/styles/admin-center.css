@@ -1133,25 +1133,29 @@ body:has(.admin-center) {
 
 .admin-center .post-content img,
 .admin-center .post-hero-figure,
-.admin-center .post-inline-figure {
+.admin-center .post-inline-figure,
+.admin-center .post-video-figure {
   border-radius: 4px;
 }
 
 .admin-center .post-hero-figure,
-.admin-center .post-inline-figure {
+.admin-center .post-inline-figure,
+.admin-center .post-video-figure {
   border-color: var(--ac-stroke);
   background: #f3f2f1;
   box-shadow: none;
 }
 
 .admin-center .post-inline-figure figcaption,
-.admin-center .post-hero-figure figcaption {
+.admin-center .post-hero-figure figcaption,
+.admin-center .post-video-figure figcaption {
   color: var(--ac-text-2);
   background: #faf9f8;
   border-top-color: var(--ac-stroke);
 }
 
-.admin-center .post-hero-figure figcaption::before {
+.admin-center .post-hero-figure figcaption::before,
+.admin-center .post-video-figure figcaption::before {
   color: var(--ac-brand);
 }
 

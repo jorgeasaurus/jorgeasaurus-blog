@@ -2460,20 +2460,6 @@ code {
     flex-wrap: nowrap;
   }
 
-  .nav-link--icon {
-    width: auto;
-    padding-inline: 14px;
-  }
-
-  .nav-link--icon span {
-    position: static;
-    width: auto;
-    height: auto;
-    overflow: visible;
-    clip: auto;
-    white-space: normal;
-  }
-
   .panel-copy {
     text-align: left;
   }
