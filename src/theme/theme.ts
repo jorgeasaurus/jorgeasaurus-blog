@@ -18,8 +18,12 @@ export function readStoredTheme(): BlogTheme {
   } catch {
     // Storage can throw in private browsing. The cookie is the fallback.
   }
-  const match = document.cookie.match(/(?:^|; )blog-theme=(admin|classic)(?:;|$)/)
-  return match ? (match[1] as BlogTheme) : 'classic'
+  try {
+    const match = document.cookie.match(/(?:^|; )blog-theme=(admin|classic)(?:;|$)/)
+    return match ? (match[1] as BlogTheme) : 'classic'
+  } catch {
+    return 'classic'
+  }
 }
 
 // Query, then the selection already applied in this document, then storage.
@@ -37,7 +41,11 @@ export function writeStoredTheme(theme: BlogTheme) {
   } catch {
     // Ignore storage failures and still set the cookie below.
   }
-  document.cookie = `${THEME_STORAGE_KEY}=${theme}; Path=/; Max-Age=31536000; SameSite=Lax`
+  try {
+    document.cookie = `${THEME_STORAGE_KEY}=${theme}; Path=/; Max-Age=31536000; SameSite=Lax`
+  } catch {
+    // Cookie access can throw SecurityError. Selection still has to proceed.
+  }
 }
 
 export function applyTheme(theme: BlogTheme) {

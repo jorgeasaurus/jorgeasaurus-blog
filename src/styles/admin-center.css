@@ -916,6 +916,10 @@ body:has(.admin-center) {
   font-weight: 600;
 }
 
+.admin-center .ac-tags {
+  min-width: 0;
+}
+
 .admin-center .post-card-tags {
   gap: 4px;
 }

@@ -511,6 +511,31 @@ function contrastRatio(foreground: string, background: string) {
   return (lighter + 0.05) / (darker + 0.05)
 }
 
+test('post rows keep a real list inside the keyword cell', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await page.goto('/?theme=admin')
+  const table = page.getByRole('table', { name: 'Posts' })
+  const row = table.getByRole('row').nth(1)
+  await expect(row.getByRole('cell')).toHaveCount(4)
+  const list = row.getByRole('list', { name: 'Category and keywords' })
+  await expect(list).toBeVisible()
+  await expect(list.getByRole('listitem').first()).toBeVisible()
+
+  const structure = await table.locator('.post-card-tags').evaluateAll((lists) => lists.map((list) => ({
+    tag: list.tagName,
+    role: list.getAttribute('role'),
+    parentRole: list.parentElement?.getAttribute('role') ?? '',
+    items: [...list.children].every((child) => child.tagName === 'LI'),
+  })))
+  expect(structure.length).toBeGreaterThan(0)
+  for (const item of structure) {
+    expect(item.tag).toBe('UL')
+    expect(item.role).toBeNull()
+    expect(item.parentRole).toBe('cell')
+    expect(item.items).toBe(true)
+  }
+})
+
 test('pagination labels follow the active sort', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 })
   await page.goto('/?theme=admin')

@@ -148,6 +148,43 @@ test('admin survives client navigation when storage and cookies are blocked', as
   expect(messages.filter((message) => /hydrat|storage blocked/i.test(message))).toEqual([])
 })
 
+test('a throwing cookie write still applies the selected theme', async ({ page }) => {
+  const messages = watchThemeErrors(page)
+  await page.addInitScript(() => {
+    const blocked = () => {
+      throw new DOMException('storage blocked', 'SecurityError')
+    }
+    Object.defineProperty(window, 'localStorage', {
+      configurable: true,
+      get: blocked,
+    })
+    Object.defineProperty(document, 'cookie', {
+      configurable: true,
+      get: blocked,
+      set: blocked,
+    })
+  })
+
+  await page.goto('/?theme=admin')
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'admin')
+  await expect(page.locator('.admin-center')).toBeVisible()
+
+  await page.getByRole('navigation', { name: 'Primary navigation' }).getByRole('link', { name: 'About', exact: true }).click()
+  await expect(page).toHaveURL(/\/about$/)
+  await expect(page).not.toHaveURL(/theme=/)
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'admin')
+  await expect(page.locator('.admin-center')).toBeVisible()
+
+  await page.goto('/')
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'classic')
+  await page.getByRole('combobox', { name: 'Theme' }).selectOption('admin')
+  await expect(page).toHaveURL(/[?&]theme=admin/)
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'admin')
+  await expect(page.locator('.admin-center')).toBeVisible()
+  await expect(page.getByRole('combobox', { name: 'Theme' })).toHaveValue('admin')
+  expect(messages.filter((message) => /hydrat|SecurityError|storage blocked/i.test(message))).toEqual([])
+})
+
 test('the theme switcher is keyboard accessible on a narrow screen', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 800 })
   await page.goto('/')

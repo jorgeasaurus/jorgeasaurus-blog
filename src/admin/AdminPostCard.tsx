@@ -40,20 +40,22 @@ export default function AdminPostCard({ post, featured = false, sequence = 0, mi
           <IconArrow className="icon post-card-cta__icon" />
         </span>
       </div>
-      <ul className="post-card-tags" aria-label="Category and keywords" role="cell">
-        <li>
-          <Link className="post-card__category" to={listingPath({ category: post.category })}>
-            {categoryLabel(post.category)}
-          </Link>
-        </li>
-        {keywords.map((keyword) => (
-          <li key={keyword}>
-            <Link to={listingPath({ category, tag: keyword })}>
-              {keyword}
+      <div className="ac-tags" role="cell">
+        <ul className="post-card-tags" aria-label="Category and keywords">
+          <li>
+            <Link className="post-card__category" to={listingPath({ category: post.category })}>
+              {categoryLabel(post.category)}
             </Link>
           </li>
-        ))}
-      </ul>
+          {keywords.map((keyword) => (
+            <li key={keyword}>
+              <Link to={listingPath({ category, tag: keyword })}>
+                {keyword}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
       <div className="ac-published" role="cell">
         <time dateTime={post.date}>{formatDate(post.date)}</time>
       </div>

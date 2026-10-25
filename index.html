@@ -11,14 +11,16 @@
           if (requested === 'admin' || requested === 'classic') {
             theme = requested
             try { localStorage.setItem(key, theme) } catch (error) { /* storage may be blocked */ }
-            document.cookie = key + '=' + theme + '; Path=/; Max-Age=31536000; SameSite=Lax'
+            try { document.cookie = key + '=' + theme + '; Path=/; Max-Age=31536000; SameSite=Lax' } catch (error) { /* cookie may be blocked */ }
           } else {
             var stored = null
             try { stored = localStorage.getItem(key) } catch (error) { /* storage may be blocked */ }
             if (stored === 'admin' || stored === 'classic') theme = stored
             else {
-              var match = document.cookie.match(/(?:^|; )blog-theme=(admin|classic)(?:;|$)/)
-              if (match) theme = match[1]
+              try {
+                var match = document.cookie.match(/(?:^|; )blog-theme=(admin|classic)(?:;|$)/)
+                if (match) theme = match[1]
+              } catch (error) { /* cookie may be blocked */ }
             }
           }
         } catch (error) { /* keep classic */ }
