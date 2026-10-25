@@ -1,8 +1,10 @@
+import type { MouseEvent } from 'react'
 import { Link } from 'react-router-dom'
 
 export interface Crumb {
   label: string
   to?: string
+  onClick?: (event: MouseEvent<HTMLAnchorElement>) => void
 }
 
 export default function Breadcrumbs({ items }: { items: Crumb[] }) {
@@ -14,7 +16,7 @@ export default function Breadcrumbs({ items }: { items: Crumb[] }) {
           return (
             <li key={`${item.label}-${index}`}>
               {item.to && !current ? (
-                <Link to={item.to}>{item.label}</Link>
+                <Link to={item.to} onClick={item.onClick}>{item.label}</Link>
               ) : (
                 <span aria-current="page">{item.label}</span>
               )}

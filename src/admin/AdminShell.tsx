@@ -1,4 +1,4 @@
-import { useState, useSyncExternalStore, type ReactNode } from 'react'
+import { useLayoutEffect, useRef, useState, useSyncExternalStore, type ReactNode } from 'react'
 import { useLocation } from 'react-router-dom'
 import BackdropCredit from '../components/BackdropCredit'
 import AdminTopbar from './AdminTopbar'
@@ -22,18 +22,37 @@ function narrowServerSnapshot() {
 
 export default function AdminShell({ children }: { children: ReactNode }) {
   const location = useLocation()
-  const locationKey = `${location.pathname}${location.search}${location.hash}`
   const [mobileOpen, setMobileOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
-  const [seenLocation, setSeenLocation] = useState(locationKey)
+  const [seenLocation, setSeenLocation] = useState(location.key)
   const narrow = useSyncExternalStore(subscribeNarrow, narrowSnapshot, narrowServerSnapshot)
+  const shellRef = useRef<HTMLElement>(null)
 
-  if (seenLocation !== locationKey) {
-    setSeenLocation(locationKey)
+  if (seenLocation !== location.key) {
+    setSeenLocation(location.key)
     setMobileOpen(false)
   }
 
   if (!narrow && mobileOpen) setMobileOpen(false)
+
+  useLayoutEffect(() => {
+    const shell = shellRef.current
+    const header = shell?.querySelector<HTMLElement>('.topbar')
+    if (!shell || !header) return
+    const apply = () => {
+      const rect = header.getBoundingClientRect()
+      const block = Math.ceil(Math.max(rect.height, rect.bottom))
+      if (block <= 0) return
+      const next = `${block}px`
+      if (shell.style.getPropertyValue('--fixed-nav-block-size') !== next) {
+        shell.style.setProperty('--fixed-nav-block-size', next)
+      }
+    }
+    apply()
+    const observer = new ResizeObserver(apply)
+    observer.observe(header)
+    return () => observer.disconnect()
+  }, [])
 
   const drawer = narrow && mobileOpen
   const shellClass = [
@@ -45,7 +64,7 @@ export default function AdminShell({ children }: { children: ReactNode }) {
 
   return (
     <AdminNavContext.Provider value={{ mobileOpen, setMobileOpen, collapsed, setCollapsed, narrow }}>
-      <main className={shellClass}>
+      <main className={shellClass} ref={shellRef}>
         <WallpaperStage />
         <AdminTopbar />
         <AdminRail />

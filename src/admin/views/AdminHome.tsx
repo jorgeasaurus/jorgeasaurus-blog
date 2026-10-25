@@ -1,6 +1,6 @@
 import usePageMetadata from '../../hooks/usePageMetadata'
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
-import { useEffect, useRef, useState, type MouseEvent } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type MouseEvent } from 'react'
 import PostCard from '../AdminPostCard'
 import PostFilters from '../../components/PostFilters'
 import NewsletterSignup from '../../components/NewsletterSignup'
@@ -68,18 +68,27 @@ export default function AdminHome() {
       : 'Recent field notes'
   const defaultListing = !filtersActive && currentPage === 1 && sortKey === 'date' && sortDirection === 'descending'
   const showOverview = defaultListing || hash === '#overview'
+  const homeCrumb = { label: 'Home', to: '/', onClick: scrollToTopOnPrimaryClick }
   const crumbs = filtersActive
     ? [
-        { label: 'Home', to: '/' },
+        homeCrumb,
         { label: 'Posts', to: '/#posts' },
         { label: activeTag ? `Tagged: ${activeTag}` : categoryLabel(category) },
       ]
-    : [{ label: 'Home', to: '/' }, { label: 'Posts' }]
+    : [homeCrumb, { label: 'Posts' }]
 
   usePageMetadata('home', { filtered: isFiltered })
 
   const filtersKey = `${category}\0${activeTag}`
   const scrollState = useRef({ page: currentPage, filters: filtersKey })
+  const postsOffset = useRef<number | null>(null)
+
+  function postsDelta() {
+    const postsSection = document.getElementById('posts')
+    const header = document.querySelector('.topbar')
+    if (!postsSection || !header) return null
+    return postsSection.getBoundingClientRect().top - header.getBoundingClientRect().bottom
+  }
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
@@ -88,11 +97,23 @@ export default function AdminHome() {
     return () => cancelAnimationFrame(frame)
   }, [currentPage, filtersKey])
 
+  useLayoutEffect(() => {
+    if (window.location.hash) return
+    const next = postsDelta()
+    if (next === null) return
+    const previous = postsOffset.current
+    if (previous !== null && window.scrollY >= 2 && Math.abs(next - previous) > 2) {
+      window.scrollBy(0, next - previous)
+    }
+    postsOffset.current = postsDelta()
+  }, [filtersKey, showOverview])
+
   useEffect(() => {
+    if (!hash) return
     let frame = requestAnimationFrame(() => {
       frame = requestAnimationFrame(() => {
-        if (hash) scrollToAdminHash(hash)
-        else window.scrollTo(0, 0)
+        scrollToAdminHash(hash)
+        postsOffset.current = postsDelta()
       })
     })
     return () => cancelAnimationFrame(frame)

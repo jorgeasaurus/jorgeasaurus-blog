@@ -236,6 +236,16 @@ test('admin link focus rings stay blue where classic rules are more specific', a
   await page.goto('/learn-intune-powershell-automation?theme=admin')
   await expectOutline(page.locator('.wayfinder__list a').first(), 'rgb(15, 108, 189)')
   await expectOutline(page.locator('.related-notes a').first(), 'rgb(15, 108, 189)')
+
+  await page.goto('/?theme=admin')
+  const newsletter = page.locator('.newsletter-signup__field input')
+  await expectOutline(newsletter, 'rgb(15, 108, 189)')
+  await page.goto('/?theme=classic')
+  const classicNewsletter = page.locator('.newsletter-signup__field input')
+  await classicNewsletter.evaluate((element) => {
+    if (element instanceof HTMLElement) element.focus({ focusVisible: true })
+  })
+  await expect.poll(() => classicNewsletter.evaluate((element) => getComputedStyle(element).outlineStyle)).toBe('none')
 })
 
 test('switching themes keeps the current hash and other query params', async ({ page }) => {
@@ -252,4 +262,167 @@ test('switching themes keeps the current hash and other query params', async ({ 
   await expect(page).toHaveURL(/theme=admin/)
   await expect(page).toHaveURL(/#posts$/)
   await expect(page.locator('.admin-center')).toBeVisible()
+})
+
+test('a rail link to the current url closes the drawer', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('blog-theme', 'admin'))
+  await page.setViewportSize({ width: 390, height: 800 })
+  await page.goto('/?category=intune')
+  await page.getByRole('button', { name: 'Open navigation' }).click()
+  await expect(page.locator('.ac-canvas')).toHaveAttribute('inert', '')
+  const devices = page.getByRole('navigation', { name: 'Admin center' }).getByRole('link', { name: 'Devices' })
+  await devices.evaluate((element) => {
+    element.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true }))
+  })
+  await expect(page.locator('.ac-overlay')).toBeVisible()
+  await devices.click()
+  await expect(page).toHaveURL(/category=intune/)
+  await expect(page.locator('.ac-overlay')).toHaveCount(0)
+  await expect(page.locator('.ac-canvas')).not.toHaveAttribute('inert', '')
+  await expect(page.getByRole('button', { name: 'Open navigation' })).toBeFocused()
+})
+
+test('filters and clear filter keep the posts scroll position', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await page.goto('/?theme=admin#posts')
+  await expectSectionBelowHeader(page, 'posts')
+  const scrolled = () => page.evaluate(() => window.scrollY)
+  const heroTop = () => page.locator('#home-title').evaluate((element) => element.getBoundingClientRect().top)
+  await expect.poll(scrolled).toBeGreaterThan(200)
+
+  await page.getByRole('button', { name: /^Intune\b/ }).evaluate((element) => {
+    if (element instanceof HTMLElement) element.click()
+  })
+  await expect(page).toHaveURL(/category=intune/)
+  await expect(page).not.toHaveURL(/#/)
+  await expectSectionBelowHeader(page, 'posts')
+  await expect.poll(heroTop).toBeLessThan(0)
+  await expect.poll(scrolled).toBeGreaterThan(120)
+
+  await page.getByRole('combobox', { name: 'Keyword' }).evaluate((element) => {
+    if (!(element instanceof HTMLSelectElement)) return
+    const option = element.options[1]
+    element.value = option.value
+    element.dispatchEvent(new Event('change', { bubbles: true }))
+  })
+  await expect(page).toHaveURL(/tag=/)
+  await expectSectionBelowHeader(page, 'posts')
+  await expect.poll(heroTop).toBeLessThan(0)
+
+  await page.goto('/?theme=admin&category=intune#posts')
+  await expectSectionBelowHeader(page, 'posts')
+  await page.getByRole('link', { name: 'Clear filter ×' }).evaluate((element) => {
+    if (element instanceof HTMLElement) element.click()
+  })
+  await expect(page).not.toHaveURL(/category=/)
+  await expect(page).not.toHaveURL(/#/)
+  await expectSectionBelowHeader(page, 'posts')
+  await expect.poll(heroTop).toBeLessThan(0)
+  await expect.poll(scrolled).toBeGreaterThan(120)
+
+  await page.getByRole('navigation', { name: 'Breadcrumb' }).getByRole('link', { name: 'Home' }).evaluate((element) => {
+    if (element instanceof HTMLElement) element.click()
+  })
+  await expect.poll(scrolled).toBeLessThan(2)
+})
+
+test('the mobile drawer starts below the wrapped header', async ({ page }) => {
+  for (const width of [320, 360, 414]) {
+    await page.setViewportSize({ width, height: 720 })
+    await page.goto('/?theme=admin')
+    await page.getByRole('button', { name: 'Open navigation' }).click()
+    const home = page.getByRole('navigation', { name: 'Admin center' }).getByRole('link', { name: 'Home', exact: true })
+    await expect(home).toBeFocused()
+    const clear = await page.evaluate(() => {
+      const header = document.querySelector('.topbar')!.getBoundingClientRect()
+      const link = document.querySelector<HTMLElement>('#admin-rail a')!
+      const box = link.getBoundingClientRect()
+      const canvas = document.querySelector('.ac-canvas')!.getBoundingClientRect()
+      const hit = document.elementFromPoint(box.left + 20, box.top + box.height / 2)
+      return {
+        linkTop: box.top,
+        headerBottom: header.bottom,
+        canvasTop: canvas.top,
+        ringTop: box.top - (Number.parseFloat(getComputedStyle(link).outlineOffset) || 0) - (Number.parseFloat(getComputedStyle(link).outlineWidth) || 0),
+        scrollerTop: link.closest('.ac-rail-scroll')?.getBoundingClientRect().top ?? 0,
+        hitHome: Boolean(hit && (hit === link || link.contains(hit))),
+        overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      }
+    })
+    expect(clear.linkTop, `${width}px home link`).toBeGreaterThanOrEqual(clear.headerBottom - 1)
+    expect(clear.ringTop, `${width}px focus ring`).toBeGreaterThanOrEqual(clear.headerBottom - 1)
+    expect(clear.ringTop, `${width}px ring clip`).toBeGreaterThanOrEqual(clear.scrollerTop - 1)
+    expect(clear.canvasTop, `${width}px canvas`).toBeGreaterThanOrEqual(clear.headerBottom - 1)
+    expect(clear.hitHome, `${width}px hit test`).toBe(true)
+    expect(clear.overflow, `${width}px overflow`).toBeLessThanOrEqual(1)
+    await page.keyboard.press('Escape')
+  }
+})
+
+test('the desktop rail clears the measured header', async ({ page }) => {
+  await page.setViewportSize({ width: 960, height: 800 })
+  await page.goto('/?theme=admin')
+  const gap = await page.evaluate(() => {
+    const header = document.querySelector('.topbar')!.getBoundingClientRect()
+    const rail = document.querySelector('#admin-rail')!.getBoundingClientRect()
+    return rail.top - header.bottom
+  })
+  expect(gap).toBeGreaterThanOrEqual(-1)
+  expect(gap).toBeLessThan(8)
+})
+
+test('wrapping drawer focus keeps Home in view', async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 520 })
+  await page.goto('/?theme=admin')
+  await page.getByRole('button', { name: 'Open navigation' }).click()
+  const rail = page.locator('#admin-rail')
+  const home = rail.getByRole('link', { name: 'Home', exact: true })
+  const overflowed = await rail.locator('.ac-rail-scroll').evaluate((element) => {
+    element.scrollTop = element.scrollHeight
+    return element.scrollTop > 40
+  })
+  expect(overflowed).toBe(true)
+  await rail.getByRole('button', { name: 'Close navigation' }).focus()
+  await page.keyboard.press('Tab')
+  await expect(home).toBeFocused()
+  await expect.poll(() => home.evaluate((element) => {
+    const scroller = element.closest('.ac-rail-scroll')
+    if (!scroller) return 'missing'
+    const link = element.getBoundingClientRect()
+    const view = scroller.getBoundingClientRect()
+    const header = document.querySelector('.topbar')!.getBoundingClientRect()
+    const clear = link.top >= header.bottom - 1 && link.top >= view.top - 1 && link.bottom <= view.bottom + 1
+    return clear ? 'visible' : `top:${link.top.toFixed(0)} header:${header.bottom.toFixed(0)} view:${view.top.toFixed(0)}-${view.bottom.toFixed(0)}`
+  })).toBe('visible')
+})
+
+test('a wayfinder fragment survives the theme switch and history', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await page.goto('/?theme=admin')
+  await page.getByRole('link', { name: /Learn Intune and PowerShell automation/ }).first().click()
+  await expect(page).toHaveURL(/learn-intune-powershell-automation/)
+  const before = await page.evaluate(() => window.history.state as { idx?: number, key?: string } | null)
+  expect(typeof before?.idx).toBe('number')
+  expect(before?.key).toBeTruthy()
+
+  const jump = page.locator('.wayfinder__list a').nth(1)
+  const href = await jump.getAttribute('href')
+  expect(href).toMatch(/^#/)
+  await jump.click()
+  await expect(page).toHaveURL(new RegExp(`${href}$`))
+  const after = await page.evaluate(() => window.history.state as { idx?: number, key?: string } | null)
+  expect(after?.key).toBe(before?.key)
+  expect(after?.idx).toBe(before?.idx)
+
+  await page.getByRole('combobox', { name: 'Theme' }).selectOption('classic')
+  await expect(page).toHaveURL(/theme=classic/)
+  await expect(page).toHaveURL(new RegExp(`${href}$`))
+  await expect(page.locator('.admin-center')).toHaveCount(0)
+  await expect(page.locator(href!)).toBeVisible()
+
+  await page.goBack()
+  await expect(page).toHaveURL(/\/\?theme=admin$/)
+  await page.goForward()
+  await expect(page).toHaveURL(new RegExp(`${href}$`))
+  await expect(page).toHaveURL(/learn-intune-powershell-automation/)
 })

@@ -82,6 +82,13 @@ body:has(.admin-center) {
   border-color: var(--ac-brand);
 }
 
+.admin-center .newsletter-signup__field input:focus-visible,
+.admin-center .post-content img:focus-visible,
+.admin-center .image-expand-trigger:focus-visible {
+  outline: 2px solid var(--ac-brand);
+  outline-offset: 2px;
+}
+
 .admin-center h1,
 .admin-center h2,
 .admin-center h3,
@@ -276,7 +283,7 @@ body:has(.admin-center) {
 .ac-rail {
   position: fixed;
   z-index: 40;
-  top: 48px;
+  top: var(--fixed-nav-block-size);
   bottom: 0;
   left: 0;
   display: flex;
@@ -298,6 +305,7 @@ body:has(.admin-center) {
   align-content: start;
   gap: 2px;
   min-height: 0;
+  padding: 6px;
   overflow: auto;
 }
 
@@ -1498,7 +1506,7 @@ body:has(.admin-center) {
     top: 0;
     z-index: 45;
     width: min(300px, 88vw);
-    padding: 64px 8px 8px;
+    padding: calc(var(--fixed-nav-block-size) + 12px) 8px 8px;
     box-shadow: 0 8px 28px rgba(0, 0, 0, 0.24);
   }
 

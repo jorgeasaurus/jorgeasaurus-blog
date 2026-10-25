@@ -30,7 +30,9 @@ export default function ArticleWayfinder({ outline }: ArticleWayfinderProps) {
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
     scrollHeadingIntoView(target, reduced ? 'auto' : 'smooth')
     target.focus({ preventScroll: true })
-    window.history.replaceState(null, '', `#${id}`)
+    const next = new URL(window.location.href)
+    next.hash = id
+    window.history.replaceState(window.history.state, '', `${next.pathname}${next.search}${next.hash}`)
     setActiveId(id)
   }, [])
 

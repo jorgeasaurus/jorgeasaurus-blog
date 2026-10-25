@@ -64,16 +64,22 @@ export default function AdminRail() {
   const railRef = useRef<HTMLElement>(null)
   const onHome = pathname === '/'
 
+  function isPlainClick(event: MouseEvent<HTMLAnchorElement>) {
+    return event.button === 0
+      && !event.metaKey
+      && !event.ctrlKey
+      && !event.shiftKey
+      && !event.altKey
+  }
+
   function scrollHomeToTop(event: MouseEvent<HTMLAnchorElement>) {
-    if (
-      pathname !== '/' ||
-      event.button !== 0 ||
-      event.metaKey ||
-      event.ctrlKey ||
-      event.shiftKey ||
-      event.altKey
-    ) return
+    if (pathname !== '/' || !isPlainClick(event)) return
     window.scrollTo(0, 0)
+  }
+
+  function closeDrawer(event: MouseEvent<HTMLAnchorElement>) {
+    if (!narrow || !isPlainClick(event)) return
+    setMobileOpen(false)
   }
 
   useEffect(() => {
@@ -83,9 +89,19 @@ export default function AdminRail() {
     const focusable = () => [...rail.querySelectorAll<HTMLElement>('a[href], button:not([disabled])')]
       .filter((element) => element.tabIndex >= 0 && getComputedStyle(element).display !== 'none')
 
+    const focusItem = (element: HTMLElement) => {
+      element.focus({ preventScroll: true })
+      const scroller = element.closest<HTMLElement>('.ac-rail-scroll')
+      if (!scroller || !rail.contains(scroller)) return
+      const view = scroller.getBoundingClientRect()
+      const box = element.getBoundingClientRect()
+      if (box.top < view.top) scroller.scrollTop -= view.top - box.top + 6
+      else if (box.bottom > view.bottom) scroller.scrollTop += box.bottom - view.bottom + 6
+    }
+
     const openedAt = `${window.location.pathname}${window.location.search}${window.location.hash}`
     const items = focusable()
-    items[0]?.focus({ preventScroll: true })
+    if (items[0]) focusItem(items[0])
 
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
@@ -103,13 +119,13 @@ export default function AdminRail() {
       if (event.shiftKey) {
         if (!inside || active === first) {
           event.preventDefault()
-          last.focus({ preventScroll: true })
+          focusItem(last)
         }
         return
       }
       if (!inside || active === last) {
         event.preventDefault()
-        first.focus({ preventScroll: true })
+        focusItem(first)
       }
     }
     window.addEventListener('keydown', onKey)
@@ -131,9 +147,18 @@ export default function AdminRail() {
       inert={narrow && !mobileOpen ? true : undefined}
     >
       <div className="ac-rail-scroll">
-        <RailLink to="/" icon="home" label="Home" current={onHome && !category && hash === ''} onClick={scrollHomeToTop} />
-        <RailLink to="/#overview" icon="grid" label="Dashboard" current={onHome && hash === '#overview'} />
-        <RailLink to="/#posts" icon="list" label="All posts" current={onHome && hash === '#posts'} />
+        <RailLink
+          to="/"
+          icon="home"
+          label="Home"
+          current={onHome && !category && hash === ''}
+          onClick={(event) => {
+            scrollHomeToTop(event)
+            closeDrawer(event)
+          }}
+        />
+        <RailLink to="/#overview" icon="grid" label="Dashboard" current={onHome && hash === '#overview'} onClick={closeDrawer} />
+        <RailLink to="/#posts" icon="list" label="All posts" current={onHome && hash === '#posts'} onClick={closeDrawer} />
         <p className="ac-rail-section">Topics</p>
         {topicBlades.map((blade) => (
           <RailLink
@@ -143,11 +168,12 @@ export default function AdminRail() {
             label={blade.label}
             hint={blade.hint}
             current={category === blade.slug}
+            onClick={closeDrawer}
           />
         ))}
         <p className="ac-rail-section">More</p>
-        <RailLink to="/about" icon="info" label="About" current={pathname === '/about'} />
-        <RailLink to="/projects" icon="folder" label="Projects" current={pathname === '/projects'} />
+        <RailLink to="/about" icon="info" label="About" current={pathname === '/about'} onClick={closeDrawer} />
+        <RailLink to="/projects" icon="folder" label="Projects" current={pathname === '/projects'} onClick={closeDrawer} />
         <RailLink to="/rss.xml" icon="rss" label="RSS" native />
         <RailLink to="https://www.youtube.com/@jorgeasaurus" icon="play" label="YouTube" external />
       </div>
