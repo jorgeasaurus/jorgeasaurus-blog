@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, type MouseEvent } from 'react'
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { listingPath } from '../lib/postSearch.mjs'
 import { useAdminNav } from './adminNavContext'
@@ -14,6 +14,7 @@ function RailLink({
   current,
   external,
   native,
+  onClick,
 }: {
   to: string
   icon: IconName
@@ -22,6 +23,7 @@ function RailLink({
   current?: boolean
   external?: boolean
   native?: boolean
+  onClick?: (event: MouseEvent<HTMLAnchorElement>) => void
 }) {
   const className = current ? 'ac-rail-link ac-rail-link--active' : 'ac-rail-link'
   const body = (
@@ -48,7 +50,7 @@ function RailLink({
   }
 
   return (
-    <Link className={className} to={to} aria-current={current ? 'page' : undefined}>
+    <Link className={className} to={to} aria-current={current ? 'page' : undefined} onClick={onClick}>
       {body}
     </Link>
   )
@@ -61,6 +63,18 @@ export default function AdminRail() {
   const category = searchParams.get('category') ?? ''
   const railRef = useRef<HTMLElement>(null)
   const onHome = pathname === '/'
+
+  function scrollHomeToTop(event: MouseEvent<HTMLAnchorElement>) {
+    if (
+      pathname !== '/' ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) return
+    window.scrollTo(0, 0)
+  }
 
   useEffect(() => {
     const rail = railRef.current
@@ -117,7 +131,7 @@ export default function AdminRail() {
       inert={narrow && !mobileOpen ? true : undefined}
     >
       <div className="ac-rail-scroll">
-        <RailLink to="/" icon="home" label="Home" current={onHome && !category && hash === ''} />
+        <RailLink to="/" icon="home" label="Home" current={onHome && !category && hash === ''} onClick={scrollHomeToTop} />
         <RailLink to="/#overview" icon="grid" label="Dashboard" current={onHome && hash === '#overview'} />
         <RailLink to="/#posts" icon="list" label="All posts" current={onHome && hash === '#posts'} />
         <p className="ac-rail-section">Topics</p>

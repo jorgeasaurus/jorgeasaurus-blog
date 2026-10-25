@@ -58,9 +58,24 @@ body:has(.admin-center) {
 
 .admin-center :focus-visible,
 .admin-center .post-card-tags a:focus-visible,
-.admin-center .post-filters__field select:focus-visible {
+.admin-center .post-filters__field select:focus-visible,
+.admin-center .hero-links a:focus-visible,
+.admin-center .profile-links a:focus-visible,
+.admin-center .wayfinder__list a:focus-visible,
+.admin-center .related-notes a:focus-visible {
   outline: 2px solid var(--ac-brand);
   outline-offset: 2px;
+}
+
+.admin-center .post-card:has(.post-card-link:focus-visible) {
+  outline: 2px solid var(--ac-brand);
+  outline-offset: 2px;
+  border-color: #f3f2f1;
+  box-shadow: none;
+}
+
+.admin-center .post-card:has(.post-card-link:focus-visible) .post-card-link:focus-visible {
+  outline: none;
 }
 
 .admin-center .post-filters__field select:focus-visible {

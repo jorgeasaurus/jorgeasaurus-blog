@@ -44,6 +44,7 @@ export default function AdminHome() {
   const [sortKey, setSortKey] = useState<SortKey>('date')
   const [sortDirection, setSortDirection] = useState<SortDirection>('descending')
 
+  const { hash } = useLocation()
   const category = searchParams.get('category') ?? ''
   const activeTag = searchParams.get('tag') ?? ''
   const sorted = sortPostsByDate(posts)
@@ -65,7 +66,8 @@ export default function AdminHome() {
     : category
       ? `Category: ${categoryLabel(category)}`
       : 'Recent field notes'
-  const showOverview = !filtersActive && currentPage === 1 && sortKey === 'date' && sortDirection === 'descending'
+  const defaultListing = !filtersActive && currentPage === 1 && sortKey === 'date' && sortDirection === 'descending'
+  const showOverview = defaultListing || hash === '#overview'
   const crumbs = filtersActive
     ? [
         { label: 'Home', to: '/' },
@@ -76,7 +78,6 @@ export default function AdminHome() {
 
   usePageMetadata('home', { filtered: isFiltered })
 
-  const { hash } = useLocation()
   const filtersKey = `${category}\0${activeTag}`
   const scrollState = useRef({ page: currentPage, filters: filtersKey })
 
@@ -198,7 +199,7 @@ export default function AdminHome() {
           <PostFilters posts={posts} matchCount={filtered.length} />
         </div>
         <div className="ac-grid-scroll">
-          <div className="ac-grid" role="table" aria-label="Posts" aria-rowcount={ordered.length}>
+          <div className="ac-grid" role="table" aria-label="Posts">
             <div className="ac-grid-head" role="row">
               {sortColumns.map((column) => {
                 const active = sortKey === column.key
@@ -222,7 +223,7 @@ export default function AdminHome() {
               <PostCard
                 key={post.slug}
                 post={post}
-                featured={index === 0 && showOverview}
+                featured={index === 0 && defaultListing}
                 sequence={sequenceBySlug.get(post.slug) ?? 0}
                 minutes={readingMinutes(post.slug)}
               />

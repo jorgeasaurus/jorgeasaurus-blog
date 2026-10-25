@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test'
+import { expect, test, type Locator, type Page } from '@playwright/test'
 
 async function sectionOffset(page: Page, id: string) {
   return page.evaluate((sectionId) => {
@@ -12,6 +12,13 @@ async function sectionOffset(page: Page, id: string) {
 
 async function expectSectionBelowHeader(page: Page, id: string) {
   await expect.poll(() => sectionOffset(page, id)).toBe('aligned')
+}
+
+async function expectOutline(locator: Locator, color: string) {
+  await locator.evaluate((element) => {
+    if (element instanceof HTMLElement) element.focus({ focusVisible: true })
+  })
+  await expect.poll(() => locator.evaluate((element) => getComputedStyle(element).outlineColor)).toBe(color)
 }
 
 test('an admin-center article renders its post body', async ({ page }) => {
@@ -163,9 +170,86 @@ test('admin focus rings and article navigation stay readable without changing cl
     if (element instanceof HTMLElement) element.focus({ focusVisible: true })
   })
   await expect.poll(() => classicTag.evaluate((element) => getComputedStyle(element).outlineColor)).toBe('rgb(215, 255, 227)')
+  await expectOutline(page.locator('.hero-links a').first(), 'rgb(215, 255, 227)')
 
   await page.goto('/bitlocker-startup-pin-after-autopilot?theme=classic')
   await expect(page.locator('.admin-center')).toHaveCount(0)
   await expect(page.locator('.article-nav-link span').first()).toHaveCSS('color', 'rgb(215, 255, 227)')
   await expect(page.locator('.post-content')).toContainText('startup PIN')
+  await expectOutline(page.locator('.wayfinder__list a').first(), 'rgb(215, 255, 227)')
+  await expectOutline(page.locator('.related-notes a').first(), 'rgb(215, 255, 227)')
+})
+
+test('rail Home returns a scrolled listing to the top without following a modified click', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await page.addInitScript(() => localStorage.setItem('blog-theme', 'admin'))
+  await page.goto('/')
+  await expect(page.locator('.admin-center')).toBeVisible()
+  const home = page.getByRole('navigation', { name: 'Admin center' }).getByRole('link', { name: 'Home', exact: true })
+  await page.evaluate(() => window.scrollTo(0, 900))
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(400)
+  await home.click({ modifiers: ['Control'] })
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(400)
+  await home.click()
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThan(2)
+  await expect(page).not.toHaveURL(/#/)
+})
+
+test('Dashboard keeps the overview available after the grid is sorted', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await page.goto('/?theme=admin')
+  await page.getByRole('columnheader', { name: 'Title' }).getByRole('button').click()
+  await expect(page.locator('#overview')).toHaveCount(0)
+  await page.getByRole('navigation', { name: 'Admin center' }).getByRole('link', { name: 'Dashboard' }).click()
+  await expect(page).toHaveURL(/#overview$/)
+  await expect(page.locator('#overview')).toBeVisible()
+  await expectSectionBelowHeader(page, 'overview')
+  await expect(page.getByText('Latest dispatch')).toHaveCount(0)
+  await expect(page.locator('#overview')).toContainText('Learn Intune and PowerShell automation: field notes')
+})
+
+test('the posts grid omits a partial aria-rowcount', async ({ page }) => {
+  await page.goto('/?theme=admin')
+  const table = page.getByRole('table', { name: 'Posts' })
+  await expect(table).toBeVisible()
+  expect(await table.getAttribute('aria-rowcount')).toBeNull()
+  await expect(table.getByRole('row').first()).not.toHaveAttribute('aria-rowindex', /.*/)
+  await page.goto('/?theme=admin&tag=zzzz-no-match')
+  await expect(page.getByRole('columnheader', { name: 'Title' })).toBeVisible()
+  await expect(page.getByText('No posts match these filters.')).toBeVisible()
+  expect(await page.getByRole('table', { name: 'Posts' }).getAttribute('aria-rowcount')).toBeNull()
+})
+
+test('admin link focus rings stay blue where classic rules are more specific', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await page.goto('/?theme=admin')
+  await expectOutline(page.locator('.hero-links a').first(), 'rgb(15, 108, 189)')
+  const cardLink = page.locator('.post-card-link').first()
+  await cardLink.evaluate((element) => {
+    if (element instanceof HTMLElement) element.focus({ focusVisible: true })
+  })
+  await expect.poll(() => page.locator('.post-card').first().evaluate((element) => getComputedStyle(element).outlineColor)).toBe('rgb(15, 108, 189)')
+
+  await page.goto('/about?theme=admin')
+  await expectOutline(page.locator('.profile-links a').first(), 'rgb(15, 108, 189)')
+
+  await page.goto('/learn-intune-powershell-automation?theme=admin')
+  await expectOutline(page.locator('.wayfinder__list a').first(), 'rgb(15, 108, 189)')
+  await expectOutline(page.locator('.related-notes a').first(), 'rgb(15, 108, 189)')
+})
+
+test('switching themes keeps the current hash and other query params', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await page.goto('/?category=intune&theme=admin#posts')
+  const theme = page.getByRole('combobox', { name: 'Theme' })
+  await theme.selectOption('classic')
+  await expect(page).toHaveURL(/category=intune/)
+  await expect(page).toHaveURL(/theme=classic/)
+  await expect(page).toHaveURL(/#posts$/)
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'classic')
+  await theme.selectOption('admin')
+  await expect(page).toHaveURL(/category=intune/)
+  await expect(page).toHaveURL(/theme=admin/)
+  await expect(page).toHaveURL(/#posts$/)
+  await expect(page.locator('.admin-center')).toBeVisible()
 })
