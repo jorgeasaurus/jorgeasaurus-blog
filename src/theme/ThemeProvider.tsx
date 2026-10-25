@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useMemo, type ReactNode } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { applyTheme, readStoredTheme, themeFromSearch, writeStoredTheme, type BlogTheme } from './theme'
+import { applyTheme, resolveTheme, themeFromSearch, writeStoredTheme, type BlogTheme } from './theme'
 import { ThemeContext } from './themeContext'
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
-  const urlTheme = themeFromSearch(searchParams.toString())
-  const theme = urlTheme ?? readStoredTheme()
+  const search = searchParams.toString()
+  const urlTheme = themeFromSearch(search)
+  const theme = resolveTheme(search)
 
   if (document.documentElement.dataset.theme !== theme) applyTheme(theme)
 

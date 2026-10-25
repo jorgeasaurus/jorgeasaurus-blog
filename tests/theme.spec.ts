@@ -83,6 +83,71 @@ test('a stored theme applies before the page renders and the query overrides it'
   expect(await page.evaluate(() => localStorage.getItem('blog-theme'))).toBe('classic')
 })
 
+test('admin survives client navigation when storage and cookies are blocked', async ({ page }) => {
+  const messages = watchThemeErrors(page)
+  await page.addInitScript(() => {
+    const blocked = () => {
+      throw new DOMException('storage blocked', 'SecurityError')
+    }
+    Object.defineProperty(window, 'localStorage', {
+      configurable: true,
+      get: blocked,
+    })
+    const jar = ''
+    Object.defineProperty(document, 'cookie', {
+      configurable: true,
+      get: () => jar,
+      set: () => {
+        // Cookie writes are blocked. Reads stay empty.
+      },
+    })
+  })
+
+  await page.goto('/')
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'classic')
+  await expect(page.locator('.admin-center')).toHaveCount(0)
+
+  await page.getByRole('combobox', { name: 'Theme' }).selectOption('admin')
+  await expect(page).toHaveURL(/[?&]theme=admin/)
+  await expect(page.locator('.admin-center')).toBeVisible()
+
+  await page.getByRole('link', { name: 'Older →', exact: true }).click()
+  await expect(page).toHaveURL(/page=2/)
+  await expect(page).not.toHaveURL(/theme=/)
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'admin')
+  await expect(page.locator('.admin-center')).toBeVisible()
+  await expect(page.getByRole('combobox', { name: 'Theme' })).toHaveValue('admin')
+
+  const primaryNav = page.getByRole('navigation', { name: 'Primary navigation' })
+  await primaryNav.getByRole('link', { name: 'Projects', exact: true }).click()
+  await expect(page).toHaveURL(/\/projects$/)
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'admin')
+  await expect(page.locator('.admin-center')).toBeVisible()
+
+  await page.getByRole('combobox', { name: 'Theme' }).selectOption('classic')
+  await expect(page).toHaveURL(/[?&]theme=classic/)
+  await expect(page.locator('.admin-center')).toHaveCount(0)
+  await primaryNav.getByRole('link', { name: 'About', exact: true }).click()
+  await expect(page).toHaveURL(/\/about$/)
+  await expect(page).not.toHaveURL(/theme=/)
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'classic')
+  await expect(page.locator('.admin-center')).toHaveCount(0)
+  await expect(page.locator('.brand-name')).toHaveText('Jorgeasaurus')
+
+  const persisted = await page.evaluate(() => {
+    let storage = 'blocked'
+    try {
+      storage = localStorage.getItem('blog-theme') ?? 'empty'
+    } catch {
+      // localStorage is blocked, so the initial value stands.
+    }
+    return { storage, cookie: document.cookie }
+  })
+  expect(persisted.storage).toBe('blocked')
+  expect(persisted.cookie).not.toContain('blog-theme')
+  expect(messages.filter((message) => /hydrat|storage blocked/i.test(message))).toEqual([])
+})
+
 test('the theme switcher is keyboard accessible on a narrow screen', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 800 })
   await page.goto('/')

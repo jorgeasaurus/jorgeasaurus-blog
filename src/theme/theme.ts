@@ -22,6 +22,15 @@ export function readStoredTheme(): BlogTheme {
   return match ? (match[1] as BlogTheme) : 'classic'
 }
 
+// Query, then the selection already applied in this document, then storage.
+// A blocked storage write must not send client-side navigation back to Classic.
+export function resolveTheme(search: string): BlogTheme {
+  const requested = themeFromSearch(search)
+  if (requested) return requested
+  if (isBlogTheme(window.__BLOG_THEME__)) return window.__BLOG_THEME__
+  return readStoredTheme()
+}
+
 export function writeStoredTheme(theme: BlogTheme) {
   try {
     localStorage.setItem(THEME_STORAGE_KEY, theme)
