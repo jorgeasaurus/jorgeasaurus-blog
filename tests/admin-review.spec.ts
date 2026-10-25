@@ -71,6 +71,20 @@ test('the admin rail RSS entry loads the feed', async ({ page }) => {
   await expect.poll(async () => page.content()).toMatch(/<rss[\s>]|<feed[\s>]/i)
 })
 
+test('narrowing the viewport moves rail focus to the menu button', async ({ page }) => {
+  await page.setViewportSize({ width: 1100, height: 800 })
+  await page.goto('/?theme=admin')
+  const rail = page.getByRole('navigation', { name: 'Admin center' })
+  const about = rail.getByRole('link', { name: 'About', exact: true })
+  await about.focus()
+  await expect(about).toBeFocused()
+  await page.setViewportSize({ width: 390, height: 800 })
+  await expect(page.getByRole('button', { name: 'Open navigation' })).toBeFocused()
+  await page.getByRole('combobox', { name: 'Theme' }).focus()
+  await page.setViewportSize({ width: 1100, height: 800 })
+  await expect(page.getByRole('combobox', { name: 'Theme' })).toBeFocused()
+})
+
 test('widening the viewport closes the drawer and unblocks the page', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 800 })
   await page.goto('/?theme=admin')

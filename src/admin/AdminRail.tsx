@@ -62,6 +62,7 @@ export default function AdminRail() {
   const { pathname, hash } = useLocation()
   const category = searchParams.get('category') ?? ''
   const railRef = useRef<HTMLElement>(null)
+  const lastFocusInside = useRef(false)
   const onHome = pathname === '/'
 
   function isPlainClick(event: MouseEvent<HTMLAnchorElement>) {
@@ -81,6 +82,36 @@ export default function AdminRail() {
     if (!narrow || !isPlainClick(event)) return
     setMobileOpen(false)
   }
+
+  useEffect(() => {
+    const rail = railRef.current
+    if (!rail) return
+    const onFocusIn = () => { lastFocusInside.current = true }
+    const onFocusOut = (event: FocusEvent) => {
+      const next = event.relatedTarget
+      if (next instanceof Node && !rail.contains(next)) lastFocusInside.current = false
+    }
+    rail.addEventListener('focusin', onFocusIn)
+    rail.addEventListener('focusout', onFocusOut)
+    return () => {
+      rail.removeEventListener('focusin', onFocusIn)
+      rail.removeEventListener('focusout', onFocusOut)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!narrow || !lastFocusInside.current) return
+    const rail = railRef.current
+    const active = document.activeElement
+    const displaced = !active || active === document.body || Boolean(rail?.contains(active))
+    if (!displaced) {
+      lastFocusInside.current = false
+      return
+    }
+    lastFocusInside.current = false
+    const toggle = document.querySelector<HTMLElement>('.ac-nav-toggle')
+    if (toggle && getComputedStyle(toggle).display !== 'none') toggle.focus({ preventScroll: true })
+  }, [narrow])
 
   useEffect(() => {
     const rail = railRef.current
