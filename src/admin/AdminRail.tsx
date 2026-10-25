@@ -1,12 +1,10 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { listingPath } from '../lib/postSearch.mjs'
 import { useAdminNav } from './adminNavContext'
 import { topicBlades } from './blades'
 import AdminIcon from './icons'
 import type { IconName } from './icons'
-
-const narrowQuery = '(max-width: 900px)'
 
 function RailLink({
   to,
@@ -15,6 +13,7 @@ function RailLink({
   hint,
   current,
   external,
+  native,
 }: {
   to: string
   icon: IconName
@@ -22,6 +21,7 @@ function RailLink({
   hint?: string
   current?: boolean
   external?: boolean
+  native?: boolean
 }) {
   const className = current ? 'ac-rail-link ac-rail-link--active' : 'ac-rail-link'
   const body = (
@@ -34,9 +34,14 @@ function RailLink({
     </>
   )
 
-  if (external) {
+  if (external || native) {
     return (
-      <a className={className} href={to} target="_blank" rel="noopener noreferrer">
+      <a
+        className={className}
+        href={to}
+        target={external ? '_blank' : undefined}
+        rel={external ? 'noopener noreferrer' : undefined}
+      >
         {body}
       </a>
     )
@@ -50,31 +55,58 @@ function RailLink({
 }
 
 export default function AdminRail() {
-  const { mobileOpen, setMobileOpen, collapsed, setCollapsed } = useAdminNav()
+  const { mobileOpen, setMobileOpen, collapsed, setCollapsed, narrow } = useAdminNav()
   const [searchParams] = useSearchParams()
   const { pathname, hash } = useLocation()
-  const [narrow, setNarrow] = useState(false)
   const category = searchParams.get('category') ?? ''
   const railRef = useRef<HTMLElement>(null)
   const onHome = pathname === '/'
 
   useEffect(() => {
-    const media = window.matchMedia(narrowQuery)
-    const sync = () => setNarrow(media.matches)
-    sync()
-    media.addEventListener('change', sync)
-    return () => media.removeEventListener('change', sync)
-  }, [])
+    const rail = railRef.current
+    if (!mobileOpen || !narrow || !rail) return
 
-  useEffect(() => {
-    if (!mobileOpen) return
-    railRef.current?.querySelector<HTMLElement>('a, button')?.focus()
+    const focusable = () => [...rail.querySelectorAll<HTMLElement>('a[href], button:not([disabled])')]
+      .filter((element) => element.tabIndex >= 0 && getComputedStyle(element).display !== 'none')
+
+    const openedAt = `${window.location.pathname}${window.location.search}${window.location.hash}`
+    const items = focusable()
+    items[0]?.focus({ preventScroll: true })
+
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setMobileOpen(false)
+      if (event.key === 'Escape') {
+        event.preventDefault()
+        setMobileOpen(false)
+        return
+      }
+      if (event.key !== 'Tab') return
+      const list = focusable()
+      if (list.length === 0) return
+      const first = list[0]
+      const last = list[list.length - 1]
+      const active = document.activeElement
+      const inside = active instanceof Node && rail.contains(active)
+      if (event.shiftKey) {
+        if (!inside || active === first) {
+          event.preventDefault()
+          last.focus({ preventScroll: true })
+        }
+        return
+      }
+      if (!inside || active === last) {
+        event.preventDefault()
+        first.focus({ preventScroll: true })
+      }
     }
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
-  }, [mobileOpen, setMobileOpen])
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      const here = `${window.location.pathname}${window.location.search}${window.location.hash}`
+      if (here !== openedAt) return
+      const toggle = document.querySelector<HTMLElement>('.ac-nav-toggle')
+      if (toggle && getComputedStyle(toggle).display !== 'none') toggle.focus({ preventScroll: true })
+    }
+  }, [mobileOpen, narrow, setMobileOpen])
 
   return (
     <nav
@@ -102,7 +134,7 @@ export default function AdminRail() {
         <p className="ac-rail-section">More</p>
         <RailLink to="/about" icon="info" label="About" current={pathname === '/about'} />
         <RailLink to="/projects" icon="folder" label="Projects" current={pathname === '/projects'} />
-        <RailLink to="/rss.xml" icon="rss" label="RSS" />
+        <RailLink to="/rss.xml" icon="rss" label="RSS" native />
         <RailLink to="https://www.youtube.com/@jorgeasaurus" icon="play" label="YouTube" external />
       </div>
       <button
@@ -110,7 +142,7 @@ export default function AdminRail() {
         type="button"
         aria-pressed={narrow ? undefined : collapsed}
         onClick={() => {
-          if (window.matchMedia(narrowQuery).matches) {
+          if (narrow) {
             setMobileOpen(false)
             return
           }

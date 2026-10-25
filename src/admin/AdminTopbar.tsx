@@ -7,7 +7,8 @@ import ThemeSwitcher from '../theme/ThemeSwitcher'
 
 export default function AdminTopbar() {
   const { pathname } = useLocation()
-  const { mobileOpen, setMobileOpen } = useAdminNav()
+  const { mobileOpen, setMobileOpen, narrow } = useAdminNav()
+  const drawer = narrow && mobileOpen
 
   function scrollListingToTop(event: MouseEvent<HTMLAnchorElement>) {
     if (
@@ -31,14 +32,14 @@ export default function AdminTopbar() {
       <button
         className="ac-nav-toggle"
         type="button"
-        aria-expanded={mobileOpen}
+        aria-expanded={drawer}
         aria-controls="admin-rail"
         onClick={() => setMobileOpen(!mobileOpen)}
       >
-        <AdminIcon name={mobileOpen ? 'dismiss' : 'menu'} />
-        <span className="visually-hidden">{mobileOpen ? 'Close navigation' : 'Open navigation'}</span>
+        <AdminIcon name={drawer ? 'dismiss' : 'menu'} />
+        <span className="visually-hidden">{drawer ? 'Close navigation' : 'Open navigation'}</span>
       </button>
-      <div className="topbar-links">
+      <div className="topbar-links" inert={drawer ? true : undefined}>
         <Link
           to="/"
           className={`nav-link nav-link--home ${pathname === '/' ? 'nav-link--active' : ''}`}

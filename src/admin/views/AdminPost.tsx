@@ -137,7 +137,7 @@ function LightboxDialog({ image, onClose }: LightboxDialogProps) {
 }
 
 const postModules = Object.fromEntries(
-  Object.entries(import.meta.glob<MdxModule>('../content/*.mdx'))
+  Object.entries(import.meta.glob<MdxModule>('../../content/*.mdx'))
     .filter(([modulePath]) =>
       posts.some((post) => modulePath.endsWith(`/${post.slug}.mdx`))
     )
@@ -153,7 +153,7 @@ export default function AdminPost() {
     postIndex >= 0 && postIndex < sortedPosts.length - 1
       ? sortedPosts[postIndex + 1]
       : null
-  const postLoad = usePostContent(slug, postModules[`../content/${slug}.mdx`])
+  const postLoad = usePostContent(slug, postModules[`../../content/${slug}.mdx`])
   const [outline, setOutline] = useState<ArticleHeading[]>([])
   const [expandedImage, setExpandedImage] = useState<ExpandedImage | null>(null)
   const contentRef = useRef<HTMLDivElement>(null)

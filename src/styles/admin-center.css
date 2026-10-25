@@ -56,9 +56,15 @@ body:has(.admin-center) {
   display: none;
 }
 
-.admin-center :focus-visible {
+.admin-center :focus-visible,
+.admin-center .post-card-tags a:focus-visible,
+.admin-center .post-filters__field select:focus-visible {
   outline: 2px solid var(--ac-brand);
   outline-offset: 2px;
+}
+
+.admin-center .post-filters__field select:focus-visible {
+  border-color: var(--ac-brand);
 }
 
 .admin-center h1,
@@ -373,6 +379,17 @@ body:has(.admin-center) {
   border: 0;
   background: rgba(0, 0, 0, 0.4);
   cursor: pointer;
+}
+
+@media (min-width: 901px) {
+  .admin-center .ac-overlay {
+    display: none;
+  }
+}
+
+.admin-center #overview,
+.admin-center #posts {
+  scroll-margin-top: calc(var(--fixed-nav-block-size) + 16px);
 }
 
 /* Breadcrumb and command bar */
@@ -1244,6 +1261,10 @@ body:has(.admin-center) {
   border: 1px solid var(--ac-stroke);
   border-radius: 4px;
   background: #fff;
+  color: var(--ac-text);
+}
+
+.admin-center .article-nav-link span {
   color: var(--ac-text);
 }
 

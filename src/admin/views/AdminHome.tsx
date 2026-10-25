@@ -1,5 +1,5 @@
 import usePageMetadata from '../../hooks/usePageMetadata'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { useEffect, useRef, useState, type MouseEvent } from 'react'
 import PostCard from '../AdminPostCard'
 import PostFilters from '../../components/PostFilters'
@@ -16,6 +16,17 @@ import { readingMinutes } from '../../lib/readingTime'
 import posts from '../../content/posts'
 
 const POSTS_PER_PAGE = 5
+
+function scrollToAdminHash(hash: string) {
+  const id = decodeURIComponent(hash.replace(/^#/, ''))
+  if (!id) return false
+  const target = document.getElementById(id)
+  if (!target) return false
+  const headerBottom = document.querySelector('.topbar')?.getBoundingClientRect().bottom ?? 0
+  const top = target.getBoundingClientRect().top + window.scrollY - headerBottom - 12
+  window.scrollTo(0, Math.max(0, top))
+  return true
+}
 
 function scrollToTopOnPrimaryClick(event: MouseEvent<HTMLAnchorElement>) {
   if (
@@ -65,6 +76,7 @@ export default function AdminHome() {
 
   usePageMetadata('home', { filtered: isFiltered })
 
+  const { hash } = useLocation()
   const filtersKey = `${category}\0${activeTag}`
   const scrollState = useRef({ page: currentPage, filters: filtersKey })
 
@@ -76,7 +88,17 @@ export default function AdminHome() {
   }, [currentPage, filtersKey])
 
   useEffect(() => {
-    window.scrollTo(0, 0)
+    let frame = requestAnimationFrame(() => {
+      frame = requestAnimationFrame(() => {
+        if (hash) scrollToAdminHash(hash)
+        else window.scrollTo(0, 0)
+      })
+    })
+    return () => cancelAnimationFrame(frame)
+  }, [hash])
+
+  useEffect(() => {
+    if (!window.location.hash) window.scrollTo(0, 0)
     let resetFrame = 0
     let resetTimer = 0
     let correctUntil = 0
@@ -89,6 +111,7 @@ export default function AdminHome() {
       resetFrame = requestAnimationFrame(snapToTop)
     }
     const onPopState = () => {
+      if (window.location.hash) return
       const params = new URLSearchParams(window.location.search)
       const nextFilters = `${params.get('category') ?? ''}\0${params.get('tag') ?? ''}`
       const requested = Number.parseInt(params.get('page') ?? '1', 10)
