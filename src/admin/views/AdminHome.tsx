@@ -44,7 +44,7 @@ export default function AdminHome() {
   const [sortKey, setSortKey] = useState<SortKey>('date')
   const [sortDirection, setSortDirection] = useState<SortDirection>('descending')
 
-  const { hash } = useLocation()
+  const { hash, key: locationKey } = useLocation()
   const category = searchParams.get('category') ?? ''
   const activeTag = searchParams.get('tag') ?? ''
   const sorted = sortPostsByDate(posts)
@@ -83,11 +83,10 @@ export default function AdminHome() {
   const scrollState = useRef({ page: currentPage, filters: filtersKey })
   const postsOffset = useRef<number | null>(null)
 
-  function postsDelta() {
+  function postsDocumentTop() {
     const postsSection = document.getElementById('posts')
-    const header = document.querySelector('.topbar')
-    if (!postsSection || !header) return null
-    return postsSection.getBoundingClientRect().top - header.getBoundingClientRect().bottom
+    if (!postsSection) return null
+    return postsSection.getBoundingClientRect().top + window.scrollY
   }
 
   useEffect(() => {
@@ -98,14 +97,13 @@ export default function AdminHome() {
   }, [currentPage, filtersKey])
 
   useLayoutEffect(() => {
-    if (window.location.hash) return
-    const next = postsDelta()
+    const next = postsDocumentTop()
     if (next === null) return
     const previous = postsOffset.current
     if (previous !== null && window.scrollY >= 2 && Math.abs(next - previous) > 2) {
       window.scrollBy(0, next - previous)
     }
-    postsOffset.current = postsDelta()
+    postsOffset.current = postsDocumentTop()
   }, [filtersKey, showOverview])
 
   useEffect(() => {
@@ -113,11 +111,11 @@ export default function AdminHome() {
     let frame = requestAnimationFrame(() => {
       frame = requestAnimationFrame(() => {
         scrollToAdminHash(hash)
-        postsOffset.current = postsDelta()
+        postsOffset.current = postsDocumentTop()
       })
     })
     return () => cancelAnimationFrame(frame)
-  }, [hash])
+  }, [hash, locationKey])
 
   useEffect(() => {
     if (!window.location.hash) window.scrollTo(0, 0)

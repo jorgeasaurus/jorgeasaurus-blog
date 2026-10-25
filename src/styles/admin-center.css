@@ -21,6 +21,11 @@ body:has(.admin-center) {
   grid-template-areas: none;
 }
 
+.admin-center,
+.admin-center * {
+  overflow-anchor: none;
+}
+
 .admin-center {
   --ac-brand: #0f6cbd;
   --ac-brand-hover: #115ea3;

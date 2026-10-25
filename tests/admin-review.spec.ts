@@ -396,6 +396,71 @@ test('wrapping drawer focus keeps Home in view', async ({ page }) => {
   })).toBe('visible')
 })
 
+test('a manual scroll on a filtered page survives a keyword change', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await page.goto('/?theme=admin&category=intune')
+  await expect(page).not.toHaveURL(/#/)
+  await expect(page.locator('#overview')).toHaveCount(0)
+  await page.evaluate(() => window.scrollTo(0, 280))
+  const scrolled = () => page.evaluate(() => window.scrollY)
+  await expect.poll(scrolled).toBeGreaterThan(260)
+  const before = await scrolled()
+  const postsTop = () => page.locator('#posts').evaluate((element) => element.getBoundingClientRect().top)
+
+  await page.getByRole('combobox', { name: 'Keyword' }).evaluate((element) => {
+    if (!(element instanceof HTMLSelectElement)) return
+    const option = element.options[1]
+    element.value = option.value
+    element.dispatchEvent(new Event('change', { bubbles: true }))
+  })
+  await expect(page).toHaveURL(/tag=/)
+  await expect(page).not.toHaveURL(/#/)
+  await expect.poll(scrolled).toBeGreaterThan(before - 8)
+  await expect.poll(scrolled).toBeLessThan(before + 8)
+
+  const anchored = await postsTop()
+  await page.getByRole('link', { name: 'Clear filter ×' }).evaluate((element) => {
+    if (element instanceof HTMLElement) element.click()
+  })
+  await expect(page).not.toHaveURL(/category=/)
+  await expect(page).not.toHaveURL(/#/)
+  await expect.poll(async () => Math.abs(await postsTop() - anchored)).toBeLessThan(8)
+  await expect.poll(() => page.locator('#home-title').evaluate((element) => element.getBoundingClientRect().top)).toBeLessThan(0)
+})
+
+test('clicking the current section link realigns that section', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await page.goto('/?theme=admin')
+  const rail = page.getByRole('navigation', { name: 'Admin center' })
+  const scrolled = () => page.evaluate(() => window.scrollY)
+
+  await rail.getByRole('link', { name: 'All posts' }).click()
+  await expect(page).toHaveURL(/#posts$/)
+  await expectSectionBelowHeader(page, 'posts')
+  await page.evaluate(() => window.scrollTo(0, 0))
+  await expect.poll(scrolled).toBeLessThan(2)
+  await rail.getByRole('link', { name: 'All posts' }).click({ modifiers: ['Control'] })
+  await expect.poll(scrolled).toBeLessThan(2)
+  await rail.getByRole('link', { name: 'All posts' }).click()
+  await expect(page).toHaveURL(/#posts$/)
+  await expectSectionBelowHeader(page, 'posts')
+  await page.getByRole('columnheader', { name: 'Title' }).getByRole('button').evaluate((element) => {
+    if (element instanceof HTMLElement) element.click()
+  })
+  await expect(page.locator('#overview')).toHaveCount(0)
+  await expect(page).toHaveURL(/#posts$/)
+  await expectSectionBelowHeader(page, 'posts')
+
+  await rail.getByRole('link', { name: 'Dashboard' }).click()
+  await expect(page).toHaveURL(/#overview$/)
+  await expectSectionBelowHeader(page, 'overview')
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+  await expect.poll(scrolled).toBeGreaterThan(400)
+  await rail.getByRole('link', { name: 'Dashboard' }).click()
+  await expect(page).toHaveURL(/#overview$/)
+  await expectSectionBelowHeader(page, 'overview')
+})
+
 test('a wayfinder fragment survives the theme switch and history', async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 800 })
   await page.goto('/?theme=admin')
