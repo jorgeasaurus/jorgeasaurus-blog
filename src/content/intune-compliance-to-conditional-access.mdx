@@ -1,0 +1,217 @@
+---
+title: "Intune compliance to Conditional Access, end to end"
+date: "2026-11-05"
+description: "Follow one device from a failed Intune compliance check to a blocked sign-in, and learn where the grace period and the no-policy setting change the result."
+tags: ["intune", "conditional-access", "entra-id", "endpoint-management"]
+---
+
+{/* TODO(Jorge): social card not generated. Add a 1200x630 card at /images/posts/intune-compliance-to-conditional-access/socialcard.png. */}
+
+A compliance policy doesn't block anything. It only calculates a status. Conditional Access reads that status in Microsoft Entra ID and decides at sign-in.
+
+Watch the walkthrough: [Intune compliance to Conditional Access](https://youtu.be/1CUViS_PZ6M).
+
+My post on [Windows custom compliance](/windows-custom-compliance-with-intune) covers the compliance half: how a script and JSON rules produce a result. This post covers the hand-off. It follows one device from a failed check to a blocked sign-in.
+
+<aside className="post-warning" role="note" aria-label="Note">
+  This post is documentation only. Every behavior here comes from Microsoft Learn, linked in each section. I didn't test it in a tenant or on a device for this post. The device, the user, and the timeline are illustrative examples.
+</aside>
+
+## Know who does what
+
+Two services do two jobs:
+
+| Service | Job | Output |
+| --- | --- | --- |
+| Intune | Evaluates compliance policies on the device | One compliance status for the device |
+| Microsoft Entra ID | Stores the device identity and the reported status | The device is marked compliant or not |
+| Conditional Access | Evaluates policies at sign-in | Grant or block |
+
+[Use compliance policies to set rules for devices](https://learn.microsoft.com/en-us/intune/device-security/compliance/overview) describes the link: when a device enrolls in Intune, it registers in Microsoft Entra ID. Intune reports the compliance status to Microsoft Entra ID. If a Conditional Access policy uses the **Require device to be marked as compliant** grant control, Conditional Access uses that status to grant or block access.
+
+Conditional Access needs a Microsoft Entra ID P1 or P2 license. See [Device-based Conditional Access with Intune](https://learn.microsoft.com/en-us/intune/device-security/conditional-access-integration/device-based-policies).
+
+## Follow one device
+
+This is an illustrative example. A Windows laptop has one compliance policy. The policy includes the custom BitLocker startup PIN check from the [custom compliance post](/windows-custom-compliance-with-intune). A Conditional Access policy requires a compliant device for Exchange Online.
+
+On Monday, the TPM+PIN protector is removed from the laptop. Then this happens:
+
+1. **The device evaluates its policies.** Compliance evaluation depends on when the device checks in. The estimated check-in schedule is about every 8 hours ([policy refresh intervals](https://learn.microsoft.com/en-us/intune/device-configuration/troubleshoot-device-profiles)). Supported Windows devices can also request a new evaluation when local state changes ([client-driven compliance evaluation](https://learn.microsoft.com/en-us/intune/device-security/compliance/create-policy)).
+2. **Intune calculates one status.** The custom setting fails, so the policy is noncompliant. If the device has more than one policy, Intune uses the most severe status. See [Calculate one status from many policies](#calculate-one-status-from-many-policies).
+3. **Intune applies the actions for noncompliance.** The default action, **Mark device noncompliant**, runs on its schedule. With the default schedule of 0 days, the device is noncompliant immediately.
+4. **Intune reports the status to Microsoft Entra ID.** In Microsoft Graph, the device object has an `isCompliant` property. Learn says that only Intune, or an approved MDM app for Windows, can update it ([device resource type](https://learn.microsoft.com/en-us/graph/api/resources/device?view=graph-rest-1.0)).
+5. **The user signs in to Outlook.** Conditional Access evaluates the policy. The device isn't marked compliant, so Conditional Access blocks access.
+
+The compliance policy didn't block the user. The Conditional Access policy did. If no Conditional Access policy requires a compliant device, the user keeps access. The noncompliant status then affects only reports and the other actions for noncompliance, such as email to the user.
+
+## Calculate one status from many policies
+
+A device can have several compliance policies. [Create a compliance policy](https://learn.microsoft.com/en-us/intune/device-security/compliance/create-policy) says that Intune gives each status a severity and assigns the highest one to the device:
+
+| Status | Severity |
+| --- | --- |
+| Unknown | 1 |
+| NotApplicable | 2 |
+| Compliant | 3 |
+| InGracePeriod | 4 |
+| NonCompliant | 5 |
+| Error | 6 |
+
+One noncompliant policy is enough to make the device noncompliant, even if every other policy is compliant.
+
+`Error` has the highest severity, but it doesn't block access immediately. See [Expect a hold when a setting returns Error](#expect-a-hold-when-a-setting-returns-error).
+
+## Use the grace period to delay the block
+
+Every compliance policy includes the **Mark device noncompliant** action. Its default schedule is 0 days. If you change the schedule, you give the user a grace period to fix the problem before Intune marks the device noncompliant ([configure actions for noncompliance](https://learn.microsoft.com/en-us/intune/device-security/compliance/configure-noncompliance-actions)).
+
+During the grace period, the device status is **In grace period**. The Graph `complianceState` enum describes `inGracePeriod` as "Device is non-compliant but still has access to corporate resources" ([complianceState enum](https://learn.microsoft.com/en-us/graph/api/resources/intune-devices-compliancestate?view=graph-rest-1.0)). The `managedDevice` resource has a `complianceGracePeriodExpirationDateTime` property that shows when the grace period ends ([managedDevice resource type](https://learn.microsoft.com/en-us/graph/api/resources/intune-devices-manageddevice?view=graph-rest-1.0)).
+
+[Create a compliance policy](https://learn.microsoft.com/en-us/intune/device-security/compliance/create-policy) gives the rule:
+
+| Actual status | Grace period | Effective status |
+| --- | --- | --- |
+| NonCompliant | None assigned | NonCompliant |
+| NonCompliant | Expired | NonCompliant |
+| NonCompliant | Ends in the future | InGracePeriod |
+
+In the example, with a schedule of 3 days, the user keeps access to Exchange Online for about three days. If the PIN protector isn't back when the grace period ends, the device becomes noncompliant and the next sign-in is blocked.
+
+To change the schedule:
+
+1. Sign in to the [Microsoft Intune admin center](https://intune.microsoft.com).
+2. Go to **Devices** > **Compliance**.
+3. Select the policy.
+4. Select **Properties**.
+5. Next to **Actions for noncompliance**, select **Edit**.
+6. Change the **Schedule (days after noncompliance)** value for **Mark device noncompliant**.
+7. Save the change.
+
+The schedule accepts whole numbers and values in 0.25 increments in the admin center. For example, `0.25` is 6 hours. For other decimal values, Learn says to use Microsoft Graph.
+
+The grace period is a per-policy decision. A short grace period on a policy for a minor setting can be fine. For a setting like encryption, a long grace period means a noncompliant device keeps access for that time.
+
+## Expect a hold when a setting returns Error
+
+[Monitor device compliance](https://learn.microsoft.com/en-us/intune/device-security/compliance/monitor-policy) describes a special case. When a compliance setting returns `Error`, the device keeps its existing compliance status for up to seven days. This gives the calculation time to finish.
+
+- If the setting becomes `Compliant` or `Not compliant` in that time, the device gets that status.
+- If the setting still returns `Error` after seven days, the device becomes noncompliant.
+- If the policy has a grace period, the device goes to **In grace period** after the seven days. It becomes noncompliant when the grace period ends.
+
+For custom compliance, a discovery script that fails can put a setting in `Error`. A failed script doesn't block the user right away. Fix the script before the hold ends. Learn also notes that discovery script output is limited to 2048 characters. Longer output can be truncated and cause error 65009.
+
+## Check the setting for devices with no policy
+
+The tenant-wide **Mark devices with no compliance policy assigned as** setting decides what happens to a device that has no compliance policy ([compliance overview](https://learn.microsoft.com/en-us/intune/device-security/compliance/overview)):
+
+- **Compliant** (default): devices with no compliance policy are compliant. Conditional Access lets them through.
+- **Not compliant**: devices with no compliance policy are noncompliant. Conditional Access blocks them.
+
+Learn recommends **Not compliant** if you use Conditional Access with compliance policies. With the default, a device that you forgot to assign a policy to passes the **Require device to be marked as compliant** check. With **Not compliant**, the Company Portal app shows **No compliance policies have been assigned** to the affected user.
+
+The same page has the **Compliance status validity period (days)** setting. If a device doesn't report its status for a policy within this period, the device is treated as noncompliant. The default is 30 days. The range is 1 to 120 days.
+
+To review both settings:
+
+1. Sign in to the [Microsoft Intune admin center](https://intune.microsoft.com).
+2. Go to **Endpoint security** > **Device compliance** > **Compliance policy settings**.
+3. Check **Mark devices with no compliance policy assigned as**.
+4. Check **Compliance status validity period (days)**.
+
+Before you change the first setting to **Not compliant**, find the devices that have no compliance policy. They lose access when the change takes effect. In the **Device compliance status** tile, devices with no policy and no trigger to check compliance can show as **Not evaluated** ([Monitor device compliance](https://learn.microsoft.com/en-us/intune/device-security/compliance/monitor-policy)).
+
+## Build the Conditional Access policy safely
+
+[Require device compliance](https://learn.microsoft.com/en-us/entra/identity/conditional-access/policy-all-users-device-compliance) gives the steps. In summary:
+
+1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a Conditional Access Administrator.
+2. Go to **Entra ID** > **Conditional Access** > **Policies**.
+3. Select **New policy**.
+4. Under **Assignments**, select **Users or workload identities**, and include the users or groups for the policy.
+5. Exclude your emergency access accounts.
+6. Under **Target resources**, select the resources to protect.
+7. Under **Access controls** > **Grant**, select **Require device to be marked as compliant**.
+8. Set **Enable policy** to **Report-only**.
+9. Select **Create**.
+10. Review the report-only results in the sign-in logs.
+11. Set **Enable policy** to **On**.
+
+Some points from Learn to keep in mind:
+
+- Create a compliance policy first. The Entra article says that without one, this policy doesn't work as intended.
+- The control supports Windows 10 and later, iOS, Android, macOS, and Linux Ubuntu devices that are registered with Microsoft Entra ID and enrolled in Intune ([grant controls](https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-conditional-access-grant)).
+- The control doesn't block Intune enrollment. A new device can enroll and then become compliant.
+- Microsoft Edge in InPrivate mode on Windows is considered a noncompliant device.
+- Report-only policies that require a compliant device can prompt users on macOS, iOS, and Android to select a device certificate. Learn suggests excluding those platforms from report-only policies that check compliance ([report-only mode](https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-conditional-access-report-only)).
+- The device-code flow doesn't support the compliant device grant control. The device that signs in can't send its device state to the device that shows the code.
+- Calls by service principals aren't blocked by Conditional Access policies that target users. Use Conditional Access for workload identities for those.
+
+## Match the symptom to the cause
+
+The table uses Learn behavior. The "what the user sees" column is general. The exact text depends on the app and the platform.
+
+| Situation | What the user sees | Why | Fix |
+| --- | --- | --- | --- |
+| A setting fails. **Mark device noncompliant** is at 0 days. | Sign-in is blocked at the next Conditional Access evaluation. | The device is noncompliant immediately, and the policy requires a compliant device. | Fix the setting. Then let the device check in again. |
+| A setting fails. The schedule is 3 days. | Access continues. Company Portal shows the problem. | The status is **In grace period**, which still has access. | Fix the setting before the grace period ends. |
+| The grace period ends and the setting still fails. | Sign-in is blocked. | The grace period expired, so the effective status is NonCompliant. | Fix the setting. Don't extend the schedule to hide the problem. |
+| A custom compliance script fails and returns `Error`. | Access continues for up to seven days. | Intune keeps the existing status while the setting is in `Error`. | Fix the discovery script. Check the output size limit. |
+| No compliance policy is assigned. The tenant setting is **Compliant**. | Access is granted. | Devices with no policy count as compliant. | Assign a policy. Set the tenant setting to **Not compliant**. |
+| No compliance policy is assigned. The tenant setting is **Not compliant**. | Sign-in is blocked. Company Portal shows **No compliance policies have been assigned**. | Devices with no policy count as noncompliant. | Assign a compliance policy to the user or the device. |
+| The device didn't report status within the validity period. | Sign-in is blocked. | The device is treated as noncompliant. | Get the device to check in with Intune. |
+| The device isn't registered in Microsoft Entra ID or isn't enrolled in Intune. | Sign-in is blocked. | The control supports only registered and enrolled devices. | Enroll the device in Intune. |
+| The user signs in from Edge InPrivate on Windows. | Sign-in is blocked on a compliant device. | Edge InPrivate on Windows counts as a noncompliant device. | Use a normal browser window. |
+| The device is noncompliant, but the user isn't blocked. | Access continues. | The user isn't in the Conditional Access policy assignment, or is excluded. | Check the include and exclude groups of both policies. |
+| The device just enrolled and shows compliant, but sign-in is blocked. | Sign-in is blocked for a short time. | Compliance information can take time to register for a new device. | Wait a few minutes and try again. Check that the user has an Intune license. |
+
+Sources for the table: [compliance overview](https://learn.microsoft.com/en-us/intune/device-security/compliance/overview), [actions for noncompliance](https://learn.microsoft.com/en-us/intune/device-security/compliance/configure-noncompliance-actions), [create a compliance policy](https://learn.microsoft.com/en-us/intune/device-security/compliance/create-policy), [monitor device compliance](https://learn.microsoft.com/en-us/intune/device-security/compliance/monitor-policy), [grant controls](https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-conditional-access-grant), and [troubleshoot Conditional Access with Intune](https://learn.microsoft.com/en-us/troubleshoot/mem/intune/device-protection/troubleshoot-conditional-access).
+
+## Find which side blocked the user
+
+Start with the sign-in, not the device. The sign-in log tells you which Conditional Access policy applied and why ([troubleshoot sign-in problems with Conditional Access](https://learn.microsoft.com/en-us/entra/identity/conditional-access/troubleshoot-conditional-access)).
+
+1. Sign in to the [Microsoft Entra admin center](https://entra.microsoft.com) as at least a Reports Reader.
+2. Go to **Entra ID** > **Monitoring & health** > **Sign-in logs**.
+3. Filter by the user name and the time of the failure.
+4. Open the failed sign-in.
+5. Select the **Conditional Access** tab to see the policy that blocked the sign-in.
+6. Select the **Troubleshooting and support** tab for the failure reason.
+7. Check **Device Info** for the device details used in the evaluation.
+
+If the policy required a compliant device, go to Intune next:
+
+1. Open the device in the Intune admin center.
+2. Check the device compliance status.
+3. Open the noncompliant policy to find the failed setting.
+
+To check which policies apply to a user before a change, use the **What If** tool at **Entra ID** > **Conditional Access** > **Policies** > **What If** ([What If tool](https://learn.microsoft.com/en-us/entra/identity/conditional-access/what-if-tool)).
+
+## Checklist
+
+- Create and assign compliance policies before you turn on a Conditional Access policy that requires a compliant device.
+- Set **Mark devices with no compliance policy assigned as** to **Not compliant**. First, find the devices without a policy.
+- Choose a **Mark device noncompliant** schedule for each policy. Use a grace period on purpose, not by default.
+- Keep custom compliance scripts small and reliable, because a failed script holds the old status for up to seven days.
+- Exclude emergency access accounts from the Conditional Access policy.
+- Start the Conditional Access policy in **Report-only**. Review the sign-in logs. Then turn it on.
+- When a user is blocked, start in the sign-in logs. Then go to the device in Intune.
+
+## References
+
+- [Use compliance policies to set rules for devices](https://learn.microsoft.com/en-us/intune/device-security/compliance/overview)
+- [Configure actions for noncompliant devices](https://learn.microsoft.com/en-us/intune/device-security/compliance/configure-noncompliance-actions)
+- [Create a compliance policy](https://learn.microsoft.com/en-us/intune/device-security/compliance/create-policy)
+- [Monitor device compliance](https://learn.microsoft.com/en-us/intune/device-security/compliance/monitor-policy)
+- [Device-based Conditional Access with Intune](https://learn.microsoft.com/en-us/intune/device-security/conditional-access-integration/device-based-policies)
+- [Conditional Access grant controls](https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-conditional-access-grant)
+- [Require device compliance with Conditional Access](https://learn.microsoft.com/en-us/entra/identity/conditional-access/policy-all-users-device-compliance)
+- [Conditional Access report-only mode](https://learn.microsoft.com/en-us/entra/identity/conditional-access/concept-conditional-access-report-only)
+- [Troubleshoot sign-in problems with Conditional Access](https://learn.microsoft.com/en-us/entra/identity/conditional-access/troubleshoot-conditional-access)
+- [Conditional Access What If tool](https://learn.microsoft.com/en-us/entra/identity/conditional-access/what-if-tool)
+- [Troubleshoot Conditional Access with Intune](https://learn.microsoft.com/en-us/troubleshoot/mem/intune/device-protection/troubleshoot-conditional-access)
+- [Policy refresh intervals](https://learn.microsoft.com/en-us/intune/device-configuration/troubleshoot-device-profiles)
+- [device resource type (Microsoft Graph)](https://learn.microsoft.com/en-us/graph/api/resources/device?view=graph-rest-1.0)
+- [managedDevice resource type (Microsoft Graph)](https://learn.microsoft.com/en-us/graph/api/resources/intune-devices-manageddevice?view=graph-rest-1.0)
+- [complianceState enum (Microsoft Graph)](https://learn.microsoft.com/en-us/graph/api/resources/intune-devices-compliancestate?view=graph-rest-1.0)
