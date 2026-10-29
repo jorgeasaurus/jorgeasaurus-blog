@@ -1,0 +1,465 @@
+---
+title: "PowerShell try/catch: why it misses errors"
+date: "2026-11-01"
+description: "Make try/catch catch cmdlet errors and native command failures, so that your Intune scripts stop reporting success when they fail."
+tags: ["powershell", "scripting", "intune", "automation"]
+---
+
+{/* TODO(Jorge): social card placeholder. Add public/images/posts/powershell-try-catch-misses-errors/socialcard.png (1200x630) and the socialImage entry in posts.ts. Not generated for this draft. */}
+
+You put a command in a `try` block. The command fails. PowerShell shows the red error text and runs the next line. The `catch` block never runs, and the script exits with code `0`.
+
+**`try`/`catch` only catches terminating errors. Most cmdlet errors are non-terminating, and native commands don't throw PowerShell errors at all.**
+
+Watch the walkthrough: [PowerShell try/catch: why it misses errors](https://youtu.be/24xoY3WpSB8) (4 minutes 42 seconds).
+
+I ran every example in this post in PowerShell 7.4.6 on Linux. I didn't test them on Windows or in an Intune tenant. Windows PowerShell 5.1 differences come from Microsoft Learn only, and I label them that way.
+
+The examples run in a test folder, `/tmp/demo`, that contains `app.json` and `policy.json`. The other files don't exist on purpose. In the output blocks, I shortened each error to one line. PowerShell 7 also shows the line number and a pointer to the failed code.
+
+## Know the three kinds of errors
+
+[about_Error_Handling](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_error_handling) defines three categories:
+
+| Category | What it does | Caught by `catch`? | Examples |
+| --- | --- | --- | --- |
+| Non-terminating | Writes an error record. The command continues with the next input. | No, unless you escalate it. | `Write-Error`, most cmdlet failures on one input object |
+| Statement-terminating | Stops the current statement. The script continues at the next statement. | Yes | `[int]::Parse('abc')`, a command that doesn't exist |
+| Script-terminating | Unwinds the call stack. | Yes | `throw`, an escalated non-terminating error |
+
+Native commands are a separate case. A native command is an external program, such as `reg.exe`, `dsregcmd.exe`, or `git`. It reports failure with an exit code, not with a PowerShell error.
+
+## See the miss
+
+`Get-Item` writes a non-terminating error when a path doesn't exist:
+
+```powershell
+try {
+    Get-Item -Path ./missing.json
+    'Still in try'
+}
+catch {
+    'Caught'
+}
+```
+
+Output:
+
+```text
+Get-Item: Cannot find path '/tmp/demo/missing.json' because it does not exist.
+Still in try
+```
+
+The error text appears. `Still in try` runs. `Caught` doesn't appear. When I ran this as a script file with `pwsh -File`, the exit code was `0`.
+
+This is by design. A cmdlet can process many input objects. One bad input doesn't stop the others:
+
+```powershell
+$Error.Clear()
+Get-Item -Path ./missing.json, ./app.json, ./policy.json |
+    Select-Object -ExpandProperty Name
+"Last command succeeded: $?"
+"Errors recorded: $($Error.Count)"
+```
+
+```text
+Get-Item: Cannot find path '/tmp/demo/missing.json' because it does not exist.
+app.json
+policy.json
+Last command succeeded: False
+Errors recorded: 1
+```
+
+The error isn't lost. PowerShell adds it to `$Error`, with the newest record at index `0`, and sets `$?` to `$false`. But nothing stops the script.
+
+## Escalate one command with -ErrorAction Stop
+
+Add the `-ErrorAction Stop` common parameter to the command that must not fail silently. PowerShell converts the non-terminating error into a terminating error, and execution moves to `catch`.
+
+```powershell
+try {
+    Get-Item -Path ./missing.json -ErrorAction Stop
+    'Still in try'
+}
+catch [System.Management.Automation.ItemNotFoundException] {
+    "Missing file: $($_.TargetObject)"
+    "Error ID: $($PSItem.FullyQualifiedErrorId)"
+}
+catch {
+    "Unexpected error: $($_.Exception.Message)"
+}
+finally {
+    'Cleanup complete'
+}
+```
+
+```text
+Missing file: /tmp/demo/missing.json
+Error ID: PathNotFound
+Cleanup complete
+```
+
+Three details matter here:
+
+- The typed `catch` block matches `ItemNotFoundException`. PowerShell wraps the escalated error in an `ActionPreferenceStopException`, but `catch` unwraps it, so you can still catch the original exception type.
+- Inside `catch`, `$_` and `$PSItem` are the same variable. Each contains the `ErrorRecord`. Use `$_.Exception.Message` for the message, `$_.TargetObject` for the input that failed, and `$_.FullyQualifiedErrorId` for a stable ID.
+- The `finally` block runs if the `try` block succeeds and if a `catch` block runs. Use it for cleanup, such as closing a file or a connection.
+
+[about_Try_Catch_Finally](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_try_catch_finally) notes one limit: if you press **Ctrl+C**, `finally` runs, but output that it sends to the pipeline isn't displayed.
+
+## Set $ErrorActionPreference for a whole scope
+
+`-ErrorAction` applies to one command. The `$ErrorActionPreference` variable applies to all commands in the current scope and its child scopes. The default value is `Continue`.
+
+A function is a child scope. If you set the preference inside a function, the caller doesn't get the change:
+
+```powershell
+function Test-StrictStep {
+    $ErrorActionPreference = 'Stop'
+    try {
+        Get-Item -Path ./missing.json
+        'Function: still in try'
+    }
+    catch {
+        'Function: caught'
+    }
+}
+
+Test-StrictStep
+"Caller preference: $ErrorActionPreference"
+try {
+    Get-Item -Path ./missing.json
+    'Caller: still in try'
+}
+catch {
+    'Caller: caught'
+}
+```
+
+```text
+Function: caught
+Caller preference: Continue
+Get-Item: Cannot find path '/tmp/demo/missing.json' because it does not exist.
+Caller: still in try
+```
+
+For an endpoint script, set `$ErrorActionPreference = 'Stop'` at the top of the script. Functions that you define in the script run in child scopes, so they inherit it.
+
+Functions from a module are different. [about_Scopes](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_scopes) says that they don't run in a child scope of the caller. For a critical call to a module command, add `-ErrorAction Stop` to that call, so that the result doesn't depend on scope.
+
+When one command is allowed to fail, override the preference on that command. `-ErrorAction` on a command takes precedence over `$ErrorActionPreference`:
+
+```powershell
+$ErrorActionPreference = 'Stop'
+try {
+    $optional = Get-Item -Path ./optional.json -ErrorAction SilentlyContinue
+    if (-not $optional) {
+        'Optional file not found. Using defaults.'
+    }
+    Get-Item -Path ./missing.json
+    'Still in try'
+}
+catch {
+    "Caught: $($_.Exception.Message)"
+}
+```
+
+```text
+Optional file not found. Using defaults.
+Caught: Cannot find path '/tmp/demo/missing.json' because it does not exist.
+```
+
+Use `-ErrorAction SilentlyContinue` only when you test the result on the next line. Without that test, you hide the error.
+
+## Check $LASTEXITCODE after native commands
+
+Native commands run in their own process. They don't take part in the PowerShell error system. `$ErrorActionPreference = 'Stop'` doesn't change that.
+
+In these examples, I use `pwsh` itself as the native command, because it exists on every machine that runs the examples. `-Command 'exit 3'` makes it fail with exit code `3`:
+
+```powershell
+$pwshPath = (Get-Process -Id $PID).Path
+$ErrorActionPreference = 'Stop'
+$Error.Clear()
+try {
+    & $pwshPath -NoProfile -Command 'exit 3'
+    "Still in try. LASTEXITCODE=$LASTEXITCODE Errors=$($Error.Count)"
+}
+catch {
+    'Caught'
+}
+```
+
+```text
+Still in try. LASTEXITCODE=3 Errors=0
+```
+
+The failure is only in `$LASTEXITCODE`. By default, a non-zero exit code sets `$?` to `$false`, but it doesn't add a record to `$Error` and it doesn't trigger `catch`.
+
+Check the exit code immediately after the call, and throw if it isn't a success code:
+
+```powershell
+$pwshPath = (Get-Process -Id $PID).Path
+try {
+    & $pwshPath -NoProfile -Command 'exit 3'
+    if ($LASTEXITCODE -ne 0) {
+        throw "Native command failed with exit code $LASTEXITCODE."
+    }
+    'Still in try'
+}
+catch {
+    "Caught: $($_.Exception.Message)"
+}
+```
+
+```text
+Caught: Native command failed with exit code 3.
+```
+
+This pattern works in Windows PowerShell 5.1 and PowerShell 7. Read `$LASTEXITCODE` before you run the next native command, because the next command overwrites it.
+
+## Use $PSNativeCommandUseErrorActionPreference in PowerShell 7.4 and later
+
+PowerShell 7.3 added `$PSNativeCommandUseErrorActionPreference` as an experimental feature. It became a stable feature in PowerShell 7.4. The default value is `$false`.
+
+When you set it to `$true`, a non-zero exit code writes a non-terminating error of type `NativeCommandExitException`. That error follows `$ErrorActionPreference`, so `Stop` sends it to `catch`:
+
+```powershell
+$pwshPath = (Get-Process -Id $PID).Path
+$ErrorActionPreference = 'Stop'
+$PSNativeCommandUseErrorActionPreference = $true
+try {
+    & $pwshPath -NoProfile -Command 'exit 3'
+    'Still in try'
+}
+catch {
+    "Caught [$($_.Exception.GetType().Name)]: $($_.Exception.Message)"
+    "Exit code: $($_.Exception.ExitCode)"
+}
+```
+
+```text
+Caught [NativeCommandExitException]: Program "pwsh" ended with non-zero exit code: 3.
+Exit code: 3
+```
+
+Some tools use non-zero exit codes for information, not for errors. For example, the [robocopy documentation](https://learn.microsoft.com/en-us/windows-server/administration/windows-commands/robocopy) says that an exit code of 8 or higher means at least one failure. Lower codes describe copy results. For those tools, turn the variable off in a script block and check the exit code yourself. The change stays inside the script block. This example uses `pwsh` as a stand-in for a tool like that:
+
+```powershell
+$pwshPath = (Get-Process -Id $PID).Path
+$ErrorActionPreference = 'Stop'
+$PSNativeCommandUseErrorActionPreference = $true
+& {
+    # Exit codes below 8 are not errors for this tool.
+    $PSNativeCommandUseErrorActionPreference = $false
+    & $pwshPath -NoProfile -Command 'exit 1'
+    if ($LASTEXITCODE -ge 8) {
+        throw "Tool failed with exit code $LASTEXITCODE."
+    }
+    "Tool finished with informational exit code $LASTEXITCODE."
+}
+"Outside the script block: $PSNativeCommandUseErrorActionPreference"
+```
+
+```text
+Tool finished with informational exit code 1.
+Outside the script block: True
+```
+
+Don't depend on this variable in scripts that can run in Windows PowerShell 5.1. The variable doesn't exist there (documentation only, see [Windows PowerShell 5.1 differences](#windows-powershell-51-differences-documentation-only)). Check `$LASTEXITCODE` instead.
+
+## Wrap native commands in one helper
+
+If a script calls several native commands, put the exit code check in one function. The function also captures standard error (stderr) as text and lets you list the exit codes that mean success:
+
+```powershell
+function Invoke-NativeCommand {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)]
+        [ValidateNotNullOrEmpty()]
+        [string]$FilePath,
+
+        [string[]]$ArgumentList = @(),
+
+        [int[]]$SuccessExitCode = @(0)
+    )
+
+    # Keep this function scope at 'Continue', so that the caller's 'Stop'
+    # can't act on redirected stderr lines. The PowerShell 7.2 stderr change
+    # isn't in the 5.1 docs. Decide on the exit code instead.
+    $ErrorActionPreference = 'Continue'
+    $PSNativeCommandUseErrorActionPreference = $false
+
+    $output = & $FilePath @ArgumentList 2>&1 | ForEach-Object { "$_" }
+    $exitCode = $LASTEXITCODE
+
+    if ($SuccessExitCode -notcontains $exitCode) {
+        throw "$FilePath exited with code $exitCode. Output: $($output -join ' ')"
+    }
+
+    [pscustomobject]@{
+        FilePath = $FilePath
+        ExitCode = $exitCode
+        Output   = $output
+    }
+}
+```
+
+Call it with the success codes for each tool:
+
+```powershell
+$pwshPath = (Get-Process -Id $PID).Path
+$ErrorActionPreference = 'Stop'
+
+try {
+    $warning = Invoke-NativeCommand -FilePath $pwshPath -ArgumentList @(
+        '-NoProfile', '-Command', '[Console]::Error.WriteLine(''disk is slow''); exit 0'
+    )
+    "Exit $($warning.ExitCode). Output: $($warning.Output)"
+
+    $info = Invoke-NativeCommand -FilePath $pwshPath -ArgumentList @(
+        '-NoProfile', '-Command', 'exit 1'
+    ) -SuccessExitCode 0, 1
+    "Exit $($info.ExitCode) is allowed."
+
+    Invoke-NativeCommand -FilePath $pwshPath -ArgumentList @(
+        '-NoProfile', '-Command', 'exit 5'
+    )
+    'Still in try'
+}
+catch {
+    "Caught: $($_.Exception.Message)"
+    exit 1
+}
+```
+
+```text
+Exit 0. Output: disk is slow
+Exit 1 is allowed.
+Caught: <path-to-pwsh> exited with code 5. Output:
+```
+
+The stderr line didn't stop the script. Exit code `1` passed because the call allows it. Exit code `5` went to `catch`, and the script exited with `1`. The real output shows the full path to `pwsh` in place of `<path-to-pwsh>`.
+
+The stderr behavior in the comment comes from [about_Preference_Variables](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables). It says that starting in PowerShell 7.2, `$ErrorActionPreference` doesn't affect redirected native command output. I didn't test the 5.1 behavior.
+
+## Stop Intune scripts from reporting false success
+
+This is where silent errors cost the most. Intune reads your exit code and output. It doesn't read the red text on a console that nobody sees.
+
+From Microsoft Learn (documentation only):
+
+- **Remediations**: the remediation script runs only if the detection script ends with `exit 1`. Any other exit code means "issue not found." See [Use Remediations](https://learn.microsoft.com/en-us/intune/device-management/tools/deploy-remediations).
+- **Win32 app custom detection scripts**: Intune detects the app when the script exits with `0` and writes a string to STDOUT. A nonzero exit code means not installed. Data on STDERR also means not installed, even with exit code `0` and STDOUT data. See [Add a Win32 app](https://learn.microsoft.com/en-us/intune/app-management/deployment/add-win32).
+- **Script exit code**: when `pwsh -File` or `powershell.exe -File` runs a script, the exit code is `1` if the script ended because of an unhandled exception, the value of `exit` if the script uses it, and `0` otherwise. See [about_Automatic_Variables](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_automatic_variables).
+
+Here is an illustrative remediation detection script with the bug. It checks an agent setting in a JSON file. The path is an example, not a real product:
+
+```powershell
+# Detect-AgentUpdates.ps1 (bad): reports OK when it can't read the config.
+param(
+    [string]$ConfigPath = "$env:ProgramData\Contoso\Agent\agent.json"
+)
+
+try {
+    $config = Get-Content -Path $ConfigPath -Raw | ConvertFrom-Json
+
+    if ($config.UpdatesEnabled -eq $false) {
+        Write-Output 'Issue: agent updates are disabled.'
+        exit 1
+    }
+
+    Write-Output 'OK: agent updates are enabled.'
+    exit 0
+}
+catch {
+    Write-Output "Detection error: $($_.Exception.Message)"
+    exit 1
+}
+```
+
+When the file is missing, `Get-Content` writes a non-terminating error. `$config` is `$null`. `$null -eq $false` is `$false`, so the script skips the issue branch, writes `OK`, and exits `0`. I ran it with `-ConfigPath` set to a file that doesn't exist:
+
+```text
+Get-Content: Cannot find path '/tmp/demo/missing.json' because it does not exist.
+OK: agent updates are enabled.
+```
+
+Exit code: `0`. In Intune terms, that is "issue not found," so remediation doesn't run on the device that needs it most.
+
+The fixed version makes two changes. It stops on cmdlet errors, and it tests for the good state instead of the bad state:
+
+```powershell
+#Requires -Version 5.1
+[CmdletBinding()]
+param(
+    [ValidateNotNullOrEmpty()]
+    [string]$ConfigPath = "$env:ProgramData\Contoso\Agent\agent.json"
+)
+
+# Make cmdlet errors terminating so that catch runs.
+$ErrorActionPreference = 'Stop'
+
+try {
+    $config = Get-Content -Path $ConfigPath -Raw | ConvertFrom-Json
+
+    # Test for the good state. Anything else is an issue.
+    if ($config.UpdatesEnabled -ne $true) {
+        Write-Output "Issue: UpdatesEnabled is '$($config.UpdatesEnabled)'."
+        exit 1
+    }
+
+    Write-Output 'OK: agent updates are enabled.'
+    exit 0
+}
+catch {
+    # A detection script that can't read the state must not report OK.
+    Write-Output "Detection error: $($_.Exception.Message)"
+    exit 1
+}
+```
+
+Results in PowerShell 7.4.6 on Linux, with `-ConfigPath` pointed at test files:
+
+| Test file | Output | Exit code |
+| --- | --- | --- |
+| `UpdatesEnabled` is `true` | `OK: agent updates are enabled.` | `0` |
+| `UpdatesEnabled` is `false` | `Issue: UpdatesEnabled is 'False'.` | `1` |
+| File doesn't exist | `Detection error: Cannot find path '...' because it does not exist.` | `1` |
+
+The `catch` block sends detection errors to `exit 1`. That matches my [reusable Intune remediation template](https://www.jorgeasaur.us/reusable-intune-remediation-template): a detection script that can't check the state must not say the state is good. If the remediation is unsafe to run when the state is unknown, exit with a code other than `1`. Then Intune doesn't run the remediation. Check how that result appears in your reports before you depend on it.
+
+The same rule applies to a Win32 app detection script that calls a native command. Check `$LASTEXITCODE` before you write anything to STDOUT. If you write `Installed` first and check later, the app can show as installed when the check failed.
+
+## Windows PowerShell 5.1 differences (documentation only)
+
+I didn't run these examples in Windows PowerShell 5.1. These differences come from the 5.1 and 7.x versions of the Microsoft Learn docs:
+
+- `$PSNativeCommandUseErrorActionPreference` isn't in the 5.1 version of [about_Preference_Variables](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables?view=powershell-5.1). Check `$LASTEXITCODE`.
+- The redirected stderr change is listed for PowerShell 7.2 and later. The 5.1 docs don't describe it. I didn't confirm how 5.1 handles redirected stderr when `$ErrorActionPreference` is `Stop`. The helper sets its own scope to `Continue`, so it doesn't depend on that behavior.
+- The default `$ErrorView` in 5.1 is `NormalView`. In PowerShell 7, the default is `ConciseView`. Your error text looks different from the output in this post. The error behavior is the same.
+- `try`, `catch`, `finally`, `-ErrorAction`, `$ErrorActionPreference`, `$_`, `$PSItem`, and `$LASTEXITCODE` are in both versions of the docs.
+
+## Checklist for scripts that a tool runs
+
+- Set `$ErrorActionPreference = 'Stop'` at the top of the script.
+- Add `-ErrorAction Stop` to critical commands in functions or modules that you don't control.
+- Use `-ErrorAction SilentlyContinue` only when the next line tests the result.
+- Check `$LASTEXITCODE` immediately after every native command. Know which exit codes mean success for that tool.
+- Use `$PSNativeCommandUseErrorActionPreference = $true` only in PowerShell 7.4 and later.
+- Test for the good state, so that missing data doesn't look like success.
+- End with explicit `exit 0` and `exit 1` when Intune or another tool reads the result.
+- Run the failure path on purpose before you deploy: a missing file, a bad path, a failed native command.
+
+## References
+
+- [about_Error_Handling](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_error_handling)
+- [about_Try_Catch_Finally](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_try_catch_finally)
+- [about_Preference_Variables](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_preference_variables)
+- [about_CommonParameters](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_commonparameters)
+- [about_Automatic_Variables](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_automatic_variables)
+- [about_Scopes](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_scopes)
+- [Everything you wanted to know about exceptions](https://learn.microsoft.com/en-us/powershell/scripting/learn/deep-dives/everything-about-exceptions)
+- [Use Remediations in Intune](https://learn.microsoft.com/en-us/intune/device-management/tools/deploy-remediations)
+- [Add a Win32 app to Intune](https://learn.microsoft.com/en-us/intune/app-management/deployment/add-win32)

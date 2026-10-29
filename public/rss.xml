@@ -6,7 +6,41 @@
     <atom:link href="https://www.jorgeasaur.us/rss.xml" rel="self" type="application/rss+xml" />
     <description>Field notes on PowerShell, endpoint management, Microsoft Graph, and automation.</description>
     <language>en-us</language>
-    <lastBuildDate>Thu, 22 Oct 2026 12:00:00 GMT</lastBuildDate>
+    <lastBuildDate>Tue, 17 Nov 2026 12:00:00 GMT</lastBuildDate>
+    <item>
+      <title>Microsoft Graph permissions: delegated vs application</title>
+      <link>https://www.jorgeasaur.us/microsoft-graph-delegated-vs-application-permissions</link>
+      <guid isPermaLink="false">https://jorgeasaur.us/microsoft-graph-delegated-vs-application-permissions</guid>
+      <pubDate>Tue, 17 Nov 2026 12:00:00 GMT</pubDate>
+      <description>Know who your Graph call runs as, why an app-only script can do more than you expect, and how to pick the smallest Intune permission for each job.</description>
+      <category>microsoft-graph</category>
+      <category>intune</category>
+      <category>entra-id</category>
+      <category>security</category>
+      <category>powershell</category>
+    </item>
+    <item>
+      <title>Intune compliance to Conditional Access, end to end</title>
+      <link>https://www.jorgeasaur.us/intune-compliance-to-conditional-access</link>
+      <guid isPermaLink="false">https://jorgeasaur.us/intune-compliance-to-conditional-access</guid>
+      <pubDate>Thu, 05 Nov 2026 12:00:00 GMT</pubDate>
+      <description>Follow one device from a failed Intune compliance check to a blocked sign-in, and learn where the grace period and the no-policy setting change the result.</description>
+      <category>intune</category>
+      <category>conditional-access</category>
+      <category>entra-id</category>
+      <category>endpoint-management</category>
+    </item>
+    <item>
+      <title>PowerShell try/catch: why it misses errors</title>
+      <link>https://www.jorgeasaur.us/powershell-try-catch-misses-errors</link>
+      <guid isPermaLink="false">https://jorgeasaur.us/powershell-try-catch-misses-errors</guid>
+      <pubDate>Sun, 01 Nov 2026 12:00:00 GMT</pubDate>
+      <description>Make try/catch catch cmdlet errors and native command failures, so that your Intune scripts stop reporting success when they fail.</description>
+      <category>powershell</category>
+      <category>scripting</category>
+      <category>intune</category>
+      <category>automation</category>
+    </item>
     <item>
       <title>Learn Intune and PowerShell automation: field notes</title>
       <link>https://www.jorgeasaur.us/learn-intune-powershell-automation</link>

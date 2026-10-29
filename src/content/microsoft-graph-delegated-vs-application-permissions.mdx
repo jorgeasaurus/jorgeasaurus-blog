@@ -1,0 +1,227 @@
+---
+title: "Microsoft Graph permissions: delegated vs application"
+date: "2026-11-17"
+description: "Know who your Graph call runs as, why an app-only script can do more than you expect, and how to pick the smallest Intune permission for each job."
+tags: ["microsoft-graph", "intune", "entra-id", "security", "powershell"]
+---
+
+{/* TODO(Jorge): social card not generated. Add a 1200x630 card at /images/posts/microsoft-graph-delegated-vs-application-permissions/socialcard.png. */}
+
+Every Microsoft Graph call runs as someone. With delegated permissions, it runs as a signed-in user, and it can never do more than that user can do. With application permissions, it runs as the app itself, and it can reach every object that the permission covers in the tenant.
+
+That one difference explains most "why did this work?" and "why did this fail?" questions in Intune automation.
+
+{/* TODO(Jorge): video is not published yet (planned for 2026-11-17, 10:00 AM PT). Do not invent a YouTube ID. When it is published, replace this comment with:
+Watch the walkthrough: [Microsoft Graph permissions: delegated vs application](VIDEO_URL). */}
+
+<aside className="post-warning" role="note" aria-label="Note">
+  This post is documentation only. Every permission name and behavior here comes from Microsoft Learn, linked in each section. I didn't run these commands against a tenant for this post. The scenarios and code are illustrative examples. Check the API reference page for each call before you grant anything.
+</aside>
+
+This post is about the permission model. For the cmdlets themselves, see my [top 20 Microsoft Graph PowerShell cmdlets](/top-20-graph-api-cmdlets). For speed with large data sets, see [Graph batch requests with PowerShell](/supercharge-microsoft-graph-api-data-retrieval-with-powershell-batch-requests).
+
+## Know who the call runs as
+
+Microsoft Graph supports two access scenarios ([Graph permissions overview](https://learn.microsoft.com/en-us/graph/permissions-overview)):
+
+| | Delegated access | App-only access |
+| --- | --- | --- |
+| Who the call runs as | The app, on behalf of a signed-in user | The app, with its own identity |
+| Permission type | Delegated permissions (also called scopes) | Application permissions (also called app roles) |
+| What the app can reach | Only what the permission allows **and** the user can already access | Any data that the permission is associated with |
+| Who can consent | Users for their own data, or admins for all users | Only admins |
+| Result of consent | `oAuth2PermissionGrant` object | `appRoleAssignment` object |
+| Typical PowerShell use | Interactive admin work | Scheduled or unattended scripts |
+
+The permission name is often the same for both types. For example, `DeviceManagementManagedDevices.Read.All` exists as a delegated permission and as an application permission, with different IDs ([permissions reference](https://learn.microsoft.com/en-us/graph/permissions-reference)). The name doesn't tell you which type a token carries. The type changes what the name means.
+
+## Delegated calls: the intersection
+
+In delegated access, two checks must pass. The app must have the delegated permission, and the user must have their own rights to the data ([permissions and consent overview](https://learn.microsoft.com/en-us/entra/identity-platform/permissions-consent-overview)).
+
+Learn gives this example: an app with the delegated `Files.Read.All` permission, acting for a user named Tom, can read only the files that Tom can already access ([Graph permissions overview](https://learn.microsoft.com/en-us/graph/permissions-overview)).
+
+The effective permission is the intersection:
+
+```text
+Effective access = (delegated permissions granted to the app) ∩ (what the signed-in user can do)
+```
+
+For Intune, "what the user can do" includes their role permissions. Learn lists the requirements for Intune APIs in Graph: the app needs the permission scopes, and the user credentials need the "role permissions required to support the application permission scopes" ([Intune APIs in Graph](https://learn.microsoft.com/en-us/intune/developer/configure-graph-api-access)).
+
+So, this can happen in delegated access:
+
+1. The app has `DeviceManagementManagedDevices.PrivilegedOperations.All`, with admin consent.
+2. The user signs in. The user has a role that can read devices but can't wipe them.
+3. The script calls the wipe action.
+4. The call fails, because the user can't do it.
+
+The consent isn't wrong, and the scope isn't missing. The user is the limit.
+
+To see what Intune allows the signed-in user to do, call `getEffectivePermissions`. It "retrieves the effective permissions of the currently authenticated user" and needs `DeviceManagementRBAC.Read.All` ([getEffectivePermissions](https://learn.microsoft.com/en-us/graph/api/intune-rbac-devicemanagement-geteffectivepermissions?view=graph-rest-1.0)).
+
+## Consent: who can say yes
+
+Consent is how an app gets a permission. The rules differ by type:
+
+- **Delegated permissions.** Users can consent for their own data, if the tenant's app consent policies allow it. Many high-privilege delegated permissions need an admin ([permissions and consent overview](https://learn.microsoft.com/en-us/entra/identity-platform/permissions-consent-overview)).
+- **Application permissions.** Only an admin can consent. For Microsoft Graph app roles, that admin must be a Privileged Role Administrator or a Global Administrator. Cloud Application Administrator and Application Administrator can grant consent for other permissions, but not for Graph application permissions ([grant tenant-wide admin consent](https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/grant-admin-consent); [Graph permissions overview](https://learn.microsoft.com/en-us/graph/permissions-overview)).
+
+All the Intune permissions in the next sections show **AdminConsentRequired: Yes** for both the delegated and the application type ([permissions reference](https://learn.microsoft.com/en-us/graph/permissions-reference)). The Intune Administrator role isn't in Learn's list of roles that can grant tenant-wide admin consent. Plan for an admin with one of the listed roles to grant it.
+
+Tenant-wide admin consent applies the grant for the whole organization. By default, all users can then use the app. To limit who signs in, require user assignment on the app and assign only the users or groups that need it ([grant tenant-wide admin consent](https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/grant-admin-consent)).
+
+## Why app-only scripts can do more than you expect
+
+An app-only script has no user, so no user narrows the result. That causes four surprises.
+
+### There is no user boundary
+
+An application permission gives access to all data that the permission is associated with. Learn's example: an app with the application permission `Files.Read.All` can read any file in the organization ([Graph permissions overview](https://learn.microsoft.com/en-us/graph/permissions-overview)).
+
+For Intune, `DeviceManagementManagedDevices.Read.All` as an application permission reads the properties of devices managed by Intune "without a signed-in user" ([permissions reference](https://learn.microsoft.com/en-us/graph/permissions-reference)). No Intune role of a person limits it, because no person signs in.
+
+Learn says application permissions are highly privileged. It recommends delegated permissions whenever they meet the app's needs ([Graph permissions overview](https://learn.microsoft.com/en-us/graph/permissions-overview)).
+
+### One permission can cover more than one action
+
+A permission often covers a group of actions, not only the one you need.
+
+For example, the `syncDevice` action and the `wipe` action need the same permission: `DeviceManagementManagedDevices.PrivilegedOperations.All` ([syncDevice](https://learn.microsoft.com/en-us/graph/api/intune-devices-manageddevice-syncdevice?view=graph-rest-1.0); [wipe](https://learn.microsoft.com/en-us/graph/api/intune-devices-manageddevice-wipe?view=graph-rest-1.0)). Learn lists the remote actions that this permission allows, including retire, wipe, passcode reset, and remote lock ([Intune APIs in Graph](https://learn.microsoft.com/en-us/intune/developer/configure-graph-api-access)).
+
+A "sync all devices every night" script with this application permission can also wipe any device in the tenant. The script doesn't do that, but the credential allows it.
+
+### User-scoped Conditional Access doesn't apply
+
+Learn says that calls made by service principals aren't blocked by Conditional Access policies scoped to users. To target service principals, use Conditional Access for workload identities ([require device compliance](https://learn.microsoft.com/en-us/entra/identity/conditional-access/policy-all-users-device-compliance)).
+
+An admin can have MFA and compliant-device policies, while the app that runs their script has neither. Plan for that.
+
+### The credential is the identity
+
+An app-only script proves who it is with a credential, such as a certificate or a client secret. Whoever has that credential can get tokens as the app. Microsoft recommends a certificate instead of a client secret before an app goes to production ([add credentials to an app](https://learn.microsoft.com/en-us/entra/identity-platform/how-to-add-credentials)).
+
+Protect the private key like an admin password. Keep it on the machine that runs the script, in a certificate store, and don't copy it to other machines.
+
+## Least privilege for Intune automation
+
+Graph Intune permissions follow the `{resource}.{operation}.{constraint}` pattern ([Graph permissions overview](https://learn.microsoft.com/en-us/graph/permissions-overview)). Each `DeviceManagement*` family covers one area of Intune ([Intune APIs in Graph](https://learn.microsoft.com/en-us/intune/developer/configure-graph-api-access)):
+
+| Permission | What it covers |
+| --- | --- |
+| `DeviceManagementManagedDevices.Read.All` | Read managed devices, device categories, detected apps, remote action status, and malware information |
+| `DeviceManagementManagedDevices.ReadWrite.All` | Also create, change, and delete managed devices and categories, plus some remote actions such as locate device |
+| `DeviceManagementManagedDevices.PrivilegedOperations.All` | User-impacting remote actions: retire, wipe, passcode reset, remote lock, and others |
+| `DeviceManagementConfiguration.Read.All` / `.ReadWrite.All` | Device configuration, compliance policies, and notification messages |
+| `DeviceManagementApps.Read.All` / `.ReadWrite.All` | Apps, app categories, app protection policies, and app configurations |
+| `DeviceManagementScripts.Read.All` / `.ReadWrite.All` | Shell scripts, device health scripts (Remediations), compliance scripts, custom attribute scripts, and device management scripts |
+| `DeviceManagementServiceConfig.Read.All` / `.ReadWrite.All` | Enrollment, Apple tokens and programs, Exchange connector, terms and conditions, Cloud PKI, branding, and Mobile Threat Defense |
+| `DeviceManagementRBAC.Read.All` / `.ReadWrite.All` | Intune role definitions, role assignments, and resource operations |
+
+Two notes from Learn:
+
+- **Scripts moved.** As of July 31, 2025, the script endpoints, such as `deviceHealthScripts`, use `DeviceManagementScripts.*` instead of `DeviceManagementConfiguration.*` ([Intune APIs in Graph](https://learn.microsoft.com/en-us/intune/developer/configure-graph-api-access)). If an older script reads Remediations with `DeviceManagementConfiguration.Read.All`, check it. The list call for `deviceHealthScripts` is documented in beta only ([list deviceHealthScripts](https://learn.microsoft.com/en-us/graph/api/intune-devices-devicehealthscript-list?view=graph-rest-beta)).
+- **Licensing still applies.** The Graph API for Intune needs an active Intune license for the tenant ([Working with Intune in Graph](https://learn.microsoft.com/en-us/graph/api/resources/intune-graph-overview?view=graph-rest-1.0)).
+
+To choose a permission, use the API reference page for the call. Each page lists permissions "from least to most privileged." For example, the managed devices list accepts `DeviceManagementManagedDevices.Read.All` or `DeviceManagementManagedDevices.ReadWrite.All`. The first one is enough to read ([list managedDevices](https://learn.microsoft.com/en-us/graph/api/intune-devices-manageddevice-list?view=graph-rest-1.0)).
+
+`Find-MgGraphCommand` also shows permissions for a cmdlet. But Learn warns that the permissions it shows "don't indicate privilege levels." Use the API page to find the least privileged one ([Find-MgGraphCommand](https://learn.microsoft.com/en-us/powershell/microsoftgraph/find-mg-graph-command?view=graph-powershell-1.0)).
+
+Don't use `Directory.AccessAsUser.All` or `Directory.ReadWrite.All` as a shortcut. Learn calls them the highest and second-highest privileged directory permissions, to use only when necessary ([Graph permissions overview](https://learn.microsoft.com/en-us/graph/permissions-overview)).
+
+## Connect-MgGraph: -Scopes vs certificate app-only
+
+The way you call `Connect-MgGraph` sets the access type ([authentication commands](https://learn.microsoft.com/en-us/powershell/microsoftgraph/authentication-commands?view=graph-powershell-1.0)).
+
+### Delegated: -Scopes
+
+`-Scopes` is "an array of delegated permissions to consent to" ([Connect-MgGraph](https://learn.microsoft.com/en-us/powershell/module/microsoft.graph.authentication/connect-mggraph?view=graph-powershell-1.0)). You sign in as yourself. Ask only for what the task needs:
+
+```powershell
+# Delegated: read Intune devices as the signed-in admin.
+Connect-MgGraph -Scopes 'DeviceManagementManagedDevices.Read.All'
+```
+
+The result is still the intersection. If your Intune role can't read a device, this session can't read it either.
+
+By default, `Connect-MgGraph` uses the default Microsoft Graph PowerShell app registration. To isolate and limit the consent for admin work, Learn shows how to create your own app registration, require user assignment, and connect with `-ClientId` and `-TenantId` ([authentication commands](https://learn.microsoft.com/en-us/powershell/microsoftgraph/authentication-commands?view=graph-powershell-1.0)).
+
+### App-only: certificate
+
+For an unattended script, connect as the app with a certificate. You don't use `-Scopes`. The app gets the application permissions that an admin consented to on its app registration ([app-only authentication](https://learn.microsoft.com/en-us/powershell/microsoftgraph/app-only?view=graph-powershell-1.0)):
+
+```powershell
+# App-only: the certificate must be in Cert:\CurrentUser\My or Cert:\LocalMachine\My.
+$connectParams = @{
+    ClientId              = '<app-client-id>'
+    TenantId              = '<tenant-id>'
+    CertificateThumbprint = '<certificate-thumbprint>'
+}
+Connect-MgGraph @connectParams
+```
+
+### Check the session
+
+After you connect, check what you have before you run anything that changes data:
+
+```powershell
+Get-MgContext | Select-Object AuthType, Account, AppName, Scopes
+```
+
+In Learn's app-only example, `AuthType` is `AppOnly`, `Account` is empty, and `Scopes` lists the application permissions that the app has ([app-only authentication](https://learn.microsoft.com/en-us/powershell/microsoftgraph/app-only?view=graph-powershell-1.0)). If `Scopes` has more than you expect, fix the app registration before the script runs.
+
+### Other options
+
+`Connect-MgGraph` also supports a client secret (`-ClientSecretCredential`) and managed identity (`-Identity`) ([authentication commands](https://learn.microsoft.com/en-us/powershell/microsoftgraph/authentication-commands?view=graph-powershell-1.0)). Managed identity removes the stored credential, because the platform manages it. It works only where the script runs on a service that has a managed identity.
+
+## Scenario table
+
+Use this table as a starting point, not as a final answer. The permission in each row is the least privileged one that the API reference lists for that call. Check the page before you grant.
+
+| Scenario | Access type | Least privileged permission | What else limits it |
+| --- | --- | --- | --- |
+| You read device inventory in a console session | Delegated (`-Scopes`) | `DeviceManagementManagedDevices.Read.All` | Your Intune role |
+| A help desk tool syncs one device on request | Delegated | `DeviceManagementManagedDevices.PrivilegedOperations.All` | The technician's Intune role |
+| A nightly script exports device inventory | App-only (certificate) | `DeviceManagementManagedDevices.Read.All` | Nothing user-based. All managed devices are in scope |
+| A nightly script syncs all devices | App-only (certificate) | `DeviceManagementManagedDevices.PrivilegedOperations.All` | Nothing user-based. The same permission allows wipe and retire |
+| A script backs up compliance policies | App-only (certificate) | `DeviceManagementConfiguration.Read.All` | Nothing user-based |
+| A script reports app inventory | App-only (certificate) | `DeviceManagementApps.Read.All` | Nothing user-based |
+| A script reads Remediations scripts (beta) | App-only (certificate) | `DeviceManagementScripts.Read.All` | Nothing user-based |
+| A script changes a managed device property | Delegated or app-only | `DeviceManagementManagedDevices.ReadWrite.All` | The user's Intune role, if delegated |
+| You check your own Intune permissions | Delegated | `DeviceManagementRBAC.Read.All` | Returns only the signed-in user's permissions |
+| A script runs on a service with a managed identity | App-only (`-Identity`) | The same as the matching row above | Nothing user-based |
+
+Sources for each row: [list managedDevices](https://learn.microsoft.com/en-us/graph/api/intune-devices-manageddevice-list?view=graph-rest-1.0), [syncDevice](https://learn.microsoft.com/en-us/graph/api/intune-devices-manageddevice-syncdevice?view=graph-rest-1.0), [wipe](https://learn.microsoft.com/en-us/graph/api/intune-devices-manageddevice-wipe?view=graph-rest-1.0), [list compliance policies](https://learn.microsoft.com/en-us/graph/api/intune-deviceconfig-devicecompliancepolicy-list?view=graph-rest-1.0), [list mobileApps](https://learn.microsoft.com/en-us/graph/api/intune-apps-mobileapp-list?view=graph-rest-1.0), [list deviceHealthScripts](https://learn.microsoft.com/en-us/graph/api/intune-devices-devicehealthscript-list?view=graph-rest-beta), [update managedDevice](https://learn.microsoft.com/en-us/graph/api/intune-devices-manageddevice-update?view=graph-rest-1.0), and [getEffectivePermissions](https://learn.microsoft.com/en-us/graph/api/intune-rbac-devicemanagement-geteffectivepermissions?view=graph-rest-1.0).
+
+Two rows need a second look:
+
+- **Sync on a schedule.** If you need a bulk sync, consider whether the credential that can sync every device should be able to wipe every device. Delegated access with a technician's Intune role keeps a person, and their role, in the path.
+- **App inventory.** The `mobileApps` list page also accepts `DeviceManagementConfiguration.*`. For an app report, `DeviceManagementApps.Read.All` matches the job. Don't add a configuration permission only because the page lists it.
+
+## Checklist
+
+- Before you write the script, decide who it runs as: a person or the app.
+- Use delegated access for interactive work. Use app-only access only when no person is present.
+- For each call, open the API reference page and pick the first permission in the list that does the job.
+- Add `.ReadWrite` or `PrivilegedOperations` only when the script must change data or run a remote action.
+- For app-only access, use a certificate, not a client secret. Protect the private key.
+- Remember that user-scoped Conditional Access doesn't apply to the app.
+- After you connect, run `Get-MgContext` and read `AuthType` and `Scopes`.
+- Review app registrations and remove permissions that scripts no longer use.
+
+## References
+
+- [Overview of Microsoft Graph permissions](https://learn.microsoft.com/en-us/graph/permissions-overview)
+- [Microsoft Graph permissions reference](https://learn.microsoft.com/en-us/graph/permissions-reference)
+- [Overview of permissions and consent in the Microsoft identity platform](https://learn.microsoft.com/en-us/entra/identity-platform/permissions-consent-overview)
+- [Grant tenant-wide admin consent to an application](https://learn.microsoft.com/en-us/entra/identity/enterprise-apps/grant-admin-consent)
+- [Use Microsoft Entra ID to access Intune APIs in Microsoft Graph](https://learn.microsoft.com/en-us/intune/developer/configure-graph-api-access)
+- [Working with Intune in Microsoft Graph](https://learn.microsoft.com/en-us/graph/api/resources/intune-graph-overview?view=graph-rest-1.0)
+- [Authentication and authorization basics](https://learn.microsoft.com/en-us/graph/auth/auth-concepts)
+- [Microsoft Graph PowerShell authentication commands](https://learn.microsoft.com/en-us/powershell/microsoftgraph/authentication-commands?view=graph-powershell-1.0)
+- [Use app-only authentication with the Microsoft Graph PowerShell SDK](https://learn.microsoft.com/en-us/powershell/microsoftgraph/app-only?view=graph-powershell-1.0)
+- [Connect-MgGraph](https://learn.microsoft.com/en-us/powershell/module/microsoft.graph.authentication/connect-mggraph?view=graph-powershell-1.0)
+- [Find-MgGraphCommand](https://learn.microsoft.com/en-us/powershell/microsoftgraph/find-mg-graph-command?view=graph-powershell-1.0)
+- [Add and manage application credentials](https://learn.microsoft.com/en-us/entra/identity-platform/how-to-add-credentials)
+- [Require device compliance with Conditional Access](https://learn.microsoft.com/en-us/entra/identity/conditional-access/policy-all-users-device-compliance)
+- [getEffectivePermissions function](https://learn.microsoft.com/en-us/graph/api/intune-rbac-devicemanagement-geteffectivepermissions?view=graph-rest-1.0)
