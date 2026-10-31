@@ -11,9 +11,17 @@ You put a command in a `try` block. The command fails. PowerShell shows the red 
 
 **`try`/`catch` only catches terminating errors. Most cmdlet errors are non-terminating, and native commands don't throw PowerShell errors at all.**
 
+The fix, in three lines:
+
+- Set `$ErrorActionPreference = 'Stop'` at the top of the script.
+- Add `-ErrorAction Stop` to critical calls to module commands.
+- Check `$LASTEXITCODE` after every native command.
+
+The rest of this post shows why each line is necessary.
+
 Watch the walkthrough: [PowerShell try/catch: why it misses errors](https://youtu.be/24xoY3WpSB8) (4 minutes 42 seconds).
 
-I ran every example in this post in PowerShell 7.4.6 on Linux. I didn't test them on Windows or in an Intune tenant. Windows PowerShell 5.1 differences come from Microsoft Learn only, and I label them that way.
+I ran every example in this post in PowerShell 7.4.6 on Linux. I didn't test them on Windows or in an Intune tenant. Intune can run your script in Windows PowerShell 5.1, not PowerShell 7, so read the 5.1 section before you deploy. Windows PowerShell 5.1 differences come from Microsoft Learn only, and I label them that way.
 
 The examples run in a test folder, `/tmp/demo`, that contains `app.json` and `policy.json`. The other files don't exist on purpose. In the output blocks, I shortened each error to one line. PowerShell 7 also shows the line number and a pointer to the failed code.
 
@@ -220,7 +228,7 @@ This pattern works in Windows PowerShell 5.1 and PowerShell 7. Read `$LASTEXITCO
 
 ## Use $PSNativeCommandUseErrorActionPreference in PowerShell 7.4 and later
 
-PowerShell 7.3 added `$PSNativeCommandUseErrorActionPreference` as an experimental feature. It became a stable feature in PowerShell 7.4. The default value is `$false`.
+PowerShell 7.3 added `$PSNativeCommandUseErrorActionPreference` as an experimental feature. It became a stable feature in PowerShell 7.4 ([What's new in PowerShell 7.4](https://learn.microsoft.com/en-us/powershell/scripting/whats-new/what-s-new-in-powershell-74)). The default value is `$false`.
 
 When you set it to `$true`, a non-zero exit code writes a non-terminating error of type `NativeCommandExitException`. That error follows `$ErrorActionPreference`, so `Stop` sends it to `catch`:
 
@@ -427,6 +435,7 @@ Results in PowerShell 7.4.6 on Linux, with `-ConfigPath` pointed at test files:
 | `UpdatesEnabled` is `true` | `OK: agent updates are enabled.` | `0` |
 | `UpdatesEnabled` is `false` | `Issue: UpdatesEnabled is 'False'.` | `1` |
 | File doesn't exist | `Detection error: Cannot find path '...' because it does not exist.` | `1` |
+| File isn't valid JSON | `Detection error: Conversion from JSON failed with error: ...` | `1` |
 
 The `catch` block sends detection errors to `exit 1`. That matches my [reusable Intune remediation template](https://www.jorgeasaur.us/reusable-intune-remediation-template): a detection script that can't check the state must not say the state is good. If the remediation is unsafe to run when the state is unknown, exit with a code other than `1`. Then Intune doesn't run the remediation. Check how that result appears in your reports before you depend on it.
 

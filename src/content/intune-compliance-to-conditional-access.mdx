@@ -100,7 +100,7 @@ The grace period is a per-policy decision. A short grace period on a policy for 
 - If the setting still returns `Error` after seven days, the device becomes noncompliant.
 - If the policy has a grace period, the device goes to **In grace period** after the seven days. It becomes noncompliant when the grace period ends.
 
-For custom compliance, a discovery script that fails can put a setting in `Error`. A failed script doesn't block the user right away. Fix the script before the hold ends. Learn also notes that discovery script output is limited to 2048 characters. Longer output can be truncated and cause error 65009.
+For custom compliance, a discovery script that fails can put a setting in `Error`. A failed script doesn't block the user right away. Fix the script before the hold ends. [Create a compliance policy](https://learn.microsoft.com/en-us/intune/device-security/compliance/create-policy) also notes that discovery script output is limited to 2048 characters. Longer output can be truncated and cause error 65009.
 
 ## Check the setting for devices with no policy
 
@@ -120,7 +120,7 @@ To review both settings:
 3. Check **Mark devices with no compliance policy assigned as**.
 4. Check **Compliance status validity period (days)**.
 
-Before you change the first setting to **Not compliant**, find the devices that have no compliance policy. They lose access when the change takes effect. In the **Device compliance status** tile, devices with no policy and no trigger to check compliance can show as **Not evaluated** ([Monitor device compliance](https://learn.microsoft.com/en-us/intune/device-security/compliance/monitor-policy)).
+Before you change the first setting to **Not compliant**, find the devices that have no compliance policy. They lose access when the change takes effect. Use the **Devices without compliance policy** tile or the **Devices without compliance policy** organizational report to find them ([Monitor device compliance](https://learn.microsoft.com/en-us/intune/device-security/compliance/monitor-policy)).
 
 ## Build the Conditional Access policy safely
 

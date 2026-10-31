@@ -127,6 +127,31 @@ To choose a permission, use the API reference page for the call. Each page lists
 
 `Find-MgGraphCommand` also shows permissions for a cmdlet. But Learn warns that the permissions it shows "don't indicate privilege levels." Use the API page to find the least privileged one ([Find-MgGraphCommand](https://learn.microsoft.com/en-us/powershell/microsoftgraph/find-mg-graph-command?view=graph-powershell-1.0)).
 
+The wipe action shows the difference. I ran this in PowerShell 7.4.6 on Linux with Microsoft.Graph.Authentication 2.41.2. `Find-MgGraphCommand` reads metadata in the module, so it needs no sign-in and no tenant:
+
+```powershell
+$findParams = @{
+    Uri        = '/deviceManagement/managedDevices/{managedDevice-id}/wipe'
+    ApiVersion = 'v1.0'
+}
+Find-MgGraphCommand @findParams |
+    Select-Object -ExpandProperty Permissions |
+    Format-Table -Property Name, PermissionType
+```
+
+```text
+Name                                                    PermissionType
+----                                                    --------------
+DeviceManagementManagedDevices.ReadWrite.All            DelegatedWork
+DeviceManagementManagedDevices.ReadWrite.All            Application
+DeviceManagementManagedDevices.PrivilegedOperations.All DelegatedWork
+DeviceManagementConfiguration.ReadWrite.All             DelegatedWork
+DeviceManagementManagedDevices.PrivilegedOperations.All Application
+DeviceManagementConfiguration.ReadWrite.All             Application
+```
+
+The [wipe](https://learn.microsoft.com/en-us/graph/api/intune-devices-manageddevice-wipe?view=graph-rest-1.0) API page lists only `DeviceManagementManagedDevices.PrivilegedOperations.All`. The cmdlet output lists two more permissions. Don't grant a permission only because `Find-MgGraphCommand` shows it.
+
 Don't use `Directory.AccessAsUser.All` or `Directory.ReadWrite.All` as a shortcut. Learn calls them the highest and second-highest privileged directory permissions, to use only when necessary ([Graph permissions overview](https://learn.microsoft.com/en-us/graph/permissions-overview)).
 
 ## Connect-MgGraph: -Scopes vs certificate app-only
@@ -151,7 +176,8 @@ By default, `Connect-MgGraph` uses the default Microsoft Graph PowerShell app re
 For an unattended script, connect as the app with a certificate. You don't use `-Scopes`. The app gets the application permissions that an admin consented to on its app registration ([app-only authentication](https://learn.microsoft.com/en-us/powershell/microsoftgraph/app-only?view=graph-powershell-1.0)):
 
 ```powershell
-# App-only: the certificate must be in Cert:\CurrentUser\My or Cert:\LocalMachine\My.
+# App-only (Windows): -CertificateThumbprint loads the certificate from
+# Cert:\CurrentUser\My or Cert:\LocalMachine\My.
 $connectParams = @{
     ClientId              = '<app-client-id>'
     TenantId              = '<tenant-id>'
@@ -159,6 +185,8 @@ $connectParams = @{
 }
 Connect-MgGraph @connectParams
 ```
+
+The certificate store locations come from [authentication commands](https://learn.microsoft.com/en-us/powershell/microsoftgraph/authentication-commands?view=graph-powershell-1.0).
 
 ### Check the session
 
