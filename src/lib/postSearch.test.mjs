@@ -48,6 +48,7 @@ test('listing paths keep category, keyword, and page shareable', () => {
 })
 
 const categoryBySlug = {
+  'microsoft-graph-delegated-vs-application-permissions': 'microsoft-graph',
   'learn-intune-powershell-automation': 'intune',
   'bitlocker-startup-pin-after-autopilot': 'intune',
   'intune-assignments-dos-and-donts': 'intune',

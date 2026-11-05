@@ -20,6 +20,7 @@ export const readingMinutesBySlug: Record<string, number> = {
   'learn-intune-powershell-automation': 5,
   'make-yourself-obsolete': 4,
   'manage-vs-code-extensions-with-intune-remediations': 15,
+  'microsoft-graph-delegated-vs-application-permissions': 10,
   'minimize-autopilot-device-preparation-provisioning-time': 10,
   'mmsmoa-2026-endpoint-management-is-engineering-now': 6,
   'powershell-summit-2026-we-are-all-insane-and-that-is-the-opportunity': 4,
