@@ -2,23 +2,6 @@ import { type PostMeta } from '../lib/posts'
 
 const posts: PostMeta[] = [
   {
-    slug: 'microsoft-graph-delegated-vs-application-permissions',
-    category: 'microsoft-graph',
-    title: 'Microsoft Graph permissions: delegated vs application',
-    date: '2026-11-17',
-    description:
-      'Know who your Graph call runs as, why an app-only script can do more than you expect, and how to pick the smallest Intune permission for each job.',
-    tags: ['microsoft-graph', 'intune', 'entra-id', 'security', 'powershell'],
-    // TODO(Jorge): social card not generated. Add a 1200x630 card at
-    // public/images/posts/microsoft-graph-delegated-vs-application-permissions/socialcard.png, then:
-    // socialImage: {
-    //   src: '/images/posts/microsoft-graph-delegated-vs-application-permissions/socialcard.png',
-    //   width: 1200,
-    //   height: 630,
-    //   type: 'image/png',
-    // },
-  },
-  {
     slug: 'intune-compliance-to-conditional-access',
     category: 'intune',
     title: 'Intune compliance to Conditional Access, end to end',

@@ -6,19 +6,7 @@
     <atom:link href="https://www.jorgeasaur.us/rss.xml" rel="self" type="application/rss+xml" />
     <description>Field notes on PowerShell, endpoint management, Microsoft Graph, and automation.</description>
     <language>en-us</language>
-    <lastBuildDate>Tue, 17 Nov 2026 12:00:00 GMT</lastBuildDate>
-    <item>
-      <title>Microsoft Graph permissions: delegated vs application</title>
-      <link>https://www.jorgeasaur.us/microsoft-graph-delegated-vs-application-permissions</link>
-      <guid isPermaLink="false">https://jorgeasaur.us/microsoft-graph-delegated-vs-application-permissions</guid>
-      <pubDate>Tue, 17 Nov 2026 12:00:00 GMT</pubDate>
-      <description>Know who your Graph call runs as, why an app-only script can do more than you expect, and how to pick the smallest Intune permission for each job.</description>
-      <category>microsoft-graph</category>
-      <category>intune</category>
-      <category>entra-id</category>
-      <category>security</category>
-      <category>powershell</category>
-    </item>
+    <lastBuildDate>Thu, 05 Nov 2026 12:00:00 GMT</lastBuildDate>
     <item>
       <title>Intune compliance to Conditional Access, end to end</title>
       <link>https://www.jorgeasaur.us/intune-compliance-to-conditional-access</link>
