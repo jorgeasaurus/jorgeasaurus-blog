@@ -5,8 +5,6 @@ description: "Make try/catch catch cmdlet errors and native command failures, so
 tags: ["powershell", "scripting", "intune", "automation"]
 ---
 
-{/* TODO(Jorge): social card placeholder. Add public/images/posts/powershell-try-catch-misses-errors/socialcard.png (1200x630) and the socialImage entry in posts.ts. Not generated for this draft. */}
-
 You put a command in a `try` block. The command fails. PowerShell shows the red error text and runs the next line. The `catch` block never runs, and the script exits with code `0`.
 
 **`try`/`catch` only catches terminating errors. Most cmdlet errors are non-terminating, and native commands don't throw PowerShell errors at all.**
