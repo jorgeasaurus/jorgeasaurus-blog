@@ -148,8 +148,26 @@ test('mobile header discloses navigation from one row', async ({ page }) => {
     await projects.click()
     await expect(page).toHaveURL(/\/projects$/)
     await expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    await expect(toggle).toBeFocused()
     await page.goBack()
     await expect(page).toHaveURL(/\/$/)
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false')
+
+    await toggle.click()
+    await menu.getByRole('link', { name: 'Home', exact: true }).click()
+    await expect(page).toHaveURL(/\/$/)
+    await expect(toggle).toBeFocused()
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false')
+
+    await page.goto('/?page=2')
+    await toggle.click()
+    await page.goBack()
+    await expect(page).toHaveURL(/\/$/)
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false')
+
+    await toggle.click()
+    await page.locator('.post-card-link').first().click()
+    await expect(page).not.toHaveURL(/\/$/)
     await expect(toggle).toHaveAttribute('aria-expanded', 'false')
 
     await toggle.click()
@@ -164,6 +182,35 @@ test('mobile header discloses navigation from one row', async ({ page }) => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1)).toBe(true)
     await page.evaluate(() => { document.documentElement.style.fontSize = '' })
   }
+
+  await page.setViewportSize({ width: 667, height: 320 })
+  await page.goto('/')
+  const landscape = page.getByRole('navigation', { name: 'Primary navigation' })
+  await landscape.getByRole('button', { name: 'Menu' }).click()
+  const landscapeMenu = landscape.locator('#primary-menu')
+  const bounds = await landscapeMenu.evaluate((element) => ({
+    client: element.clientHeight,
+    scroll: element.scrollHeight,
+    bottom: element.getBoundingClientRect().bottom,
+    view: window.innerHeight,
+  }))
+  expect(bounds.scroll).toBeGreaterThan(bounds.client)
+  expect(bounds.bottom).toBeLessThanOrEqual(bounds.view + 1)
+  await landscapeMenu.getByRole('link', { name: 'RSS', exact: true }).focus()
+  expect(await landscapeMenu.getByRole('link', { name: 'RSS', exact: true }).evaluate((element) => {
+    const link = element.getBoundingClientRect()
+    const menu = element.closest('#primary-menu')!.getBoundingClientRect()
+    return link.bottom <= menu.bottom + 1 && link.top >= menu.top - 1
+  })).toBe(true)
+
+  await page.setViewportSize({ width: 1000, height: 800 })
+  await page.goto('/')
+  const wide = page.getByRole('navigation', { name: 'Primary navigation' })
+  await wide.getByRole('link', { name: 'Projects', exact: true }).focus()
+  await page.setViewportSize({ width: 390, height: 800 })
+  await expect(wide.getByRole('button', { name: 'Menu' })).toBeFocused()
+  await page.setViewportSize({ width: 1000, height: 800 })
+  await expect(wide.getByRole('link', { name: 'Home', exact: true })).toBeFocused()
 })
 
 test('small glass text clears WCAG AA on the brightest backdrop', async ({ page }) => {

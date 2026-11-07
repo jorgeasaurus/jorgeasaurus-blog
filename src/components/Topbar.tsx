@@ -4,17 +4,23 @@ import SocialIcon from './SocialIcon'
 import useLiquidGlassSurface from '../hooks/useLiquidGlassSurface'
 
 const menuId = 'primary-menu'
+const compactQuery = '(max-width: 840px)'
+let focusMenuAfterNavigation = false
 
 export default function Topbar() {
-  const { pathname } = useLocation()
+  const location = useLocation()
+  const { pathname } = location
   const [open, setOpen] = useState(false)
-  const [openPath, setOpenPath] = useState(pathname)
+  const [seenKey, setSeenKey] = useState(location.key)
+  const [focusGeneration, setFocusGeneration] = useState(0)
   const [compact, setCompact] = useState(() =>
-    typeof window !== 'undefined' && window.matchMedia('(max-width: 840px)').matches
+    typeof window !== 'undefined' && window.matchMedia(compactQuery).matches
   )
-  if (openPath !== pathname) {
-    setOpenPath(pathname)
+  if (seenKey !== location.key) {
+    const shouldRestore = open
+    setSeenKey(location.key)
     setOpen(false)
+    if (shouldRestore) setFocusGeneration(focusGeneration + 1)
   }
   const navRef = useRef<HTMLElement | null>(null)
   const glassRef = useLiquidGlassSurface<HTMLElement>({
@@ -27,13 +33,59 @@ export default function Topbar() {
   }, [glassRef])
 
   useEffect(() => {
-    const media = window.matchMedia('(max-width: 840px)')
+    if (!focusMenuAfterNavigation) return
+    focusMenuAfterNavigation = false
+    if (!window.matchMedia(compactQuery).matches) return
+    const nav = navRef.current
+    requestAnimationFrame(() => {
+      nav?.querySelector<HTMLButtonElement>('.nav-toggle')?.focus()
+    })
+  }, [])
+
+  useEffect(() => {
+    if (focusGeneration === 0) return
+    const nav = navRef.current
+    if (!nav || !window.matchMedia(compactQuery).matches) return
+    const active = document.activeElement
+    if (active instanceof HTMLElement && !nav.contains(active)) return
+    requestAnimationFrame(() => {
+      nav.querySelector<HTMLButtonElement>('.nav-toggle')?.focus()
+    })
+  }, [focusGeneration])
+
+  useEffect(() => {
+    const media = window.matchMedia(compactQuery)
+    const nav = navRef.current
+    const lastNavFocus = { current: null as HTMLElement | null }
+    const remember = (event: FocusEvent) => {
+      if (event.target instanceof HTMLElement) lastNavFocus.current = event.target
+    }
+    nav?.addEventListener('focusin', remember)
     const apply = () => {
-      setCompact(media.matches)
-      if (!media.matches) setOpen(false)
+      const next = media.matches
+      const bar = navRef.current
+      const active = document.activeElement
+      const candidate = active instanceof HTMLElement && bar?.contains(active)
+        ? active
+        : lastNavFocus.current
+      setCompact(next)
+      if (!next) setOpen(false)
+      if (!bar || !(candidate instanceof HTMLElement) || !bar.contains(candidate)) return
+      const moveToMenu = next && Boolean(candidate.closest(`#${menuId}`))
+      const moveToLink = !next && candidate.classList.contains('nav-toggle')
+      if (!moveToMenu && !moveToLink) return
+      requestAnimationFrame(() => {
+        const target = moveToMenu
+          ? bar.querySelector<HTMLElement>('.nav-toggle')
+          : bar.querySelector<HTMLElement>(`#${menuId} a`)
+        target?.focus()
+      })
     }
     media.addEventListener('change', apply)
-    return () => media.removeEventListener('change', apply)
+    return () => {
+      media.removeEventListener('change', apply)
+      nav?.removeEventListener('focusin', remember)
+    }
   }, [])
 
   useEffect(() => {
@@ -46,8 +98,10 @@ export default function Topbar() {
     function onPointer(event: PointerEvent) {
       const nav = navRef.current
       if (!nav || !(event.target instanceof Node) || nav.contains(event.target)) return
+      const target = event.target instanceof Element ? event.target : null
+      const takesFocus = Boolean(target?.closest('a, button, input, select, textarea, summary, [tabindex]:not([tabindex="-1"])'))
       setOpen(false)
-      nav.querySelector<HTMLButtonElement>('.nav-toggle')?.focus()
+      if (!takesFocus) nav.querySelector<HTMLButtonElement>('.nav-toggle')?.focus()
     }
     document.addEventListener('keydown', onKey)
     document.addEventListener('pointerdown', onPointer)
@@ -70,7 +124,22 @@ export default function Topbar() {
   }
 
   function closeFromLink(event: MouseEvent<HTMLDivElement>) {
-    if ((event.target as Element).closest('a')) setOpen(false)
+    const anchor = (event.target as Element).closest('a')
+    if (!anchor) return
+    setOpen(false)
+    if (!compact) return
+    const url = new URL(anchor.href, window.location.href)
+    const clientRoute = anchor.target !== '_blank'
+      && url.origin === window.location.origin
+      && url.pathname !== window.location.pathname
+    if (clientRoute) {
+      focusMenuAfterNavigation = true
+      return
+    }
+    const nav = navRef.current
+    requestAnimationFrame(() => {
+      nav?.querySelector<HTMLButtonElement>('.nav-toggle')?.focus()
+    })
   }
 
   const name = pathname === '/'
@@ -96,7 +165,7 @@ export default function Topbar() {
         id={menuId}
         className="topbar-links"
         hidden={compact && !open}
-        onClick={closeFromLink}
+        onClickCapture={closeFromLink}
       >
         <Link
           to="/"

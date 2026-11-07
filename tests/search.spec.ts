@@ -392,6 +392,7 @@ test('the keyword chevron sits inset from the pill edge', async ({ page }) => {
     await select.evaluate((element) => {
       element.style.color = 'transparent'
       element.style.textShadow = 'none'
+      element.style.backgroundColor = '#06100b'
     })
     const ratio = await page.evaluate(() => window.devicePixelRatio || 1)
     const rawGap = chevronRightGap(decodePng(await select.screenshot()))
