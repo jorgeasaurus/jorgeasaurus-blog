@@ -211,6 +211,30 @@ test('mobile header discloses navigation from one row', async ({ page }) => {
   await expect(wide.getByRole('button', { name: 'Menu' })).toBeFocused()
   await page.setViewportSize({ width: 1000, height: 800 })
   await expect(wide.getByRole('link', { name: 'Home', exact: true })).toBeFocused()
+
+  await wide.getByRole('link', { name: 'Projects', exact: true }).focus()
+  const email = page.getByRole('textbox', { name: 'Email address', exact: true })
+  await email.focus()
+  await page.setViewportSize({ width: 390, height: 800 })
+  await expect(email).toBeFocused()
+
+  await page.goto('/')
+  const compact = page.getByRole('navigation', { name: 'Primary navigation' })
+  const compactMenu = compact.getByRole('button', { name: 'Menu' })
+  await page.getByRole('link', { name: 'Older →', exact: true }).click()
+  await expect(page).toHaveURL(/page=2/)
+  await compactMenu.click()
+  await compact.getByRole('link', { name: 'Home', exact: true }).focus()
+  await page.goBack()
+  await expect(page).toHaveURL(/\/$/)
+  await expect(compactMenu).toBeFocused()
+  await expect(compactMenu).toHaveAttribute('aria-expanded', 'false')
+
+  await compactMenu.click()
+  await compact.getByRole('link', { name: 'Projects', exact: true }).click({ modifiers: ['Control'] })
+  await expect(page).toHaveURL(/\/$/)
+  await expect(compactMenu).toBeFocused()
+  await expect(compactMenu).toHaveAttribute('aria-expanded', 'false')
 })
 
 test('small glass text clears WCAG AA on the brightest backdrop', async ({ page }) => {

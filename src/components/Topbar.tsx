@@ -47,7 +47,7 @@ export default function Topbar() {
     const nav = navRef.current
     if (!nav || !window.matchMedia(compactQuery).matches) return
     const active = document.activeElement
-    if (active instanceof HTMLElement && !nav.contains(active)) return
+    if (active instanceof HTMLElement && active !== document.body && !nav.contains(active)) return
     requestAnimationFrame(() => {
       nav.querySelector<HTMLButtonElement>('.nav-toggle')?.focus()
     })
@@ -65,9 +65,10 @@ export default function Topbar() {
       const next = media.matches
       const bar = navRef.current
       const active = document.activeElement
+      const displaced = active == null || active === document.body || active === document.documentElement
       const candidate = active instanceof HTMLElement && bar?.contains(active)
         ? active
-        : lastNavFocus.current
+        : displaced ? lastNavFocus.current : null
       setCompact(next)
       if (!next) setOpen(false)
       if (!bar || !(candidate instanceof HTMLElement) || !bar.contains(candidate)) return
@@ -126,10 +127,12 @@ export default function Topbar() {
   function closeFromLink(event: MouseEvent<HTMLDivElement>) {
     const anchor = (event.target as Element).closest('a')
     if (!anchor) return
+    const modified = event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey
     setOpen(false)
     if (!compact) return
     const url = new URL(anchor.href, window.location.href)
-    const clientRoute = anchor.target !== '_blank'
+    const clientRoute = !modified
+      && anchor.target !== '_blank'
       && url.origin === window.location.origin
       && url.pathname !== window.location.pathname
     if (clientRoute) {
