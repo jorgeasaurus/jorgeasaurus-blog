@@ -30,7 +30,7 @@ test('category chips and the keyword select filter without a category dropdown',
   await expect(page).toHaveURL(/category=intune/)
   await expect(page).not.toHaveURL(/[?&]q=/)
   await expect(intune).toHaveAttribute('aria-pressed', 'true')
-  await expect(page.getByRole('heading', { name: 'Category: Intune' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Category: Intune' })).toHaveCount(0)
 
   await page.goto('/?tag=windows')
   await page.getByRole('button', { name: /^Intune\b/ }).click()
@@ -47,21 +47,27 @@ test('category chips and the keyword select filter without a category dropdown',
   await expect(page).not.toHaveURL(/category=/)
 })
 
-test('homepage keeps the name, tagline, and one sentence', async ({ page }) => {
+test('homepage leads with the name and the latest note', async ({ page }) => {
   await page.goto('/')
   await expect(page.getByRole('heading', { level: 1, name: 'Jorgeasaurus' })).toBeVisible()
-  await expect(page.locator('.hero-signal')).toHaveText('Learn. Build. Automate.')
-  await expect(page.locator('.hero-panel .hero-copy')).toContainText('Practical engineering notes')
-  await expect(page.locator('.hero-ledger')).toHaveCount(0)
-  await expect(page.locator('.hero-latest')).toHaveCount(0)
-  await expect(page.locator('.hero-panel .eyebrow')).toHaveCount(0)
+  await expect(page.locator('.hero-panel')).toHaveCount(0)
+  await expect(page.getByText('Learn. Build. Automate.')).toHaveCount(0)
+  await expect(page.getByRole('heading', { name: 'Posts', exact: true })).toHaveCount(1)
   const card = page.locator('.post-card--featured')
-  await expect(card).toContainText('Latest dispatch')
-  await expect(card).toContainText(/No\. \d+/)
+  await expect(card).not.toContainText('Latest dispatch')
+  await expect(card).not.toContainText(/No\. \d+/)
   await expect(card).toContainText('min read')
-  await expect(card.locator('.post-card-cta')).toHaveText(/Read field note/)
-  expect(await card.locator('.post-card-cta').evaluate((element) => getComputedStyle(element).textTransform)).toBe('none')
+  await expect(card.locator('.post-card-desc')).not.toBeEmpty()
+  await expect(card.locator('.post-card-cta')).toHaveCount(0)
   await expect(card.locator('.post-card__category')).toBeVisible()
+  const signup = page.locator('.newsletter-signup')
+  await expect(signup.getByRole('heading', { name: 'Get new field notes' })).toBeVisible()
+  await expect(signup.getByText('Email list')).toHaveCount(0)
+  await expect(signup.getByText(/No spam/)).toHaveCount(0)
+  await page.goto('/this-post-does-not-exist')
+  await expect(page.getByRole('heading', { name: 'Post Not Found' })).toBeVisible()
+  await page.getByRole('link', { name: 'Back to home' }).click()
+  await expect(page).toHaveURL(/\/$/)
 })
 
 test('article wayfinder, progress, code copy, and continuity controls', async ({ page, context }) => {
@@ -70,6 +76,7 @@ test('article wayfinder, progress, code copy, and continuity controls', async ({
   await expect(page.locator('.reading-progress')).toHaveCount(1)
   await expect(page.locator('.reading-status')).toContainText(/min read|% read/)
   const toc = page.getByRole('navigation', { name: 'On this page' })
+  await expect(page.locator('.wayfinder__label')).toHaveCount(0)
   const link = toc.getByRole('link', { name: 'The Real Change', exact: true })
   await expect(link).toBeVisible()
   await expect(page.locator('#the-real-change')).toHaveCount(1)
@@ -91,17 +98,19 @@ test('article wayfinder, progress, code copy, and continuity controls', async ({
   await expect(page.locator('.reading-status')).toHaveText('Complete')
 
   await expect(page.locator('.post__header').getByRole('button', { name: 'Back to top' })).toHaveCount(0)
-  await expect(page.locator('.post__header').getByRole('button', { name: 'Copy link' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Copy link' })).toHaveCount(1)
   await expect(page.getByRole('button', { name: 'Back to top' })).toHaveCount(1)
   await page.getByRole('button', { name: 'Back to top' }).click()
   await expect(page.locator('.post__header h1')).toBeFocused()
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThan(20)
-  await page.getByRole('button', { name: 'Copy link' }).first().click()
-  await expect(page.getByRole('button', { name: 'Copy link' }).first()).toContainText('Copied')
+  await page.getByRole('button', { name: 'Copy link' }).click()
+  await expect(page.getByRole('button', { name: 'Copy link' })).toContainText('Copied')
 
   await expect(page.getByRole('heading', { name: 'Related field notes' })).toBeVisible()
   await expect(page.locator('.related-notes a').first()).toBeVisible()
-  await expect(page.getByRole('navigation', { name: 'Adjacent field notes' }).getByRole('link').first()).toContainText(/Previous field note|Next field note/)
+  const adjacent = page.getByRole('navigation', { name: 'Adjacent field notes' }).getByRole('link').first()
+  await expect(adjacent).toHaveAccessibleName(/^(Older|Newer): /)
+  await expect(adjacent).not.toContainText(/Previous field note|Next field note/)
 })
 
 test('code blocks name the language and copy the snippet', async ({ page, context }) => {
@@ -476,3 +485,62 @@ for (const width of [375, 768, 1024, 1440]) {
     }
   })
 }
+
+test('article tables align headers with cells and stay inside the page', async ({ page }) => {
+  for (const width of [1440, 390]) {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto('/intune-compliance-to-conditional-access')
+    const services = page.getByRole('table').filter({ hasText: 'Service' }).first()
+    await services.scrollIntoViewIfNeeded()
+    const header = services.getByRole('columnheader', { name: 'Service', exact: true })
+    const label = services.getByRole('cell', { name: 'Conditional Access', exact: true })
+    const alignment = await label.evaluate((element) => {
+      const cellStyle = getComputedStyle(element)
+      const table = element.closest('table')!
+      const headerStyle = getComputedStyle(table.querySelector('th')!)
+      const bordered = getComputedStyle(table.querySelector('tbody td')!)
+      const range = document.createRange()
+      range.selectNodeContents(element)
+      return {
+        headerAlign: headerStyle.textAlign,
+        cellAlign: cellStyle.textAlign,
+        verticalAlign: cellStyle.verticalAlign,
+        border: Number.parseFloat(bordered.borderBottomWidth),
+        paddingTop: Number.parseFloat(cellStyle.paddingTop),
+        lines: range.getClientRects().length,
+      }
+    })
+    expect(['left', 'start']).toContain(alignment.headerAlign)
+    expect(['left', 'start']).toContain(alignment.cellAlign)
+    expect(alignment.verticalAlign).toBe('top')
+    expect(alignment.border).toBeGreaterThan(0)
+    expect(alignment.paddingTop).toBeGreaterThanOrEqual(10)
+    if (width === 1440) expect(alignment.lines).toBe(1)
+    await expect(header).toBeVisible()
+    await expect(label).toBeVisible()
+    const region = services.locator('xpath=..')
+    await expect(region).toHaveAttribute('aria-label', 'Scrollable table')
+    const contained = await region.evaluate((element) => {
+      const bounds = element.closest('.post-content')!.getBoundingClientRect()
+      const rect = element.getBoundingClientRect()
+      return rect.left >= bounds.left - 1 && rect.right <= bounds.right + 1
+    })
+    expect(contained).toBe(true)
+    await expectNoHorizontalOverflow(page)
+  }
+
+  await page.setViewportSize({ width: 390, height: 800 })
+  await page.goto('/intune-compliance-to-conditional-access')
+  const wide = page.getByRole('table').filter({ has: page.getByRole('columnheader', { name: 'Situation', exact: true }) })
+  const region = wide.locator('xpath=..')
+  await region.scrollIntoViewIfNeeded()
+  await region.focus()
+  const overflows = await region.evaluate((element) => element.scrollWidth > element.clientWidth + 1)
+  if (overflows) {
+    await page.keyboard.press('ArrowRight')
+    await expect.poll(() => region.evaluate((element) => element.scrollLeft)).toBeGreaterThan(0)
+  }
+  await expectNoHorizontalOverflow(page)
+  const severity = page.getByRole('columnheader', { name: 'Severity', exact: true })
+  expect(await severity.evaluate((element) => getComputedStyle(element).textAlign)).toMatch(/left|start/)
+})

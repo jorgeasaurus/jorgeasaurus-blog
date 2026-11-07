@@ -20,7 +20,6 @@ export default function About() {
       <article className="about-panel glass-panel" ref={aboutGlassRef}>
         <div className="about-header">
           <div className="about-heading">
-            <p className="eyebrow">About</p>
             <h1>Jorge Suarez</h1>
             <p className="about-lede">
               Client platforms engineer, Microsoft MVP, and automation builder

@@ -1,15 +1,116 @@
-import type { MouseEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type MouseEvent } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import SocialIcon from './SocialIcon'
 import useLiquidGlassSurface from '../hooks/useLiquidGlassSurface'
-import ThemeSwitcher from '../theme/ThemeSwitcher'
+
+const menuId = 'primary-menu'
+const compactQuery = '(max-width: 840px)'
+let focusMenuAfterNavigation = false
 
 export default function Topbar() {
-  const { pathname } = useLocation()
+  const location = useLocation()
+  const { pathname } = location
+  const [open, setOpen] = useState(false)
+  const [seenKey, setSeenKey] = useState(location.key)
+  const [focusGeneration, setFocusGeneration] = useState(0)
+  const [compact, setCompact] = useState(() =>
+    typeof window !== 'undefined' && window.matchMedia(compactQuery).matches
+  )
+  if (seenKey !== location.key) {
+    const shouldRestore = open
+    setSeenKey(location.key)
+    setOpen(false)
+    if (shouldRestore) setFocusGeneration(focusGeneration + 1)
+  }
+  const navRef = useRef<HTMLElement | null>(null)
   const glassRef = useLiquidGlassSurface<HTMLElement>({
     borderRadius: 999,
     type: 'pill',
   })
+  const setNav = useCallback((node: HTMLElement | null) => {
+    navRef.current = node
+    if (typeof glassRef === 'function') glassRef(node)
+  }, [glassRef])
+
+  useEffect(() => {
+    if (!focusMenuAfterNavigation) return
+    focusMenuAfterNavigation = false
+    if (!window.matchMedia(compactQuery).matches) return
+    const nav = navRef.current
+    requestAnimationFrame(() => {
+      nav?.querySelector<HTMLButtonElement>('.nav-toggle')?.focus()
+    })
+  }, [])
+
+  useEffect(() => {
+    if (focusGeneration === 0) return
+    const nav = navRef.current
+    if (!nav || !window.matchMedia(compactQuery).matches) return
+    const active = document.activeElement
+    if (active instanceof HTMLElement && active !== document.body && !nav.contains(active)) return
+    requestAnimationFrame(() => {
+      nav.querySelector<HTMLButtonElement>('.nav-toggle')?.focus()
+    })
+  }, [focusGeneration])
+
+  useEffect(() => {
+    const media = window.matchMedia(compactQuery)
+    const nav = navRef.current
+    const lastNavFocus = { current: null as HTMLElement | null }
+    const remember = (event: FocusEvent) => {
+      if (event.target instanceof HTMLElement) lastNavFocus.current = event.target
+    }
+    nav?.addEventListener('focusin', remember)
+    const apply = () => {
+      const next = media.matches
+      const bar = navRef.current
+      const active = document.activeElement
+      const displaced = active == null || active === document.body || active === document.documentElement
+      const candidate = active instanceof HTMLElement && bar?.contains(active)
+        ? active
+        : displaced ? lastNavFocus.current : null
+      setCompact(next)
+      if (!next) setOpen(false)
+      if (!bar || !(candidate instanceof HTMLElement) || !bar.contains(candidate)) return
+      const moveToMenu = next && Boolean(candidate.closest(`#${menuId}`))
+      const moveToLink = !next && candidate.classList.contains('nav-toggle')
+      if (!moveToMenu && !moveToLink) return
+      requestAnimationFrame(() => {
+        const target = moveToMenu
+          ? bar.querySelector<HTMLElement>('.nav-toggle')
+          : bar.querySelector<HTMLElement>(`#${menuId} a`)
+        target?.focus()
+      })
+    }
+    media.addEventListener('change', apply)
+    return () => {
+      media.removeEventListener('change', apply)
+      nav?.removeEventListener('focusin', remember)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!open) return
+    function onKey(event: KeyboardEvent) {
+      if (event.key !== 'Escape') return
+      setOpen(false)
+      navRef.current?.querySelector<HTMLButtonElement>('.nav-toggle')?.focus()
+    }
+    function onPointer(event: PointerEvent) {
+      const nav = navRef.current
+      if (!nav || !(event.target instanceof Node) || nav.contains(event.target)) return
+      const target = event.target instanceof Element ? event.target : null
+      const takesFocus = Boolean(target?.closest('a, button, input, select, textarea, summary, [tabindex]:not([tabindex="-1"])'))
+      setOpen(false)
+      if (!takesFocus) nav.querySelector<HTMLButtonElement>('.nav-toggle')?.focus()
+    }
+    document.addEventListener('keydown', onKey)
+    document.addEventListener('pointerdown', onPointer)
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.removeEventListener('pointerdown', onPointer)
+    }
+  }, [open])
 
   function scrollListingToTop(event: MouseEvent<HTMLAnchorElement>) {
     if (
@@ -23,14 +124,52 @@ export default function Topbar() {
     window.scrollTo(0, 0)
   }
 
+  function closeFromLink(event: MouseEvent<HTMLDivElement>) {
+    const anchor = (event.target as Element).closest('a')
+    if (!anchor) return
+    const modified = event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey
+    setOpen(false)
+    if (!compact) return
+    const url = new URL(anchor.href, window.location.href)
+    const clientRoute = !modified
+      && anchor.target !== '_blank'
+      && url.origin === window.location.origin
+      && url.pathname !== window.location.pathname
+    if (clientRoute) {
+      focusMenuAfterNavigation = true
+      return
+    }
+    const nav = navRef.current
+    requestAnimationFrame(() => {
+      nav?.querySelector<HTMLButtonElement>('.nav-toggle')?.focus()
+    })
+  }
+
+  const name = pathname === '/'
+    ? <h1 className="brand-name">Jorgeasaurus</h1>
+    : <span className="brand-name">Jorgeasaurus</span>
+
   return (
-    <nav className="topbar glass-panel" aria-label="Primary navigation" ref={glassRef}>
+    <nav className="topbar glass-panel" aria-label="Primary navigation" ref={setNav}>
       <Link to="/" className="brand-link" onClick={scrollListingToTop}>
         <span className="brand-prompt" aria-hidden="true">&gt;</span>
-        <span className="brand-name">Jorgeasaurus</span>
+        {name}
       </Link>
-      <ThemeSwitcher />
-      <div className="topbar-links">
+      <button
+        className="nav-toggle"
+        type="button"
+        aria-expanded={open}
+        aria-controls={menuId}
+        onClick={() => setOpen((value) => !value)}
+      >
+        Menu
+      </button>
+      <div
+        id={menuId}
+        className="topbar-links"
+        hidden={compact && !open}
+        onClickCapture={closeFromLink}
+      >
         <Link
           to="/"
           className={`nav-link nav-link--home ${pathname === '/' ? 'nav-link--active' : ''}`}
