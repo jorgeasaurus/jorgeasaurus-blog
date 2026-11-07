@@ -99,20 +99,70 @@ test('social links stay inside the nav just above 840px', async ({ page }) => {
   expect(await nav.evaluate((element) => element.scrollWidth - element.clientWidth)).toBeLessThanOrEqual(1)
 })
 
-test('mobile nav keeps the social and rss links', async ({ page }) => {
+test('mobile header discloses navigation from one row', async ({ page }) => {
   for (const width of [390, 320]) {
     await page.setViewportSize({ width, height: 800 })
     await page.goto('/')
     const nav = page.getByRole('navigation', { name: 'Primary navigation' })
-    for (const name of ['GitHub', 'LinkedIn', 'YouTube', 'RSS']) {
+    const toggle = nav.getByRole('button', { name: 'Menu' })
+    const menu = nav.locator('#primary-menu')
+    const projects = menu.getByRole('link', { name: 'Projects', exact: true })
+    await expect(nav.locator('.brand-name')).toHaveText('Jorgeasaurus')
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    await expect(toggle).toHaveAttribute('aria-controls', 'primary-menu')
+    await expect(menu).toBeHidden()
+    expect(await menu.locator('a').first().evaluate((element) => element.closest('[hidden]') !== null)).toBe(true)
+    await page.keyboard.press('Tab')
+    await expect(nav.locator('.brand-link')).toBeFocused()
+    await page.keyboard.press('Tab')
+    await expect(toggle).toBeFocused()
+    await page.keyboard.press('Tab')
+    expect(await page.evaluate(() => document.activeElement?.closest('#primary-menu') == null)).toBe(true)
+    const bar = await nav.boundingBox()
+    expect(bar!.height).toBeLessThan(76)
+    expect(await nav.evaluate((element) => element.scrollWidth <= element.clientWidth + 1)).toBe(true)
+
+    await toggle.click()
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    await page.keyboard.press('Tab')
+    await expect(menu.getByRole('link', { name: 'Home', exact: true })).toBeFocused()
+    for (const name of ['Home', 'Projects', 'About', 'GitHub', 'LinkedIn', 'YouTube', 'RSS']) {
       const link = nav.getByRole('link', { name, exact: true })
       await expect(link).toBeVisible()
       const box = await link.boundingBox()
       expect(box).not.toBeNull()
+      expect(box!.height).toBeGreaterThanOrEqual(44)
       expect(box!.x).toBeGreaterThanOrEqual(-1)
       expect(box!.x + box!.width).toBeLessThanOrEqual(width + 1)
+      expect(await link.evaluate((element) => {
+        const rect = element.getBoundingClientRect()
+        return document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2) === element
+          || element.contains(document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2))
+      })).toBe(true)
     }
+    await page.keyboard.press('Escape')
+    await expect(toggle).toBeFocused()
+    await expect(projects).toBeHidden()
+
+    await toggle.click()
+    await projects.click()
+    await expect(page).toHaveURL(/\/projects$/)
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    await page.goBack()
+    await expect(page).toHaveURL(/\/$/)
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false')
+
+    await toggle.click()
+    await page.evaluate(() => {
+      document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }))
+    })
+    await expect(toggle).toBeFocused()
+    await expect(projects).toBeHidden()
+
+    await page.evaluate(() => { document.documentElement.style.fontSize = '22px' })
+    expect(await nav.locator('.brand-name').evaluate((element) => element.scrollWidth <= element.clientWidth + 1)).toBe(true)
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1)).toBe(true)
+    await page.evaluate(() => { document.documentElement.style.fontSize = '' })
   }
 })
 

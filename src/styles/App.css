@@ -260,6 +260,10 @@
   z-index: 20;
 }
 
+.nav-toggle {
+  display: none;
+}
+
 .topbar-links {
   display: flex;
   gap: 10px;
@@ -3382,18 +3386,106 @@ code {
   }
 }
 
+@media (min-width: 841px) {
+  .topbar-links[hidden] {
+    display: flex !important;
+  }
+}
+
 @media (max-width: 840px) {
   .blog-shell {
-    --fixed-nav-block-size: 104px;
+    --fixed-nav-block-size: 64px;
+  }
+
+  .nav-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    min-width: 44px;
+    min-height: 44px;
+    margin-left: auto;
+    padding: 0 14px;
+    border: 1px solid rgba(215, 255, 227, 0.28);
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.28);
+    color: #fff;
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+
+  .nav-toggle:focus-visible {
+    outline: 2px solid var(--sprout-bright);
+    outline-offset: 3px;
   }
 
   .topbar {
-    flex-wrap: wrap;
-    row-gap: 6px;
+    flex-wrap: nowrap;
+    align-items: center;
+    overflow: visible;
+    border-radius: 999px;
   }
 
-  .topbar-links {
-    flex-basis: 100%;
-    justify-content: flex-end;
+  .brand-link {
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+
+  .topbar.liquid-glass-surface > .topbar-links {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: min(240px, calc(100vw - 28px));
+    margin: 0;
+    padding: 8px;
+    gap: 4px;
+    border: 1px solid rgba(215, 255, 227, 0.2);
+    border-radius: 18px;
+    background: rgba(6, 16, 11, 0.96);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.38);
+  }
+
+  .topbar-links[hidden] {
+    display: none !important;
+  }
+
+  .topbar-social {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .topbar-links .nav-link,
+  .topbar-links .nav-link--icon,
+  .topbar-links .nav-link--home {
+    display: inline-flex;
+    width: auto;
+    min-width: 0;
+    min-height: 44px;
+    justify-content: flex-start;
+    padding: 8px 12px;
+    border: 0;
+    border-radius: 10px;
+    background: transparent;
+  }
+
+  .topbar-links .nav-link:hover,
+  .topbar-links .nav-link--active {
+    background: rgba(255, 255, 255, 0.08);
+  }
+
+  .nav-link--icon span {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip: auto;
+    white-space: nowrap;
   }
 }
