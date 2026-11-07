@@ -1,4 +1,5 @@
 import { expect, test, type BrowserContext, type Page } from '@playwright/test'
+import { decodePng } from './contrast.mjs'
 
 async function blockExternalRequests(context: BrowserContext, baseURL: string) {
   const localOrigin = new URL(baseURL).origin
@@ -33,7 +34,8 @@ test('category and keyword filters combine, share, and restore with history', as
   await expect(page).toHaveURL(/tag=jamf/)
   await expect(page).toHaveURL(/category=endpoint-management/)
   await expect(page.getByRole('heading', { name: 'Tagged: jamf' })).toHaveCount(0)
-  await expect(resultStatus(page)).toHaveCount(0)
+  await expect(resultStatus(page)).toHaveText('')
+  await expect(resultStatus(page)).toHaveClass(/visually-hidden/)
 
   await page.goBack()
   await expect(page.getByLabel('Keyword', { exact: true })).toHaveValue('')
@@ -47,7 +49,8 @@ test('category and keyword filters combine, share, and restore with history', as
   await expect(page.getByRole('button', { name: /^Intune\b/ })).toHaveAttribute('aria-pressed', 'true')
   await expect(page.getByLabel('Keyword', { exact: true })).toHaveValue('reboot')
   await expect(page.getByRole('link', { name: 'Proactive Remediation to Remind Windows Users to Reboot' })).toBeVisible()
-  await expect(resultStatus(page)).toHaveCount(0)
+  await expect(resultStatus(page)).toHaveText('')
+  await expect(resultStatus(page)).toHaveClass(/visually-hidden/)
 
   await page.goto('/?category=intune')
   await page.getByRole('link', { name: 'Older →', exact: true }).click()
@@ -57,6 +60,7 @@ test('category and keyword filters combine, share, and restore with history', as
 
   await page.goto('/?category=career&tag=jamf')
   await expect(resultStatus(page)).toHaveText('No posts match these filters.')
+  await expect(resultStatus(page)).not.toHaveClass(/visually-hidden/)
   await expect(page.locator('.post-card')).toHaveCount(0)
   await page.getByRole('link', { name: 'Clear filter ×' }).click()
   await expect(page).toHaveURL(/\/$/)
@@ -84,7 +88,8 @@ test('a category badge filters the listing and selects that category', async ({ 
   await expect(page.getByRole('heading', { name: 'Category: AI' })).toHaveCount(0)
   await expect(page.getByRole('link', { name: 'Use GitHub Copilot with Third-Party LLM Models' })).toBeVisible()
   await expect(page.getByRole('link', { name: "Intune assignments: Do's and don'ts" })).toHaveCount(0)
-  await expect(resultStatus(page)).toHaveCount(0)
+  await expect(resultStatus(page)).toHaveText('')
+  await expect(resultStatus(page)).toHaveClass(/visually-hidden/)
 })
 
 test('filter edits keep the scroll position and pagination returns to the top', async ({ page }) => {
@@ -331,4 +336,69 @@ test('filters stay inside a narrow viewport', async ({ page }) => {
   expect(bounds.right).toBeLessThanOrEqual(bounds.viewport + 1)
   expect(bounds.overflow).toBe(false)
   await expect(page.getByRole('link', { name: 'Add a BitLocker startup PIN after Autopilot' })).toBeVisible()
+})
+
+function chevronRightGap(image: { width: number; height: number; pixels: Uint8Array | Buffer }) {
+  const { width, height, pixels } = image
+  const y0 = Math.floor(height * 0.3)
+  const y1 = Math.floor(height * 0.7)
+  let total = 0
+  let count = 0
+  for (let y = y0; y < y1; y += 2) {
+    for (let x = Math.floor(width * 0.4); x < Math.floor(width * 0.62); x += 2) {
+      const index = (y * width + x) * 4
+      total += pixels[index] + pixels[index + 1] + pixels[index + 2]
+      count += 1
+    }
+  }
+  const base = total / Math.max(count, 1)
+  let right = -1
+  const innerRight = width - 4
+  for (let y = y0; y < y1; y += 1) {
+    for (let x = Math.floor(width * 0.62); x < innerRight; x += 1) {
+      const index = (y * width + x) * 4
+      const sum = pixels[index] + pixels[index + 1] + pixels[index + 2]
+      if (sum > base + 90) right = Math.max(right, x)
+    }
+  }
+  if (right < 0) return null
+  return width - 1 - right
+}
+
+test('the keyword chevron sits inset from the pill edge', async ({ page }) => {
+  for (const width of [1440, 390]) {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto('/')
+    const select = page.getByRole('combobox', { name: 'Keyword' })
+    await expect(select).toHaveJSProperty('tagName', 'SELECT')
+    await select.focus()
+    expect(await select.evaluate((element) => getComputedStyle(element).outlineStyle)).not.toBe('none')
+    await select.blur()
+    const metrics = await select.evaluate((element: HTMLSelectElement) => {
+      const style = getComputedStyle(element)
+      return {
+        padLeft: Number.parseFloat(style.paddingLeft),
+        padRight: Number.parseFloat(style.paddingRight),
+        borderRight: Number.parseFloat(style.borderRightWidth),
+        appearance: style.appearance,
+        backgroundPosition: style.backgroundPosition,
+      }
+    })
+    expect(metrics.appearance).toBe('none')
+    expect(metrics.backgroundPosition).toBe(`calc(100% - ${metrics.padLeft}px) 50%`)
+    expect(metrics.padRight).toBeGreaterThan(metrics.padLeft + 12)
+    await select.evaluate((element) => {
+      element.style.color = 'transparent'
+      element.style.textShadow = 'none'
+    })
+    const ratio = await page.evaluate(() => window.devicePixelRatio || 1)
+    const rawGap = chevronRightGap(decodePng(await select.screenshot()))
+    if (rawGap !== null) {
+      const gap = rawGap / ratio
+      expect(gap, `${width}px gap ${gap}`).toBeGreaterThan(8)
+      expect(gap).toBeLessThan(metrics.padLeft + 20)
+    }
+    await select.selectOption({ index: 1 })
+    await expect(select).not.toHaveValue('')
+  }
 })

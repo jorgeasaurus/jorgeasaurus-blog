@@ -91,11 +91,12 @@ export default function PostFilters({ posts, matchCount }: PostFiltersProps) {
           Clear filter ×
         </Link>
       )}
-      {matchCount === 0 && (
-        <p className="post-filter-status post-filter-status--empty" role="status">
-          No posts match these filters.
-        </p>
-      )}
+      <p
+        className={`post-filter-status${matchCount === 0 ? ' post-filter-status--empty' : ' visually-hidden'}`}
+        role="status"
+      >
+        {matchCount === 0 ? 'No posts match these filters.' : ''}
+      </p>
     </form>
   )
 }

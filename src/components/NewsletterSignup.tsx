@@ -100,7 +100,7 @@ export default function NewsletterSignup({
               onChange={(event) => setEmail(event.target.value)}
               placeholder="you@example.com"
               autoComplete="email"
-              aria-describedby={message ? messageId : undefined}
+              aria-describedby={messageId}
               disabled={isSubmitting}
               required
             />
@@ -120,16 +120,14 @@ export default function NewsletterSignup({
           tabIndex={-1}
           autoComplete="off"
         />
-        {message && (
-          <p
-            id={messageId}
-            className={`newsletter-signup__message newsletter-signup__message--${status}`}
-            role="status"
-            aria-live="polite"
-          >
-            {message}
-          </p>
-        )}
+        <p
+          id={messageId}
+          className={`newsletter-signup__message newsletter-signup__message--${status}${message ? '' : ' visually-hidden'}`}
+          role="status"
+          aria-live="polite"
+        >
+          {message}
+        </p>
       </form>
     </section>
   )

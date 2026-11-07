@@ -1328,17 +1328,23 @@ h2 {
   min-height: 48px;
   border: 1px solid var(--glass-control-border);
   border-radius: 999px;
-  background: var(--glass-control-bg);
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: var(--glass-control-bg);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M2.2 4.4 6 8.1 9.8 4.4' fill='none' stroke='%23fff' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  background-size: 12px 12px;
   color: #fff;
   color-scheme: dark;
-  padding: 0 16px;
+  padding: 0 44px 0 16px;
   box-shadow: none;
   text-shadow: var(--glass-text-shadow);
 }
 
 .post-filters__field select:hover {
   border-color: rgba(215, 255, 227, 0.42);
-  background: rgba(0, 0, 0, 0.32);
+  background-color: rgba(0, 0, 0, 0.32);
 }
 
 .post-filters__field select:focus-visible {
@@ -1822,12 +1828,47 @@ h2 {
 
 .post-table-scroll {
   max-width: 100%;
+  margin: 0.35em 0 1.45em;
   overflow-x: auto;
+  overscroll-behavior-x: contain;
 }
 
 .post-table-scroll:focus-visible {
   outline: 2px solid var(--sprout-bright);
   outline-offset: 2px;
+}
+
+.post-content table {
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  text-align: left;
+}
+
+.post-content th,
+.post-content td {
+  min-width: 9rem;
+  padding: 0.85rem 1.4rem 0.85rem 0;
+  text-align: left;
+  vertical-align: top;
+  line-height: 1.45;
+  border-bottom: 1px solid rgba(215, 255, 227, 0.16);
+  overflow-wrap: break-word;
+}
+
+.post-content th:first-child,
+.post-content td:first-child {
+  min-width: 13rem;
+}
+
+.post-content th {
+  color: #fff;
+  font-weight: 700;
+  border-bottom-color: rgba(215, 255, 227, 0.4);
+}
+
+.post-content tr:last-child td {
+  border-bottom: 0;
 }
 
 .post-content pre {

@@ -485,3 +485,62 @@ for (const width of [375, 768, 1024, 1440]) {
     }
   })
 }
+
+test('article tables align headers with cells and stay inside the page', async ({ page }) => {
+  for (const width of [1440, 390]) {
+    await page.setViewportSize({ width, height: 900 })
+    await page.goto('/intune-compliance-to-conditional-access')
+    const services = page.getByRole('table').filter({ hasText: 'Service' }).first()
+    await services.scrollIntoViewIfNeeded()
+    const header = services.getByRole('columnheader', { name: 'Service', exact: true })
+    const label = services.getByRole('cell', { name: 'Conditional Access', exact: true })
+    const alignment = await label.evaluate((element) => {
+      const cellStyle = getComputedStyle(element)
+      const table = element.closest('table')!
+      const headerStyle = getComputedStyle(table.querySelector('th')!)
+      const bordered = getComputedStyle(table.querySelector('tbody td')!)
+      const range = document.createRange()
+      range.selectNodeContents(element)
+      return {
+        headerAlign: headerStyle.textAlign,
+        cellAlign: cellStyle.textAlign,
+        verticalAlign: cellStyle.verticalAlign,
+        border: Number.parseFloat(bordered.borderBottomWidth),
+        paddingTop: Number.parseFloat(cellStyle.paddingTop),
+        lines: range.getClientRects().length,
+      }
+    })
+    expect(['left', 'start']).toContain(alignment.headerAlign)
+    expect(['left', 'start']).toContain(alignment.cellAlign)
+    expect(alignment.verticalAlign).toBe('top')
+    expect(alignment.border).toBeGreaterThan(0)
+    expect(alignment.paddingTop).toBeGreaterThanOrEqual(10)
+    if (width === 1440) expect(alignment.lines).toBe(1)
+    await expect(header).toBeVisible()
+    await expect(label).toBeVisible()
+    const region = services.locator('xpath=..')
+    await expect(region).toHaveAttribute('aria-label', 'Scrollable table')
+    const contained = await region.evaluate((element) => {
+      const bounds = element.closest('.post-content')!.getBoundingClientRect()
+      const rect = element.getBoundingClientRect()
+      return rect.left >= bounds.left - 1 && rect.right <= bounds.right + 1
+    })
+    expect(contained).toBe(true)
+    await expectNoHorizontalOverflow(page)
+  }
+
+  await page.setViewportSize({ width: 390, height: 800 })
+  await page.goto('/intune-compliance-to-conditional-access')
+  const wide = page.getByRole('table').filter({ has: page.getByRole('columnheader', { name: 'Situation', exact: true }) })
+  const region = wide.locator('xpath=..')
+  await region.scrollIntoViewIfNeeded()
+  await region.focus()
+  const overflows = await region.evaluate((element) => element.scrollWidth > element.clientWidth + 1)
+  if (overflows) {
+    await page.keyboard.press('ArrowRight')
+    await expect.poll(() => region.evaluate((element) => element.scrollLeft)).toBeGreaterThan(0)
+  }
+  await expectNoHorizontalOverflow(page)
+  const severity = page.getByRole('columnheader', { name: 'Severity', exact: true })
+  expect(await severity.evaluate((element) => getComputedStyle(element).textAlign)).toMatch(/left|start/)
+})
