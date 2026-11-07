@@ -1353,6 +1353,15 @@ h2 {
   outline-offset: 3px;
 }
 
+@media (forced-colors: active) {
+  .post-filters__field select {
+    appearance: auto;
+    -webkit-appearance: menulist;
+    background-image: none;
+    forced-color-adjust: auto;
+  }
+}
+
 .post-filter-status {
   grid-column: 1 / -1;
   margin: 0;

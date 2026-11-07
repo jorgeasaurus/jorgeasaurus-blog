@@ -382,9 +382,11 @@ test('the keyword chevron sits inset from the pill edge', async ({ page }) => {
         borderRight: Number.parseFloat(style.borderRightWidth),
         appearance: style.appearance,
         backgroundPosition: style.backgroundPosition,
+        backgroundImage: style.backgroundImage,
       }
     })
     expect(metrics.appearance).toBe('none')
+    expect(metrics.backgroundImage).toContain('data:image/svg+xml')
     expect(metrics.backgroundPosition).toBe(`calc(100% - ${metrics.padLeft}px) 50%`)
     expect(metrics.padRight).toBeGreaterThan(metrics.padLeft + 12)
     await select.evaluate((element) => {
@@ -393,12 +395,25 @@ test('the keyword chevron sits inset from the pill edge', async ({ page }) => {
     })
     const ratio = await page.evaluate(() => window.devicePixelRatio || 1)
     const rawGap = chevronRightGap(decodePng(await select.screenshot()))
-    if (rawGap !== null) {
-      const gap = rawGap / ratio
-      expect(gap, `${width}px gap ${gap}`).toBeGreaterThan(8)
-      expect(gap).toBeLessThan(metrics.padLeft + 20)
-    }
+    expect(rawGap, `${width}px chevron was not painted`).not.toBeNull()
+    const gap = rawGap! / ratio
+    expect(gap, `${width}px gap ${gap}`).toBeGreaterThan(8)
+    expect(gap).toBeLessThan(metrics.padLeft + 20)
     await select.selectOption({ index: 1 })
     await expect(select).not.toHaveValue('')
   }
+})
+
+test('forced colors restores the native keyword arrow', async ({ page }) => {
+  await page.emulateMedia({ forcedColors: 'active' })
+  await page.goto('/')
+  const select = page.getByRole('combobox', { name: 'Keyword' })
+  const style = await select.evaluate((element: HTMLSelectElement) => {
+    const computed = getComputedStyle(element)
+    return { appearance: computed.appearance, backgroundImage: computed.backgroundImage }
+  })
+  expect(style.appearance).not.toBe('none')
+  expect(style.backgroundImage).toBe('none')
+  await select.selectOption({ index: 1 })
+  await expect(select).not.toHaveValue('')
 })
