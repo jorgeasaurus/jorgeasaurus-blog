@@ -3,10 +3,11 @@ import { IconCheck, IconLink, IconUp } from './Icons'
 import { copyText } from '../lib/copyText'
 
 interface ArticleActionsProps {
+  showCopy?: boolean
   showBackToTop?: boolean
 }
 
-export default function ArticleActions({ showBackToTop = false }: ArticleActionsProps) {
+export default function ArticleActions({ showCopy = true, showBackToTop = false }: ArticleActionsProps) {
   const [copied, setCopied] = useState(false)
   const timer = useRef(0)
 
@@ -29,10 +30,12 @@ export default function ArticleActions({ showBackToTop = false }: ArticleActions
 
   return (
     <div className="article-actions" role="group" aria-label="Article actions">
-      <button className="article-action" type="button" aria-label="Copy link" onClick={() => { void copyLink() }}>
-        {copied ? <IconCheck /> : <IconLink />}
-        <span>{copied ? 'Copied' : 'Copy link'}</span>
-      </button>
+      {showCopy && (
+        <button className="article-action" type="button" aria-label="Copy link" onClick={() => { void copyLink() }}>
+          {copied ? <IconCheck /> : <IconLink />}
+          <span>{copied ? 'Copied' : 'Copy link'}</span>
+        </button>
+      )}
       {showBackToTop && (
         <button className="article-action" type="button" onClick={backToTop}>
           <IconUp />

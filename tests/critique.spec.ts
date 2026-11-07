@@ -33,12 +33,17 @@ test('subscribe modal stays closed and the inline form remains', async ({ page }
 })
 
 test('card tags do not repeat the category', async ({ page }) => {
-  await page.goto('/')
-  for (const number of ['33', '34', '35']) {
-    const card = page.locator('.post-card').filter({ hasText: `No. ${number}` })
-    const labels = (await card.locator('.post-card-tags a').allTextContents()).map((label) => label.trim().toLowerCase())
-    expect(labels.filter((label) => label === 'intune')).toEqual(['intune'])
-    expect(new Set(labels).size).toBe(labels.length)
+  for (const path of ['/', '/?page=2']) {
+    await page.goto(path)
+    const cards = page.locator('.post-card')
+    expect(await cards.count()).toBeGreaterThan(0)
+    for (let index = 0; index < await cards.count(); index += 1) {
+      const labels = (await cards.nth(index).locator('.post-card-tags a').allTextContents())
+        .map((label) => label.trim().toLowerCase())
+      expect(labels.length).toBeGreaterThan(0)
+      expect(new Set(labels).size).toBe(labels.length)
+      expect(labels.filter((label) => label === labels[0])).toEqual([labels[0]])
+    }
   }
 })
 
@@ -125,7 +130,7 @@ test('small glass text clears WCAG AA on the brightest backdrop', async ({ page 
     })
   })
 
-  for (const selector of ['.post-card-date', '.post-card-tags a', '.post-card-cta', '.listing-tools .eyebrow', '.post-filters__field label']) {
+  for (const selector of ['.post-card-date', '.post-card-tags a', '.category-pill']) {
     const metrics = await page.locator(selector).first().evaluate((element) => {
       const style = getComputedStyle(element)
       return {
@@ -137,8 +142,6 @@ test('small glass text clears WCAG AA on the brightest backdrop', async ({ page 
     expect(metrics.fontSize).toBeLessThanOrEqual(13)
     expect(metrics.letterSpacing).toBeLessThanOrEqual(1)
   }
-  expect(await page.locator('.post-card-cta').first().evaluate((element) => getComputedStyle(element).textTransform)).toBe('none')
-
   const reading = await measureBrightestGlass(page)
   const described = [...reading.card, ...reading.hero]
     .map((sample) => `${sample.name} ${sample.ratio.toFixed(2)}:1 on rgb(${sample.background.join(',')})`)

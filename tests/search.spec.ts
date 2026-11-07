@@ -26,14 +26,14 @@ test('category and keyword filters combine, share, and restore with history', as
 
   await category.click()
   await expect(page).toHaveURL(/category=endpoint-management/)
-  await expect(page.getByRole('heading', { name: 'Category: Endpoint management' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Category: Endpoint management' })).toHaveCount(0)
   await expect(page.getByRole('link', { name: 'Back Up or Restore Jamf Pro Objects with PowerShell' })).toBeVisible()
 
   await page.getByLabel('Keyword', { exact: true }).selectOption('jamf')
   await expect(page).toHaveURL(/tag=jamf/)
   await expect(page).toHaveURL(/category=endpoint-management/)
-  await expect(page.getByRole('heading', { name: 'Tagged: jamf' })).toBeVisible()
-  await expect(resultStatus(page)).toHaveText('1 post')
+  await expect(page.getByRole('heading', { name: 'Tagged: jamf' })).toHaveCount(0)
+  await expect(resultStatus(page)).toHaveCount(0)
 
   await page.goBack()
   await expect(page.getByLabel('Keyword', { exact: true })).toHaveValue('')
@@ -41,13 +41,13 @@ test('category and keyword filters combine, share, and restore with history', as
 
   await page.goForward()
   await expect(page.getByLabel('Keyword', { exact: true })).toHaveValue('jamf')
-  await expect(page.getByRole('heading', { name: 'Tagged: jamf' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Tagged: jamf' })).toHaveCount(0)
 
   await page.goto('/?category=intune&tag=reboot')
   await expect(page.getByRole('button', { name: /^Intune\b/ })).toHaveAttribute('aria-pressed', 'true')
   await expect(page.getByLabel('Keyword', { exact: true })).toHaveValue('reboot')
   await expect(page.getByRole('link', { name: 'Proactive Remediation to Remind Windows Users to Reboot' })).toBeVisible()
-  await expect(resultStatus(page)).toHaveText('1 post')
+  await expect(resultStatus(page)).toHaveCount(0)
 
   await page.goto('/?category=intune')
   await page.getByRole('link', { name: 'Older →', exact: true }).click()
@@ -60,7 +60,7 @@ test('category and keyword filters combine, share, and restore with history', as
   await expect(page.locator('.post-card')).toHaveCount(0)
   await page.getByRole('link', { name: 'Clear filter ×' }).click()
   await expect(page).toHaveURL(/\/$/)
-  await expect(page.getByRole('heading', { name: 'Recent field notes' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Posts', exact: true })).toHaveCount(1)
   await expect(page.getByRole('button', { name: /^All\b/ })).toHaveAttribute('aria-pressed', 'true')
   await expect(page.getByLabel('Keyword', { exact: true })).toHaveValue('')
 })
@@ -81,10 +81,10 @@ test('a category badge filters the listing and selects that category', async ({ 
   await page.locator('article header').getByRole('link', { name: 'AI', exact: true }).click()
   await expect(page).toHaveURL(/\/\?category=ai$/)
   await expect(page.getByRole('button', { name: /^AI\b/ })).toHaveAttribute('aria-pressed', 'true')
-  await expect(page.getByRole('heading', { name: 'Category: AI' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Category: AI' })).toHaveCount(0)
   await expect(page.getByRole('link', { name: 'Use GitHub Copilot with Third-Party LLM Models' })).toBeVisible()
   await expect(page.getByRole('link', { name: "Intune assignments: Do's and don'ts" })).toHaveCount(0)
-  await expect(resultStatus(page)).not.toHaveText('No posts match these filters.')
+  await expect(resultStatus(page)).toHaveCount(0)
 })
 
 test('filter edits keep the scroll position and pagination returns to the top', async ({ page }) => {
@@ -184,7 +184,7 @@ test('opening home from a scrolled article starts at the top', async ({ page }) 
   expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(40)
   await page.getByRole('navigation', { name: 'Primary navigation' }).getByRole('link', { name: 'Home', exact: true }).click()
   await expect(page).toHaveURL(/\/$/)
-  await expect(page.getByRole('heading', { name: 'Recent field notes' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'Posts', exact: true })).toHaveCount(1)
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeLessThan(20)
 })
 

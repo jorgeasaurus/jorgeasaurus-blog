@@ -1,4 +1,4 @@
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   categories,
   categoryLabel,
@@ -10,11 +10,6 @@ import type { PostMeta } from '../lib/posts'
 interface PostFiltersProps {
   posts: PostMeta[]
   matchCount: number
-}
-
-function statusText(matchCount: number) {
-  if (matchCount === 0) return 'No posts match these filters.'
-  return matchCount === 1 ? '1 post' : `${matchCount} posts`
 }
 
 function countFor(posts: PostMeta[], category: string, tag: string) {
@@ -77,7 +72,7 @@ export default function PostFilters({ posts, matchCount }: PostFiltersProps) {
         })}
       </div>
       <div className="post-filters__field">
-        <label htmlFor="field-note-tag">Keyword</label>
+        <label className="visually-hidden" htmlFor="field-note-tag">Keyword</label>
         <select
           id="field-note-tag"
           name="tag"
@@ -91,12 +86,16 @@ export default function PostFilters({ posts, matchCount }: PostFiltersProps) {
           ))}
         </select>
       </div>
-      <p
-        className={`post-filter-status${matchCount === 0 ? ' post-filter-status--empty' : ''}`}
-        role="status"
-      >
-        {statusText(matchCount)}
-      </p>
+      {(category || tag) && (
+        <Link className="tag-filter-clear" to="/">
+          Clear filter ×
+        </Link>
+      )}
+      {matchCount === 0 && (
+        <p className="post-filter-status post-filter-status--empty" role="status">
+          No posts match these filters.
+        </p>
+      )}
     </form>
   )
 }

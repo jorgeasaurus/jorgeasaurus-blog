@@ -23,22 +23,24 @@ for (const width of [320, 390]) {
       await page.addInitScript(() => localStorage.setItem('newsletter-popup-subscribed', 'true'))
     })
 
-    test('hero text fits its content column', async ({ page }) => {
+    test('the wordmark fits in the navigation', async ({ page }) => {
       await page.goto('/')
-      await expect(page.locator('.hero-title-block h1')).toBeVisible()
       await loadFonts(page)
-      const bounds = await page.locator('.hero-title-block h1').evaluate((heading) => {
-        const column = heading.closest('.hero-title-block')!.getBoundingClientRect()
-        const range = document.createRange()
-        range.selectNodeContents(heading)
-        return { column: { left: column.left, right: column.right }, text: [...range.getClientRects()].map(({ left, right }) => ({ left, right })) }
+      const name = page.locator('.brand-name')
+      await expect(name).toHaveText('Jorgeasaurus')
+      const nav = page.getByRole('navigation', { name: 'Primary navigation' })
+      const fit = await name.evaluate((element) => {
+        const navBox = element.closest('nav')!.getBoundingClientRect()
+        const box = element.getBoundingClientRect()
+        return {
+          clipped: element.scrollWidth > element.clientWidth + 1,
+          inside: box.left >= navBox.left - 1 && box.right <= navBox.right + 1,
+        }
       })
-      expect(bounds.text.length).toBeGreaterThan(0)
-      for (const rect of bounds.text) {
-        expect(rect.left).toBeGreaterThanOrEqual(bounds.column.left - 1)
-        expect(rect.right).toBeLessThanOrEqual(bounds.column.right + 1)
-      }
-      expect(await page.locator('.hero-intro').evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true)
+      expect(fit.clipped).toBe(false)
+      expect(fit.inside).toBe(true)
+      await expect(nav.getByRole('link', { name: 'Projects', exact: true })).toBeVisible()
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1)).toBe(true)
     })
 
     test('materialized inline code and tables remain inside article bounds', async ({ page }) => {
@@ -95,7 +97,7 @@ for (const width of [320, 390]) {
       await nav.getByRole('link', { name: 'About', exact: true }).tap()
       await expect(page).toHaveURL(/\/about$/)
       await page.getByRole('link', { name: 'Jorgeasaurus', exact: true }).tap()
-      await expect(page.getByRole('heading', { name: 'Recent field notes' })).toBeVisible()
+      await expect(page.getByRole('heading', { level: 1, name: 'Jorgeasaurus' })).toBeVisible()
       const older = page.getByRole('link', { name: 'Older →', exact: true })
       await older.scrollIntoViewIfNeeded()
       let olderTop = null
@@ -110,9 +112,10 @@ for (const width of [320, 390]) {
       await page.getByRole('link', { name: '← Newer', exact: true }).tap()
       await expect(page.locator('.pagination [aria-current="page"]')).toHaveText('1')
       await page.locator('a[href*="?tag="]').first().tap()
-      await expect(page.locator('.content-heading h2')).toContainText('Tagged:')
+      await expect(page).toHaveURL(/[?&]tag=/)
+      await expect(page.getByLabel('Keyword', { exact: true })).not.toHaveValue('')
       await page.getByRole('link', { name: 'Clear filter ×' }).tap()
-      await expect(page.locator('.content-heading h2')).not.toContainText('Tagged:')
+      await expect(page.getByLabel('Keyword', { exact: true })).toHaveValue('')
       const email = page.getByRole('textbox', { name: 'Email address', exact: true })
       await email.fill('invalid')
       await page.getByRole('button', { name: 'Notify me', exact: true }).tap()

@@ -5,11 +5,10 @@ import Topbar from '../components/Topbar'
 import PostCard from '../components/PostCard'
 import PostFilters from '../components/PostFilters'
 import NewsletterSignup from '../components/NewsletterSignup'
-import SocialIcon from '../components/SocialIcon'
 import WallpaperStage from '../components/WallpaperStage'
 import BackdropCredit from '../components/BackdropCredit'
 import { sortPostsByDate } from '../lib/posts'
-import { categoryLabel, filterPosts, listingPath } from '../lib/postSearch.mjs'
+import { filterPosts, listingPath } from '../lib/postSearch.mjs'
 import { readingMinutes } from '../lib/readingTime'
 import posts from '../content/posts'
 import useLiquidGlassSurface from '../hooks/useLiquidGlassSurface'
@@ -29,10 +28,6 @@ function scrollToTopOnPrimaryClick(event: MouseEvent<HTMLAnchorElement>) {
 
 export default function Home() {
   const [searchParams] = useSearchParams()
-  const heroGlassRef = useLiquidGlassSurface<HTMLElement>({
-    borderRadius: 44,
-    type: 'rounded',
-  })
   const listingGlassRef = useLiquidGlassSurface<HTMLDivElement>({
     borderRadius: 34,
     type: 'rounded',
@@ -41,7 +36,6 @@ export default function Home() {
   const category = searchParams.get('category') ?? ''
   const activeTag = searchParams.get('tag') ?? ''
   const sorted = sortPostsByDate(posts)
-  const sequenceBySlug = new Map(sorted.map((post, index) => [post.slug, sorted.length - index]))
   const filtered = filterPosts(sorted, { category, tag: activeTag })
   const totalPages = Math.max(1, Math.ceil(filtered.length / POSTS_PER_PAGE))
   const requestedPage = Number.parseInt(searchParams.get('page') ?? '1', 10)
@@ -53,11 +47,6 @@ export default function Home() {
   const isFiltered = filtersActive || currentPage > 1
   const pageStart = (currentPage - 1) * POSTS_PER_PAGE
   const visiblePosts = filtered.slice(pageStart, pageStart + POSTS_PER_PAGE)
-  const heading = activeTag
-    ? `Tagged: ${activeTag}`
-    : category
-      ? `Category: ${categoryLabel(category)}`
-      : 'Recent field notes'
 
   usePageMetadata('home', { filtered: isFiltered })
 
@@ -113,54 +102,9 @@ export default function Home() {
     <main className="blog-shell">
       <WallpaperStage />
       <Topbar />
-      <section className="hero-panel glass-panel" ref={heroGlassRef}>
-        <div className="hero-layout">
-          <div className="hero-title-block">
-            <h1>
-              <span aria-hidden="true">&gt;</span>
-              Jorgeasaurus
-            </h1>
-            <p className="hero-signal">Learn. Build. Automate.</p>
-          </div>
-          <div className="hero-intro">
-            <p className="hero-copy">
-              Practical engineering notes on PowerShell, endpoint management,
-              Microsoft Graph, and building durable automation systems.
-            </p>
-            <div className="hero-links" aria-label="Profile links">
-              <a href="https://github.com/jorgeasaurus" target="_blank" rel="noopener noreferrer">
-                <SocialIcon name="github" />
-                GitHub
-              </a>
-              <a href="https://www.youtube.com/@jorgeasaurus" target="_blank" rel="noopener noreferrer">
-                <SocialIcon name="youtube" />
-                YouTube
-              </a>
-              <a
-                href="https://mvp.microsoft.com/en-US/MVP/profile/79a79af0-1218-4504-b4ee-082ae4ff75f6"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <SocialIcon name="microsoft" />
-                Microsoft MVP
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
       <section className="content-area">
+        <h2 className="visually-hidden">Posts</h2>
         <div className="listing-tools glass-panel" ref={listingGlassRef}>
-          <div className="content-heading">
-            <div>
-              <p className="eyebrow">Posts</p>
-              <h2>{heading}</h2>
-            </div>
-            {filtersActive && (
-              <Link className="tag-filter-clear" to="/">
-                Clear filter ×
-              </Link>
-            )}
-          </div>
           <PostFilters posts={posts} matchCount={filtered.length} />
         </div>
         {visiblePosts.map((post, index) => (
@@ -168,7 +112,6 @@ export default function Home() {
             key={post.slug}
             post={post}
             featured={index === 0 && currentPage === 1 && !filtersActive}
-            sequence={sequenceBySlug.get(post.slug) ?? 0}
             minutes={readingMinutes(post.slug)}
           />
         ))}

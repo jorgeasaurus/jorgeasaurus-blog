@@ -1,5 +1,4 @@
 import { Link, useSearchParams } from 'react-router-dom'
-import { IconArrow } from './Icons'
 import { formatDate, type PostMeta } from '../lib/posts'
 import { cardKeywords, categoryLabel, listingPath } from '../lib/postSearch.mjs'
 import useLiquidGlassSurface from '../hooks/useLiquidGlassSurface'
@@ -7,11 +6,10 @@ import useLiquidGlassSurface from '../hooks/useLiquidGlassSurface'
 interface PostCardProps {
   post: PostMeta
   featured?: boolean
-  sequence?: number
   minutes?: number
 }
 
-export default function PostCard({ post, featured = false, sequence = 0, minutes = 0 }: PostCardProps) {
+export default function PostCard({ post, featured = false, minutes = 0 }: PostCardProps) {
   const [searchParams] = useSearchParams()
   const glassRef = useLiquidGlassSurface<HTMLElement>({
     borderRadius: featured ? 34 : 24,
@@ -27,9 +25,7 @@ export default function PostCard({ post, featured = false, sequence = 0, minutes
     >
       <div className="post-card-body">
         <div className="post-card-meta">
-          {featured && <span>Latest dispatch</span>}
           <p className="post-card-date">
-            {sequence > 0 && <span>No. {String(sequence).padStart(2, '0')}</span>}
             <time dateTime={post.date}>{formatDate(post.date)}</time>
             {minutes > 0 && <span>{minutes} min read</span>}
           </p>
@@ -54,10 +50,6 @@ export default function PostCard({ post, featured = false, sequence = 0, minutes
             </li>
           ))}
         </ul>
-        <span className="post-card-cta" aria-hidden="true">
-          Read field note
-          <IconArrow className="icon post-card-cta__icon" />
-        </span>
       </div>
     </article>
   )

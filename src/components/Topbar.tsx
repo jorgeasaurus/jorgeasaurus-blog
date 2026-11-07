@@ -2,7 +2,6 @@ import type { MouseEvent } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import SocialIcon from './SocialIcon'
 import useLiquidGlassSurface from '../hooks/useLiquidGlassSurface'
-import ThemeSwitcher from '../theme/ThemeSwitcher'
 
 export default function Topbar() {
   const { pathname } = useLocation()
@@ -23,13 +22,16 @@ export default function Topbar() {
     window.scrollTo(0, 0)
   }
 
+  const name = pathname === '/'
+    ? <h1 className="brand-name">Jorgeasaurus</h1>
+    : <span className="brand-name">Jorgeasaurus</span>
+
   return (
     <nav className="topbar glass-panel" aria-label="Primary navigation" ref={glassRef}>
       <Link to="/" className="brand-link" onClick={scrollListingToTop}>
         <span className="brand-prompt" aria-hidden="true">&gt;</span>
-        <span className="brand-name">Jorgeasaurus</span>
+        {name}
       </Link>
-      <ThemeSwitcher />
       <div className="topbar-links">
         <Link
           to="/"

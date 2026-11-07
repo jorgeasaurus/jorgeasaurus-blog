@@ -24,7 +24,7 @@ export default function NewsletterSignup({
   })
   const [email, setEmail] = useState('')
   const [status, setStatus] = useState<SubmitStatus>('idle')
-  const [message, setMessage] = useState('No spam. Just new posts when they ship.')
+  const [message, setMessage] = useState('')
   const isSubmitting = status === 'submitting'
   const isPanel = surface === 'panel'
 
@@ -86,11 +86,7 @@ export default function NewsletterSignup({
       aria-labelledby={`${emailId}-heading`}
     >
       <div className="newsletter-signup__content">
-        <p className="eyebrow">Email list</p>
         <h2 id={`${emailId}-heading`}>Get new field notes</h2>
-        <p className="hero-copy">
-          Receive an email when a new post is published.
-        </p>
       </div>
       <form className="newsletter-signup__form" onSubmit={handleSubmit}>
         <div className="newsletter-signup__field">
@@ -104,7 +100,7 @@ export default function NewsletterSignup({
               onChange={(event) => setEmail(event.target.value)}
               placeholder="you@example.com"
               autoComplete="email"
-              aria-describedby={messageId}
+              aria-describedby={message ? messageId : undefined}
               disabled={isSubmitting}
               required
             />
@@ -124,14 +120,16 @@ export default function NewsletterSignup({
           tabIndex={-1}
           autoComplete="off"
         />
-        <p
-          id={messageId}
-          className={`newsletter-signup__message newsletter-signup__message--${status}`}
-          role="status"
-          aria-live="polite"
-        >
-          {message}
-        </p>
+        {message && (
+          <p
+            id={messageId}
+            className={`newsletter-signup__message newsletter-signup__message--${status}`}
+            role="status"
+            aria-live="polite"
+          >
+            {message}
+          </p>
+        )}
       </form>
     </section>
   )

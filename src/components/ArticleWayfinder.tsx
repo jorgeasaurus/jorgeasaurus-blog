@@ -123,9 +123,7 @@ export default function ArticleWayfinder({ outline }: ArticleWayfinderProps) {
 
   return (
     <nav className={`wayfinder frosted${wide ? ' wayfinder--dock' : ''}`} aria-label="On this page">
-      {wide ? (
-        <p className="wayfinder__label">On this page</p>
-      ) : (
+      {wide ? null : (
         <button
           className="wayfinder__toggle"
           type="button"
