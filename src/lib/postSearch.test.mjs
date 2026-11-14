@@ -48,6 +48,7 @@ test('listing paths keep category, keyword, and page shareable', () => {
 })
 
 const categoryBySlug = {
+  'powershell-command-to-module': 'powershell',
   'intune-compliance-to-conditional-access': 'intune',
   'powershell-try-catch-misses-errors': 'powershell',
   'learn-intune-powershell-automation': 'intune',

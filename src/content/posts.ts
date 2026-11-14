@@ -2,6 +2,21 @@ import { type PostMeta } from '../lib/posts'
 
 const posts: PostMeta[] = [
   {
+    slug: 'powershell-command-to-module',
+    category: 'powershell',
+    title: 'How to turn a PowerShell script into a module',
+    date: '2026-11-14',
+    description:
+      'Turn a one-off PowerShell command into a script, an advanced function, and a module that your Intune remediation scripts can call.',
+    tags: ['powershell', 'scripting', 'intune', 'automation'],
+    socialImage: {
+      src: '/images/posts/powershell-command-to-module/socialcard.png',
+      width: 1200,
+      height: 630,
+      type: 'image/png',
+    },
+  },
+  {
     slug: 'intune-compliance-to-conditional-access',
     category: 'intune',
     title: 'Intune compliance to Conditional Access, end to end',
