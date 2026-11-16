@@ -23,6 +23,8 @@ const PANEL_SELECTOR = '.liquid-glass-surface:not(.topbar)'
 const TOPBAR_SELECTOR = '.topbar.liquid-glass-surface'
 const TOPBAR_CANVAS_SELECTOR = '.topbar-glass'
 const ACTIVE_ATTRIBUTE = 'glass'
+/* CSS px the canvas extends past the viewport, above and below. */
+const OVERSCAN = 160
 const SKIP_QUERY =
   '(prefers-reduced-motion: reduce), (prefers-reduced-transparency: reduce), (prefers-contrast: more)'
 
@@ -67,6 +69,7 @@ uniform float u_tint;
 uniform float u_brightness;
 uniform float u_sat;
 uniform vec2  u_tilt;
+uniform vec2  u_origin;      // viewport's bottom-left corner in canvas px
 
 float rrSDF(vec2 p, vec2 b, float r) {
   vec2 q = abs(p) - b + vec2(r);
@@ -92,9 +95,12 @@ vec2 coverUV(vec2 uv) {
 }
 
 void main() {
+  // The canvas scrolls with the page and overscans the viewport, while the
+  // wallpaper is fixed: panel geometry is in canvas px, sampling in viewport px.
   vec2 fragPx = gl_FragCoord.xy;
+  vec2 viewPx = fragPx - u_origin;
   vec2 pxToUV = 1.0 / u_resolution;
-  vec2 sUV = fragPx * pxToUV;
+  vec2 sUV = viewPx * pxToUV;
 
   // Refraction accumulates across overlapping panels, then the background is
   // sampled once with the combined offset.
@@ -174,7 +180,7 @@ void main() {
 
   // The wallpaper's CSS wash: linear-gradient(115deg, 2% -> 34% at 76%).
   vec2 dir = vec2(0.9063, 0.4226);
-  vec2 cssPx = vec2(fragPx.x, u_resolution.y - fragPx.y);
+  vec2 cssPx = vec2(viewPx.x, u_resolution.y - viewPx.y);
   float span = dot(u_resolution, dir);
   float t = dot(cssPx - u_resolution * 0.5, dir) / span + 0.5;
   col = mix(col, vec3(0.008, 0.039, 0.027), mix(0.02, 0.34, clamp(t / 0.76, 0.0, 1.0)));
@@ -238,8 +244,11 @@ const noop = () => {}
 
 /**
  * Renders refractive glass on `canvas` behind every `.liquid-glass-surface`
- * element. `canvas` must cover the viewport (position: fixed; inset: 0) inside
- * `stage`, which supplies the wallpaper through `--wallpaper-image`.
+ * element. `canvas` is the only child of an absolutely positioned, clipping
+ * layer that spans the page, so it scrolls with the panels on the compositor
+ * and the glass edge cannot trail them; each frame it is re-centred on the
+ * viewport and redrawn. `stage` is the fixed wallpaper element: it gives the
+ * viewport size and the image, through `--wallpaper-image`.
  * Returns a cleanup function. Does nothing when WebGL2 is unavailable or the
  * visitor asked for reduced motion, reduced transparency or more contrast; the
  * CSS backdrop-filter glass remains in that case.
@@ -283,7 +292,7 @@ export function startGlassPanels(canvas: HTMLCanvasElement, stage: HTMLElement):
 
   for (const name of [
     'u_bgSharp', 'u_bgBlur', 'u_resolution', 'u_bgSize', 'u_dpr', 'u_count', 'u_panels', 'u_shapes',
-    'u_refract', 'u_chroma', 'u_edgeHL', 'u_fresnel', 'u_tint', 'u_brightness', 'u_sat', 'u_tilt',
+    'u_refract', 'u_chroma', 'u_edgeHL', 'u_fresnel', 'u_tint', 'u_brightness', 'u_sat', 'u_tilt', 'u_origin',
   ]) {
     uniforms[name] = gl.getUniformLocation(program, name)
   }
@@ -360,14 +369,34 @@ export function startGlassPanels(canvas: HTMLCanvasElement, stage: HTMLElement):
   const barShape = new Float32Array(2)
   const drawnBar = new Float32Array(6)
   let barDirty = true
+  let placedY = Number.NaN
+  let placedHeight = 0
 
   const render = (time: number) => {
     frame = requestAnimationFrame(render)
     if (!ready) return
 
     const dpr = Math.min(window.devicePixelRatio || 1, 2)
-    const cssWidth = canvas.clientWidth
-    const cssHeight = canvas.clientHeight
+    const layer = canvas.parentElement
+    if (!layer) return
+    const layerRect = layer.getBoundingClientRect()
+    const viewWidth = stage.clientWidth
+    const viewHeight = stage.clientHeight
+    /* Keep the canvas centred on the viewport with OVERSCAN to spare above and
+       below, so panels scrolled into view before the next frame are covered. */
+    const cssWidth = layerRect.width
+    const cssHeight = viewHeight + 2 * OVERSCAN
+    const offsetY = Math.round(-layerRect.top - OVERSCAN)
+    if (offsetY !== placedY || cssHeight !== placedHeight) {
+      placedY = offsetY
+      placedHeight = cssHeight
+      canvas.style.height = `${cssHeight}px`
+      canvas.style.transform = `translate3d(0, ${offsetY}px, 0)`
+      dirty = true
+    }
+    /* Canvas origin in viewport coordinates. */
+    const originX = layerRect.left
+    const originY = layerRect.top + offsetY
     const width = Math.max(1, Math.round(cssWidth * dpr))
     const height = Math.max(1, Math.round(cssHeight * dpr))
     if (canvas.width !== width || canvas.height !== height) {
@@ -386,11 +415,12 @@ export function startGlassPanels(canvas: HTMLCanvasElement, stage: HTMLElement):
       const rect = element.getBoundingClientRect()
       if (
         rect.width < 2 || rect.height < 2 ||
-        rect.bottom <= 0 || rect.top >= cssHeight || rect.right <= 0 || rect.left >= cssWidth
+        rect.bottom <= originY || rect.top >= originY + cssHeight ||
+        rect.right <= originX || rect.left >= originX + cssWidth
       ) continue
       const radius = Number.parseFloat(getComputedStyle(element).borderTopLeftRadius) || 0
-      panels[count * 4] = (rect.left + rect.width / 2) * dpr
-      panels[count * 4 + 1] = height - (rect.top + rect.height / 2) * dpr
+      panels[count * 4] = (rect.left - originX + rect.width / 2) * dpr
+      panels[count * 4 + 1] = height - (rect.top - originY + rect.height / 2) * dpr
       panels[count * 4 + 2] = (rect.width / 2) * dpr
       panels[count * 4 + 3] = (rect.height / 2) * dpr
       shapes[count * 2] = radius * dpr
@@ -418,8 +448,8 @@ export function startGlassPanels(canvas: HTMLCanvasElement, stage: HTMLElement):
     const barCanvas = bar?.querySelector<HTMLCanvasElement>(TOPBAR_CANVAS_SELECTOR)
     const barRect = bar && barCanvas ? bar.getBoundingClientRect() : null
     if (bar && barRect && barRect.width >= 2 && barRect.height >= 2) {
-      barPanel[0] = (barRect.left + barRect.width / 2) * dpr
-      barPanel[1] = height - (barRect.top + barRect.height / 2) * dpr
+      barPanel[0] = (barRect.left - originX + barRect.width / 2) * dpr
+      barPanel[1] = height - (barRect.top - originY + barRect.height / 2) * dpr
       barPanel[2] = (barRect.width / 2) * dpr
       barPanel[3] = (barRect.height / 2) * dpr
       barShape[0] = (Number.parseFloat(getComputedStyle(bar).borderTopLeftRadius) || 0) * dpr
@@ -437,7 +467,8 @@ export function startGlassPanels(canvas: HTMLCanvasElement, stage: HTMLElement):
        frame as the first draw. Set first: the bar pass reads CSS that keys on it. */
     root.dataset[ACTIVE_ATTRIBUTE] = 'webgl'
 
-    gl.uniform2f(uniforms.u_resolution, width, height)
+    gl.uniform2f(uniforms.u_resolution, viewWidth * dpr, viewHeight * dpr)
+    gl.uniform2f(uniforms.u_origin, -originX * dpr, height - (viewHeight - originY) * dpr)
     gl.uniform1f(uniforms.u_dpr, dpr)
     /* Shader space is y-up, pointer space is y-down. */
     gl.uniform2f(uniforms.u_tilt, tilt.x, -tilt.y)
@@ -445,8 +476,8 @@ export function startGlassPanels(canvas: HTMLCanvasElement, stage: HTMLElement):
 
     if (barDirty && barCanvas && barRect && barRect.width >= 2 && barRect.height >= 2) {
       const context = barCanvas.getContext('2d')
-      const left = Math.round(barRect.left * dpr)
-      const top = Math.round(barRect.top * dpr)
+      const left = Math.round((barRect.left - originX) * dpr)
+      const top = Math.round((barRect.top - originY) * dpr)
       const barWidth = Math.max(1, Math.round(barRect.width * dpr))
       const barHeight = Math.max(1, Math.round(barRect.height * dpr))
       if (context) {

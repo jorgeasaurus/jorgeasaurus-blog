@@ -57,11 +57,31 @@
   transform: translateZ(0);
 }
 
-/* WebGL liquid glass (src/lib/glassPanels.ts). The stage canvas paints refracted
+/* WebGL liquid glass (src/lib/glassPanels.ts). A canvas paints refracted
    wallpaper behind each .liquid-glass-surface and is transparent elsewhere.
-   Once it has drawn, it owns the blur, so the CSS backdrop-filter steps aside.
+   It lives in a layer that spans the page and scrolls with it, so the glass
+   moves with its panel on the compositor; the layer clips the canvas so its
+   overscan never extends the page. Once the canvas has drawn, it owns the
+   blur, so the CSS backdrop-filter steps aside.
    The fixed topbar gets its glass on a canvas of its own, inside the bar. */
-.wallpaper-glass,
+.glass-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.wallpaper-glass {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  width: 100%;
+  opacity: 0;
+  will-change: transform;
+}
+
 .liquid-glass-surface > .topbar-glass {
   position: absolute;
   inset: 0;

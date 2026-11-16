@@ -11,8 +11,11 @@ export default function WallpaperStage() {
   }, [])
 
   return (
-    <div className="wallpaper-stage" aria-hidden="true" ref={stageRef}>
-      <canvas className="wallpaper-glass" ref={canvasRef} />
-    </div>
+    <>
+      <div className="wallpaper-stage" aria-hidden="true" ref={stageRef} />
+      <div className="glass-layer" aria-hidden="true">
+        <canvas className="wallpaper-glass" ref={canvasRef} />
+      </div>
+    </>
   )
 }
