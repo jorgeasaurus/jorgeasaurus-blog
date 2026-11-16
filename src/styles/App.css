@@ -88,7 +88,7 @@
    no longer needed; a lighter one, painted onto that canvas, lets the
    refraction show. */
 :root[data-glass='webgl'] .topbar.liquid-glass-surface {
-  --topbar-glass-scrim: 0.45;
+  --topbar-glass-scrim: 0.36;
 }
 
 @media (max-width: 1920px) and (max-height: 1080px) and (max-resolution: 1dppx) {

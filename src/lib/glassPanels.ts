@@ -27,16 +27,17 @@ const SKIP_QUERY =
   '(prefers-reduced-motion: reduce), (prefers-reduced-transparency: reduce), (prefers-contrast: more)'
 
 const GLASS = {
-  bevelDepth: 30,
+  bevelDepth: 52,
   refraction: 1.21,
-  chromatic: 0.29,
+  chromatic: 0.4,
   fresnel: 0.8,
   edgeHighlight: 0.4,
   tint: 0.12,
-  /* Matches the brightness/saturate/blur of --main-hero-glass-filter. */
+  /* Brightness/saturation match --main-hero-glass-filter; the blur is lighter
+     so the bent wallpaper stays recognisable through the body. */
   brightness: -0.16,
   saturation: 0.12,
-  blur: 22,
+  blur: 9,
   pointerTilt: 1,
 }
 
@@ -169,7 +170,7 @@ void main() {
   vec3 sharp = vec3(texture(u_bgSharp, uvR).r, texture(u_bgSharp, uvG).g, texture(u_bgSharp, uvB).b);
   vec3 blur = vec3(texture(u_bgBlur, uvR).r, texture(u_bgBlur, uvG).g, texture(u_bgBlur, uvB).b);
   // Crisp, lens-like rim; frosted body so the text on top stays readable.
-  vec3 col = mix(blur, sharp, maxSharp * 0.6);
+  vec3 col = mix(blur, sharp, maxSharp);
 
   // The wallpaper's CSS wash: linear-gradient(115deg, 2% -> 34% at 76%).
   vec2 dir = vec2(0.9063, 0.4226);
