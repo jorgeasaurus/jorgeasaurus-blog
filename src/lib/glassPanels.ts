@@ -16,9 +16,12 @@
  */
 
 const MAX_PANELS = 16
-/* The fixed topbar scrolls over page content, which only a CSS backdrop-filter
-   can blur, so it keeps the CSS glass. */
 const PANEL_SELECTOR = '.liquid-glass-surface:not(.topbar)'
+/* The fixed topbar floats over page content, so its glass cannot live on the
+   canvas behind the page. It is rendered in a pass of its own and copied into
+   a 2D canvas inside the bar, which then covers whatever scrolls underneath. */
+const TOPBAR_SELECTOR = '.topbar.liquid-glass-surface'
+const TOPBAR_CANVAS_SELECTOR = '.topbar-glass'
 const ACTIVE_ATTRIBUTE = 'glass'
 const SKIP_QUERY =
   '(prefers-reduced-motion: reduce), (prefers-reduced-transparency: reduce), (prefers-contrast: more)'
@@ -352,6 +355,10 @@ export function startGlassPanels(canvas: HTMLCanvasElement, stage: HTMLElement):
   const drawnShapes = new Float32Array(MAX_PANELS * 2)
   let drawnCount = -1
   let lastTime = 0
+  const barPanel = new Float32Array(4)
+  const barShape = new Float32Array(2)
+  const drawnBar = new Float32Array(6)
+  let barDirty = true
 
   const render = (time: number) => {
     frame = requestAnimationFrame(render)
@@ -367,6 +374,7 @@ export function startGlassPanels(canvas: HTMLCanvasElement, stage: HTMLElement):
       canvas.height = height
       gl.viewport(0, 0, width, height)
       dirty = true
+      barDirty = true
     }
 
     /* Polling rects every frame keeps the glass glued to panels through
@@ -402,26 +410,81 @@ export function startGlassPanels(canvas: HTMLCanvasElement, stage: HTMLElement):
       tilt.x += dx * k
       tilt.y += dy * k
       dirty = true
+      barDirty = true
     }
 
-    if (!dirty) return
+    const bar = document.querySelector<HTMLElement>(TOPBAR_SELECTOR)
+    const barCanvas = bar?.querySelector<HTMLCanvasElement>(TOPBAR_CANVAS_SELECTOR)
+    const barRect = bar && barCanvas ? bar.getBoundingClientRect() : null
+    if (bar && barRect && barRect.width >= 2 && barRect.height >= 2) {
+      barPanel[0] = (barRect.left + barRect.width / 2) * dpr
+      barPanel[1] = height - (barRect.top + barRect.height / 2) * dpr
+      barPanel[2] = (barRect.width / 2) * dpr
+      barPanel[3] = (barRect.height / 2) * dpr
+      barShape[0] = (Number.parseFloat(getComputedStyle(bar).borderTopLeftRadius) || 0) * dpr
+      barShape[1] = GLASS.bevelDepth * dpr
+      for (let i = 0; i < 6; i++) {
+        const value = i < 4 ? barPanel[i] : barShape[i - 4]
+        if (value !== drawnBar[i]) barDirty = true
+        drawnBar[i] = value
+      }
+    }
+
+    if (!dirty && !barDirty) return
+
+    /* Hand the panels over from CSS backdrop-filter to the canvas in the same
+       frame as the first draw. Set first: the bar pass reads CSS that keys on it. */
+    root.dataset[ACTIVE_ATTRIBUTE] = 'webgl'
+
+    gl.uniform2f(uniforms.u_resolution, width, height)
+    gl.uniform1f(uniforms.u_dpr, dpr)
+    /* Shader space is y-up, pointer space is y-down. */
+    gl.uniform2f(uniforms.u_tilt, tilt.x, -tilt.y)
+    gl.clearColor(0, 0, 0, 0)
+
+    if (barDirty && barCanvas && barRect && barRect.width >= 2 && barRect.height >= 2) {
+      const context = barCanvas.getContext('2d')
+      const left = Math.round(barRect.left * dpr)
+      const top = Math.round(barRect.top * dpr)
+      const barWidth = Math.max(1, Math.round(barRect.width * dpr))
+      const barHeight = Math.max(1, Math.round(barRect.height * dpr))
+      if (context) {
+        if (barCanvas.width !== barWidth || barCanvas.height !== barHeight) {
+          barCanvas.width = barWidth
+          barCanvas.height = barHeight
+        }
+        gl.enable(gl.SCISSOR_TEST)
+        gl.scissor(left, height - top - barHeight, barWidth, barHeight)
+        gl.uniform1i(uniforms.u_count, 1)
+        gl.uniform4fv(uniforms.u_panels, barPanel)
+        gl.uniform2fv(uniforms.u_shapes, barShape)
+        gl.clear(gl.COLOR_BUFFER_BIT)
+        gl.drawArrays(gl.TRIANGLES, 0, 3)
+        gl.disable(gl.SCISSOR_TEST)
+        /* The drawing buffer is only readable until this frame is presented. */
+        context.clearRect(0, 0, barWidth, barHeight)
+        context.drawImage(canvas, left, top, barWidth, barHeight, 0, 0, barWidth, barHeight)
+        /* This canvas sits above the bar's CSS background, so repaint its scrim. */
+        const scrim = Number.parseFloat(getComputedStyle(bar!).getPropertyValue('--topbar-glass-scrim'))
+        if (scrim > 0) {
+          context.globalCompositeOperation = 'source-atop'
+          context.fillStyle = `rgba(5, 14, 10, ${Math.min(scrim, 1)})`
+          context.fillRect(0, 0, barWidth, barHeight)
+          context.globalCompositeOperation = 'source-over'
+        }
+      }
+    }
+    barDirty = false
     dirty = false
     drawnCount = count
     drawnPanels.set(panels)
     drawnShapes.set(shapes)
 
-    gl.uniform2f(uniforms.u_resolution, width, height)
-    gl.uniform1f(uniforms.u_dpr, dpr)
     gl.uniform1i(uniforms.u_count, count)
     gl.uniform4fv(uniforms.u_panels, panels)
     gl.uniform2fv(uniforms.u_shapes, shapes)
-    /* Shader space is y-up, pointer space is y-down. */
-    gl.uniform2f(uniforms.u_tilt, tilt.x, -tilt.y)
-    gl.clearColor(0, 0, 0, 0)
     gl.clear(gl.COLOR_BUFFER_BIT)
     gl.drawArrays(gl.TRIANGLES, 0, 3)
-    /* Only now hand the panels over from CSS backdrop-filter to the canvas. */
-    root.dataset[ACTIVE_ATTRIBUTE] = 'webgl'
   }
 
   const stop = () => {

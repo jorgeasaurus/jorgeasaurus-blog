@@ -57,27 +57,38 @@
   transform: translateZ(0);
 }
 
-/* WebGL liquid glass (src/lib/glassPanels.ts). The canvas paints refracted
+/* WebGL liquid glass (src/lib/glassPanels.ts). The stage canvas paints refracted
    wallpaper behind each .liquid-glass-surface and is transparent elsewhere.
    Once it has drawn, it owns the blur, so the CSS backdrop-filter steps aside.
-   The fixed topbar keeps its backdrop-filter: it also has to blur page content
-   scrolling underneath, which the canvas cannot see. */
-.wallpaper-glass {
+   The fixed topbar gets its glass on a canvas of its own, inside the bar. */
+.wallpaper-glass,
+.liquid-glass-surface > .topbar-glass {
   position: absolute;
   inset: 0;
+  z-index: 0;
   display: block;
   width: 100%;
   height: 100%;
+  border-radius: inherit;
+  pointer-events: none;
   opacity: 0;
 }
 
-:root[data-glass='webgl'] .wallpaper-glass {
+:root[data-glass='webgl'] .wallpaper-glass,
+:root[data-glass='webgl'] .liquid-glass-surface > .topbar-glass {
   opacity: 1;
 }
 
-:root[data-glass='webgl'] .liquid-glass-surface:not(.topbar) {
+:root[data-glass='webgl'] .liquid-glass-surface {
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
+}
+
+/* The bar's canvas is opaque, so the heavy scrim that hid scrolling content is
+   no longer needed; a lighter one, painted onto that canvas, lets the
+   refraction show. */
+:root[data-glass='webgl'] .topbar.liquid-glass-surface {
+  --topbar-glass-scrim: 0.45;
 }
 
 @media (max-width: 1920px) and (max-height: 1080px) and (max-resolution: 1dppx) {
