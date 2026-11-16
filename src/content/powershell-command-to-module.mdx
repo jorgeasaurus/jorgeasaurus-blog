@@ -1,0 +1,285 @@
+---
+title: "How to turn a PowerShell script into a module"
+date: "2026-11-14"
+description: "Turn a one-off PowerShell command into a script, an advanced function, and a module that your Intune remediation scripts can call."
+tags: ["powershell", "scripting", "intune", "automation"]
+---
+
+You fix a problem with one line in the console. A week later you type it again. Then you paste it into an Intune detection script, and again into the remediation script. Now the same logic lives in three places, and they drift.
+
+**Pick the smallest packaging step that matches how you reuse the code. When two scripts need the same logic, that step is a function in a module.**
+
+Watch the walkthrough: [How to Turn a PowerShell Script into a Module](https://youtu.be/lF-hv-ujQdw).
+
+I ran every example in this post in PowerShell 7.4.6 on Linux. I didn't test them in Windows PowerShell 5.1 or in the Intune management extension. Statements about those come from Microsoft Learn only, and I label them that way.
+
+The example task: find files older than 30 days in a cache folder. The test folder `/tmp/cache` has two old files and one new file. On Windows, use a path such as `C:\ProgramData\Contoso\Cache`.
+
+## Start with a command
+
+```powershell
+Get-ChildItem -Path /tmp/cache -File |
+    Where-Object -FilterScript { $_.LastWriteTime -lt (Get-Date).AddDays(-30) }
+```
+
+One line, one answer, nothing saved. That is correct while you explore or check one machine. When you type the same line a second time, promote it.
+
+## Save it as a script when you rerun it
+
+A script is a plain text file of PowerShell commands with a `.ps1` extension ([about_Scripts](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_scripts)). The `param` block must be the first statement, after comments and `#Requires` only.
+
+```powershell
+# Get-StaleFile.ps1
+param(
+    [Parameter(Mandatory)]
+    [string]$Path,
+
+    [int]$Days = 30
+)
+
+$cutoff = (Get-Date).AddDays(-$Days)
+Get-ChildItem -Path $Path -File |
+    Where-Object -FilterScript { $_.LastWriteTime -lt $cutoff }
+```
+
+Run it with a path:
+
+```powershell
+./Get-StaleFile.ps1 -Path /tmp/cache
+```
+
+PowerShell doesn't run a script by its bare name, even from the current folder. You must give a path ([about_Command_Precedence](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_command_precedence)).
+
+A script is good for one job that you schedule, share, or keep in source control. It is bad for shared logic. Another script can call it only by file path, and it doesn't take pipeline input.
+
+## Make it an advanced function when other code calls it
+
+`[CmdletBinding()]` makes a function work like a compiled cmdlet. PowerShell adds the common parameters, such as `-Verbose` and `-ErrorAction`, and the `$PSCmdlet` variable ([about_Functions_CmdletBindingAttribute](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_cmdletbindingattribute), [about_CommonParameters](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_commonparameters)).
+
+```powershell
+function Get-StaleFile {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory, ValueFromPipeline)]
+        [ValidateNotNullOrEmpty()]
+        [string[]]$Path,
+
+        [ValidateRange(1, 3650)]
+        [int]$Days = 30
+    )
+
+    begin {
+        $cutoff = (Get-Date).AddDays(-$Days)
+        Write-Verbose -Message "Cutoff: $cutoff"
+    }
+
+    process {
+        foreach ($folder in $Path) {
+            Get-ChildItem -Path $folder -File -ErrorAction Stop |
+                Where-Object -FilterScript { $_.LastWriteTime -lt $cutoff } |
+                ForEach-Object -Process {
+                    [pscustomobject]@{
+                        Path          = $_.FullName
+                        LastWriteTime = $_.LastWriteTime
+                        AgeDays       = [int]((Get-Date) - $_.LastWriteTime).TotalDays
+                    }
+                }
+        }
+    }
+}
+```
+
+What each part does:
+
+- `begin` runs once before pipeline input. `process` runs once for each input object ([about_Functions_Advanced_Methods](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_advanced_methods)). If a parameter takes pipeline input and you leave out `process`, the function doesn't process records one at a time.
+- `ValueFromPipeline` lets you pipe folder paths in ([about_Functions_Advanced_Parameters](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_advanced_parameters)).
+- `ValidateRange` rejects `-Days 0` before the function body runs. I got `ParameterArgumentValidationError` in the test.
+- The output is objects, not text. The caller decides what to do with them.
+
+Both of these calls work:
+
+```powershell
+Get-StaleFile -Path /tmp/cache -Days 30
+'/tmp/cache' | Get-StaleFile -Verbose
+```
+
+## Add a remove function that respects -WhatIf
+
+A function that deletes files must support `-WhatIf`. `SupportsShouldProcess` adds `-WhatIf` and `-Confirm`, and `$PSCmdlet.ShouldProcess()` asks before each change ([about_Functions_CmdletBindingAttribute](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_cmdletbindingattribute)).
+
+```powershell
+function Remove-StaleFile {
+    [CmdletBinding(SupportsShouldProcess)]
+    param(
+        [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
+        [string]$Path
+    )
+
+    process {
+        if ($PSCmdlet.ShouldProcess($Path, 'Remove stale file')) {
+            Remove-Item -LiteralPath $Path -ErrorAction Stop
+        }
+    }
+}
+```
+
+`ValueFromPipelineByPropertyName` binds the `Path` property of each object that `Get-StaleFile` returns:
+
+```powershell
+Get-StaleFile -Path /tmp/cache | Remove-StaleFile -WhatIf
+```
+
+```text
+What if: Performing the operation "Remove stale file" on target "/tmp/cache/old1.log".
+What if: Performing the operation "Remove stale file" on target "/tmp/cache/old2.log".
+```
+
+## Ship a module when you have a set of functions
+
+A script module is a `.psm1` file ([about_Modules](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_modules)). Put both functions and any private helpers in `Contoso.Endpoint/Contoso.Endpoint.psm1`, then list the public ones at the end:
+
+```powershell
+function Write-EndpointLog {
+    param([string]$Message)
+    # Private helper. Not exported.
+    "$(Get-Date -Format o) $Message"
+}
+
+Export-ModuleMember -Function Get-StaleFile, Remove-StaleFile
+```
+
+If you leave out `Export-ModuleMember`, the module exports all functions and aliases, but not variables. If you use it, the module exports only the members you list ([Export-ModuleMember](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/export-modulemember)).
+
+Add a manifest:
+
+```powershell
+$manifest = @{
+    Path              = './Contoso.Endpoint/Contoso.Endpoint.psd1'
+    RootModule        = 'Contoso.Endpoint.psm1'
+    ModuleVersion     = '1.0.0'
+    FunctionsToExport = 'Get-StaleFile', 'Remove-StaleFile'
+    CmdletsToExport   = @()
+    VariablesToExport = @()
+    AliasesToExport   = @()
+}
+New-ModuleManifest @manifest
+Test-ModuleManifest -Path ./Contoso.Endpoint/Contoso.Endpoint.psd1
+```
+
+List `FunctionsToExport` by name, with no wildcards. Microsoft says this helps performance and command discovery. `FunctionsToExport` can only restrict what the `.psm1` already exports. It can't add a function ([about_Module_Manifests](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_module_manifests), [New-ModuleManifest](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/new-modulemanifest)).
+
+Check the public surface:
+
+```powershell
+Import-Module ./Contoso.Endpoint -Force
+Get-Command -Module Contoso.Endpoint
+```
+
+The test showed only `Get-StaleFile` and `Remove-StaleFile`. `Write-EndpointLog` wasn't available outside the module.
+
+## Call the module from detection and remediation
+
+Intune runs the remediation script only when the detection script exits with `exit 1`. Any other exit code, or empty output, means the issue isn't found ([Remediations](https://learn.microsoft.com/en-us/intune/intune-service/fundamentals/remediations)).
+
+Detection:
+
+```powershell
+#Requires -Version 5.1
+$ErrorActionPreference = 'Stop'
+
+try {
+    Import-Module -Name Contoso.Endpoint
+    $stale = @(Get-StaleFile -Path '/tmp/cache' -Days 30)
+}
+catch {
+    Write-Output "Detection failed: $($_.Exception.Message)"
+    exit 1
+}
+
+if ($stale.Count -gt 0) {
+    Write-Output "Found $($stale.Count) stale file(s)."
+    exit 1
+}
+
+Write-Output 'Compliant.'
+exit 0
+```
+
+Remediation:
+
+```powershell
+#Requires -Version 5.1
+$ErrorActionPreference = 'Stop'
+
+try {
+    Import-Module -Name Contoso.Endpoint
+    Get-StaleFile -Path '/tmp/cache' -Days 30 | Remove-StaleFile
+    $left = @(Get-StaleFile -Path '/tmp/cache' -Days 30)
+}
+catch {
+    Write-Output "Remediation failed: $($_.Exception.Message)"
+    exit 1
+}
+
+if ($left.Count -gt 0) {
+    Write-Output "$($left.Count) stale file(s) remain."
+    exit 1
+}
+
+Write-Output 'Removed stale files.'
+exit 0
+```
+
+My test run, with the module folder on `$env:PSModulePath`:
+
+```text
+detect     Found 1 stale file(s).   exit 1
+remediate  Removed stale files.     exit 0
+detect     Compliant.               exit 0
+```
+
+The remediation checks its own result. A script that removes files and always exits `0` hides failures.
+
+I chose to exit `1` when detection itself fails, so the device shows up as an issue and not as a silent pass. Exit `0` there if you prefer fewer false alarms.
+
+## Get the module onto the device first
+
+This is the catch. You upload a remediation as a single script file. The module folder doesn't travel with it. `Import-Module -Name Contoso.Endpoint` works only if the module is already in a folder on `$env:PSModulePath` on the device.
+
+Options, untested in Intune by me:
+
+- Deploy the module folder to a machine-wide module path with a Win32 app, and make the remediation depend on that deployment state.
+- Paste the functions into the top of each script. You lose one source of truth, so generate both scripts from the module in your build, and don't edit them by hand.
+
+Also check the **Run script in 64-bit PowerShell** setting. The Learn example shows it set to **No**, which means a 32-bit host. My inference, not tested: 32-bit and 64-bit hosts can resolve Program Files paths differently, so put the module where the host that runs your script can find it.
+
+## When to stop climbing
+
+- **Command:** you are exploring, or you won't ask the question again.
+- **Script:** you rerun the same job by file path.
+- **Function:** other code calls the logic, or objects come in through the pipeline.
+- **Module:** you have more than one function, private helpers, and a public surface that you control with `Export-ModuleMember` and `FunctionsToExport`.
+
+## Checklist
+
+- `[CmdletBinding()]` and typed, validated parameters.
+- A `process` block on every parameter that takes pipeline input.
+- `SupportsShouldProcess` on every function that changes state.
+- Objects out, not formatted text.
+- `Export-ModuleMember` and explicit `FunctionsToExport`. No wildcards.
+- `Test-ModuleManifest` passes, and `Get-Command -Module` shows only what you meant to ship.
+- Detection exits `1` only when remediation should run. Remediation verifies its result before it exits `0`.
+- The module is on the device before the script imports it.
+
+## References
+
+- [about_Scripts](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_scripts)
+- [about_Functions](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions)
+- [about_Functions_Advanced](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_advanced)
+- [about_Functions_CmdletBindingAttribute](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_cmdletbindingattribute)
+- [about_Functions_Advanced_Parameters](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_functions_advanced_parameters)
+- [about_Modules](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_modules)
+- [about_Module_Manifests](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_module_manifests)
+- [Export-ModuleMember](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/export-modulemember)
+- [New-ModuleManifest](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.core/new-modulemanifest)
+- [Intune Remediations](https://learn.microsoft.com/en-us/intune/intune-service/fundamentals/remediations)
