@@ -151,6 +151,7 @@ export default function Topbar() {
 
   return (
     <nav className="topbar glass-panel" aria-label="Primary navigation" ref={setNav}>
+      <canvas className="topbar-glass" aria-hidden="true" />
       <Link to="/" className="brand-link" onClick={scrollListingToTop}>
         <span className="brand-prompt" aria-hidden="true">&gt;</span>
         {name}
