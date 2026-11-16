@@ -255,6 +255,9 @@ export default function Post() {
           <p className="hero-copy">
             The post you're looking for doesn't exist.
           </p>
+          <p>
+            <Link to="/">Back to home</Link>
+          </p>
         </div>
         <BackdropCredit />
       </main>
@@ -328,7 +331,7 @@ export default function Post() {
             <PostContent components={mdxComponents} />
           </ExpandImageContext.Provider>
         </div>
-        <ArticleActions showBackToTop />
+        <ArticleActions showCopy={false} showBackToTop />
         {related.length > 0 && (
           <section className="related-notes" aria-labelledby="related-notes-title">
             <h2 id="related-notes-title" className="article-section-title">Related field notes</h2>
@@ -347,16 +350,22 @@ export default function Post() {
         {(newerPost || olderPost) && (
           <nav className="article-nav" aria-label="Adjacent field notes">
             {olderPost ? (
-              <Link className="article-nav-link" to={`/${olderPost.slug}`}>
-                <span>Previous field note</span>
+              <Link
+                className="article-nav-link"
+                to={`/${olderPost.slug}`}
+                aria-label={`Older: ${olderPost.title}`}
+              >
                 <strong>{olderPost.title}</strong>
               </Link>
             ) : (
               <span className="article-nav-link article-nav-link--empty" />
             )}
             {newerPost ? (
-              <Link className="article-nav-link article-nav-link--next" to={`/${newerPost.slug}`}>
-                <span>Next field note</span>
+              <Link
+                className="article-nav-link article-nav-link--next"
+                to={`/${newerPost.slug}`}
+                aria-label={`Newer: ${newerPost.title}`}
+              >
                 <strong>{newerPost.title}</strong>
               </Link>
             ) : (

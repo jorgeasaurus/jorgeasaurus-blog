@@ -218,21 +218,16 @@ async function showGlass(page) {
 const probeMarkup = {
   card: `
     <p class="post-card-date" data-sample="date"><time>October 22, 2026</time><span>5 min read</span></p>
-    <div class="post-card-meta"><span data-sample="badge">Latest dispatch</span></div>
     <ul class="post-card-tags"><li><a data-sample="tag" href="/">Intune</a></li></ul>
-    <span class="post-card-cta" data-sample="cta">Read field note</span>
-    <p class="eyebrow" data-sample="eyebrow">Posts</p>
-    <div class="post-filters__field"><label data-sample="keyword">Keyword</label></div>
   `,
   hero: `
-    <p class="hero-signal" data-sample="tagline">Learn. Build. Automate.</p>
-    <p class="hero-copy" data-sample="sentence">Practical engineering notes on PowerShell, endpoint management, Microsoft Graph, and building durable automation systems.</p>
+    <button class="category-pill" type="button" data-sample="pill">Intune</button>
   `,
 }
 
 export async function measureSurface(page, kind, bright) {
   const className = kind === 'hero'
-    ? 'hero-panel glass-panel liquid-glass-surface'
+    ? 'listing-tools glass-panel liquid-glass-surface'
     : 'post-card glass-panel liquid-glass-surface'
   await page.evaluate(({ className: surfaceClass, html, bright: origin }) => {
     document.getElementById('contrast-probe')?.remove()

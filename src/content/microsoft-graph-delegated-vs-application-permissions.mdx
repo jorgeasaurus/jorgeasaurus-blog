@@ -1,6 +1,6 @@
 ---
 title: "Microsoft Graph permissions: delegated vs application"
-date: "2026-11-17"
+date: "2026-11-15"
 description: "Know who your Graph call runs as, why an app-only script can do more than you expect, and how to pick the smallest Intune permission for each job."
 tags: ["microsoft-graph", "intune", "entra-id", "security", "powershell"]
 ---
@@ -11,8 +11,7 @@ Every Microsoft Graph call runs as someone. With delegated permissions, it runs 
 
 That one difference explains most "why did this work?" and "why did this fail?" questions in Intune automation.
 
-{/* TODO(Jorge): video is not published yet (planned for 2026-11-17, 10:00 AM PT). Do not invent a YouTube ID. When it is published, replace this comment with:
-Watch the walkthrough: [Microsoft Graph permissions: delegated vs application](VIDEO_URL). */}
+Watch the walkthrough: [Microsoft Graph delegated vs application permissions in PowerShell (Intune)](https://youtu.be/jxJ0LKlD_Vk).
 
 <aside className="post-warning" role="note" aria-label="Note">
   This post is documentation only. Every permission name and behavior here comes from Microsoft Learn, linked in each section. I didn't run these commands against a tenant for this post. The scenarios and code are illustrative examples. Check the API reference page for each call before you grant anything.

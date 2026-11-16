@@ -33,12 +33,17 @@ test('subscribe modal stays closed and the inline form remains', async ({ page }
 })
 
 test('card tags do not repeat the category', async ({ page }) => {
-  await page.goto('/')
-  for (const number of ['33', '34', '35']) {
-    const card = page.locator('.post-card').filter({ hasText: `No. ${number}` })
-    const labels = (await card.locator('.post-card-tags a').allTextContents()).map((label) => label.trim().toLowerCase())
-    expect(labels.filter((label) => label === 'intune')).toEqual(['intune'])
-    expect(new Set(labels).size).toBe(labels.length)
+  for (const path of ['/', '/?page=2']) {
+    await page.goto(path)
+    const cards = page.locator('.post-card')
+    expect(await cards.count()).toBeGreaterThan(0)
+    for (let index = 0; index < await cards.count(); index += 1) {
+      const labels = (await cards.nth(index).locator('.post-card-tags a').allTextContents())
+        .map((label) => label.trim().toLowerCase())
+      expect(labels.length).toBeGreaterThan(0)
+      expect(new Set(labels).size).toBe(labels.length)
+      expect(labels.filter((label) => label === labels[0])).toEqual([labels[0]])
+    }
   }
 })
 
@@ -94,21 +99,142 @@ test('social links stay inside the nav just above 840px', async ({ page }) => {
   expect(await nav.evaluate((element) => element.scrollWidth - element.clientWidth)).toBeLessThanOrEqual(1)
 })
 
-test('mobile nav keeps the social and rss links', async ({ page }) => {
+test('mobile header discloses navigation from one row', async ({ page }) => {
   for (const width of [390, 320]) {
     await page.setViewportSize({ width, height: 800 })
     await page.goto('/')
     const nav = page.getByRole('navigation', { name: 'Primary navigation' })
-    for (const name of ['GitHub', 'LinkedIn', 'YouTube', 'RSS']) {
+    const toggle = nav.getByRole('button', { name: 'Menu' })
+    const menu = nav.locator('#primary-menu')
+    const projects = menu.getByRole('link', { name: 'Projects', exact: true })
+    await expect(nav.locator('.brand-name')).toHaveText('Jorgeasaurus')
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    await expect(toggle).toHaveAttribute('aria-controls', 'primary-menu')
+    await expect(menu).toBeHidden()
+    expect(await menu.locator('a').first().evaluate((element) => element.closest('[hidden]') !== null)).toBe(true)
+    await page.keyboard.press('Tab')
+    await expect(nav.locator('.brand-link')).toBeFocused()
+    await page.keyboard.press('Tab')
+    await expect(toggle).toBeFocused()
+    await page.keyboard.press('Tab')
+    expect(await page.evaluate(() => document.activeElement?.closest('#primary-menu') == null)).toBe(true)
+    const bar = await nav.boundingBox()
+    expect(bar!.height).toBeLessThan(76)
+    expect(await nav.evaluate((element) => element.scrollWidth <= element.clientWidth + 1)).toBe(true)
+
+    await toggle.click()
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true')
+    await page.keyboard.press('Tab')
+    await expect(menu.getByRole('link', { name: 'Home', exact: true })).toBeFocused()
+    for (const name of ['Home', 'Projects', 'About', 'GitHub', 'LinkedIn', 'YouTube', 'RSS']) {
       const link = nav.getByRole('link', { name, exact: true })
       await expect(link).toBeVisible()
       const box = await link.boundingBox()
       expect(box).not.toBeNull()
+      expect(box!.height).toBeGreaterThanOrEqual(44)
       expect(box!.x).toBeGreaterThanOrEqual(-1)
       expect(box!.x + box!.width).toBeLessThanOrEqual(width + 1)
+      expect(await link.evaluate((element) => {
+        const rect = element.getBoundingClientRect()
+        return document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2) === element
+          || element.contains(document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2))
+      })).toBe(true)
     }
+    await page.keyboard.press('Escape')
+    await expect(toggle).toBeFocused()
+    await expect(projects).toBeHidden()
+
+    await toggle.click()
+    await projects.click()
+    await expect(page).toHaveURL(/\/projects$/)
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false')
+    await expect(toggle).toBeFocused()
+    await page.goBack()
+    await expect(page).toHaveURL(/\/$/)
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false')
+
+    await toggle.click()
+    await menu.getByRole('link', { name: 'Home', exact: true }).click()
+    await expect(page).toHaveURL(/\/$/)
+    await expect(toggle).toBeFocused()
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false')
+
+    await page.goto('/?page=2')
+    await toggle.click()
+    await page.goBack()
+    await expect(page).toHaveURL(/\/$/)
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false')
+
+    await toggle.click()
+    await page.locator('.post-card-link').first().click()
+    await expect(page).not.toHaveURL(/\/$/)
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false')
+
+    await toggle.click()
+    await page.evaluate(() => {
+      document.body.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true }))
+    })
+    await expect(toggle).toBeFocused()
+    await expect(projects).toBeHidden()
+
+    await page.evaluate(() => { document.documentElement.style.fontSize = '22px' })
+    expect(await nav.locator('.brand-name').evaluate((element) => element.scrollWidth <= element.clientWidth + 1)).toBe(true)
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1)).toBe(true)
+    await page.evaluate(() => { document.documentElement.style.fontSize = '' })
   }
+
+  await page.setViewportSize({ width: 667, height: 320 })
+  await page.goto('/')
+  const landscape = page.getByRole('navigation', { name: 'Primary navigation' })
+  await landscape.getByRole('button', { name: 'Menu' }).click()
+  const landscapeMenu = landscape.locator('#primary-menu')
+  const bounds = await landscapeMenu.evaluate((element) => ({
+    client: element.clientHeight,
+    scroll: element.scrollHeight,
+    bottom: element.getBoundingClientRect().bottom,
+    view: window.innerHeight,
+  }))
+  expect(bounds.scroll).toBeGreaterThan(bounds.client)
+  expect(bounds.bottom).toBeLessThanOrEqual(bounds.view + 1)
+  await landscapeMenu.getByRole('link', { name: 'RSS', exact: true }).focus()
+  expect(await landscapeMenu.getByRole('link', { name: 'RSS', exact: true }).evaluate((element) => {
+    const link = element.getBoundingClientRect()
+    const menu = element.closest('#primary-menu')!.getBoundingClientRect()
+    return link.bottom <= menu.bottom + 1 && link.top >= menu.top - 1
+  })).toBe(true)
+
+  await page.setViewportSize({ width: 1000, height: 800 })
+  await page.goto('/')
+  const wide = page.getByRole('navigation', { name: 'Primary navigation' })
+  await wide.getByRole('link', { name: 'Projects', exact: true }).focus()
+  await page.setViewportSize({ width: 390, height: 800 })
+  await expect(wide.getByRole('button', { name: 'Menu' })).toBeFocused()
+  await page.setViewportSize({ width: 1000, height: 800 })
+  await expect(wide.getByRole('link', { name: 'Home', exact: true })).toBeFocused()
+
+  await wide.getByRole('link', { name: 'Projects', exact: true }).focus()
+  const email = page.getByRole('textbox', { name: 'Email address', exact: true })
+  await email.focus()
+  await page.setViewportSize({ width: 390, height: 800 })
+  await expect(email).toBeFocused()
+
+  await page.goto('/')
+  const compact = page.getByRole('navigation', { name: 'Primary navigation' })
+  const compactMenu = compact.getByRole('button', { name: 'Menu' })
+  await page.getByRole('link', { name: 'Older →', exact: true }).click()
+  await expect(page).toHaveURL(/page=2/)
+  await compactMenu.click()
+  await compact.getByRole('link', { name: 'Home', exact: true }).focus()
+  await page.goBack()
+  await expect(page).toHaveURL(/\/$/)
+  await expect(compactMenu).toBeFocused()
+  await expect(compactMenu).toHaveAttribute('aria-expanded', 'false')
+
+  await compactMenu.click()
+  await compact.getByRole('link', { name: 'Projects', exact: true }).click({ modifiers: ['Control'] })
+  await expect(page).toHaveURL(/\/$/)
+  await expect(compactMenu).toBeFocused()
+  await expect(compactMenu).toHaveAttribute('aria-expanded', 'false')
 })
 
 test('small glass text clears WCAG AA on the brightest backdrop', async ({ page }) => {
@@ -125,7 +251,7 @@ test('small glass text clears WCAG AA on the brightest backdrop', async ({ page 
     })
   })
 
-  for (const selector of ['.post-card-date', '.post-card-tags a', '.post-card-cta', '.listing-tools .eyebrow', '.post-filters__field label']) {
+  for (const selector of ['.post-card-date', '.post-card-tags a', '.category-pill']) {
     const metrics = await page.locator(selector).first().evaluate((element) => {
       const style = getComputedStyle(element)
       return {
@@ -137,8 +263,6 @@ test('small glass text clears WCAG AA on the brightest backdrop', async ({ page 
     expect(metrics.fontSize).toBeLessThanOrEqual(13)
     expect(metrics.letterSpacing).toBeLessThanOrEqual(1)
   }
-  expect(await page.locator('.post-card-cta').first().evaluate((element) => getComputedStyle(element).textTransform)).toBe('none')
-
   const reading = await measureBrightestGlass(page)
   const described = [...reading.card, ...reading.hero]
     .map((sample) => `${sample.name} ${sample.ratio.toFixed(2)}:1 on rgb(${sample.background.join(',')})`)

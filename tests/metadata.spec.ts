@@ -132,7 +132,7 @@ test('real links and browser history replace metadata and clear article-specific
 
 test('filtered listing and utility noindex state do not leak to public pages', async ({ page }) => {
   await page.goto(`/?tag=${firstPost.tags![0]}`, { waitUntil: 'domcontentloaded' })
-  await expect(page.getByRole('heading', { name: `Tagged: ${firstPost.tags![0]}` })).toBeVisible()
+  await expect(page.getByLabel('Keyword', { exact: true })).toHaveValue(firstPost.tags![0])
   await meta(page, 'name="robots"', 'noindex,follow')
   await page.getByRole('link', { name: firstPost.title, exact: true }).click()
   await postHead(page, firstPost)

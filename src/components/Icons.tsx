@@ -44,15 +44,6 @@ export function IconClose({ className }: IconProps) {
   )
 }
 
-export function IconArrow({ className }: IconProps) {
-  return (
-    <StrokeIcon className={className}>
-      <path d="M5 12h14" />
-      <path d="M13 6l6 6-6 6" />
-    </StrokeIcon>
-  )
-}
-
 export function IconUp({ className }: IconProps) {
   return (
     <StrokeIcon className={className}>
