@@ -48,6 +48,7 @@ test('listing paths keep category, keyword, and page shareable', () => {
 })
 
 const categoryBySlug = {
+  'export-bitlocker-keys-before-deleting-stale-entra-devices': 'intune',
   'microsoft-graph-delegated-vs-application-permissions': 'microsoft-graph',
   'powershell-command-to-module': 'powershell',
   'intune-compliance-to-conditional-access': 'intune',

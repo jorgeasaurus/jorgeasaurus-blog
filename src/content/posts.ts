@@ -2,6 +2,23 @@ import { type PostMeta } from '../lib/posts'
 
 const posts: PostMeta[] = [
   {
+    slug: 'export-bitlocker-keys-before-deleting-stale-entra-devices',
+    category: 'intune',
+    title: 'Export BitLocker recovery keys before deleting stale Entra devices',
+    date: '2026-11-21',
+    description:
+      "Encrypt and keep BitLocker recovery keys with Microsoft Graph before a stale-device cleanup, refuse to delete devices whose keys aren't saved, and restore a device with Entra soft delete (preview).",
+    tags: ['intune', 'microsoft-graph', 'powershell', 'windows', 'endpoint-management'],
+    // TODO(Jorge): social card not generated. Add a 1200x630 card at
+    // public/images/posts/export-bitlocker-keys-before-deleting-stale-entra-devices/socialcard.png, then:
+    // socialImage: {
+    //   src: '/images/posts/export-bitlocker-keys-before-deleting-stale-entra-devices/socialcard.png',
+    //   width: 1200,
+    //   height: 630,
+    //   type: 'image/png',
+    // },
+  },
+  {
     slug: 'microsoft-graph-delegated-vs-application-permissions',
     category: 'microsoft-graph',
     title: 'Microsoft Graph permissions: delegated vs application',

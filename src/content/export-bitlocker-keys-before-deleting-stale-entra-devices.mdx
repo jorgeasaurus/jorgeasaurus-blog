@@ -1,0 +1,375 @@
+---
+title: "Export BitLocker recovery keys before deleting stale Entra devices"
+date: "2026-11-21"
+description: "Encrypt and keep BitLocker recovery keys with Microsoft Graph before a stale-device cleanup, refuse to delete devices whose keys aren't saved, and restore a device with Entra soft delete (preview)."
+tags: ["intune", "microsoft-graph", "powershell", "windows", "endpoint-management"]
+---
+
+{/* TODO(Jorge): social card. Ask Creative Designer for public/images/posts/export-bitlocker-keys-before-deleting-stale-entra-devices/socialcard.png (1200x630) and add the socialImage entry in posts.ts. */}
+
+You run the stale-device cleanup. Four hundred disabled devices, 120 days without a sign-in, gone. Six months later a laptop comes back from a drawer, boots to the BitLocker recovery screen, and the helpdesk searches Entra for the key. The device object is gone, and the key went with it.
+
+Microsoft says this in the stale-device guidance: BitLocker keys for Windows devices are stored on the device object in Entra ID, and deleting the device deletes the keys. The same page says there's no way to recover the keys after the device is deleted. A r/Intune thread from the week of Nov 13 asked how to keep keys you can still recover years later.
+
+**Export the keys, encrypted, before you delete anything, and make the delete step refuse any device whose keys aren't in the export.** Device soft delete (preview) gives you a 30-day undo. That's a safety net, and it doesn't replace the export.
+
+What this post gives you:
+
+- `Export-BitLockerKeyEscrow.ps1` reads the keys with Microsoft Graph and writes them to a file encrypted to a certificate. A separate CSV manifest lists device IDs and key IDs, with no key material.
+- `Remove-EscrowedStaleDevice.ps1` deletes stale devices only when every current key ID is in the manifest.
+- The Graph calls to list and restore soft-deleted devices.
+
+I ran both scripts in PowerShell 7.4.6 on Linux against mocked Graph cmdlets, and ran the encryption and decryption for real with a test certificate. I didn't run them against a live tenant. Every claim about Entra and Graph behavior comes from Microsoft Learn, linked at the end. Where Learn doesn't answer a question, I say so.
+
+## Step 1: Get the right permissions and role
+
+Two Graph permissions apply, and they differ in one way.
+
+| Permission | What it reads |
+|---|---|
+| `BitlockerKey.ReadBasic.All` | Key metadata: id, deviceId, volumeType, createdDateTime. No key. |
+| `BitlockerKey.Read.All` | Metadata plus the recovery key itself. |
+
+The list call never returns the key. You get the key with a second call per key, `GET /informationProtection/bitlocker/recoveryKeys/{id}?$select=key`, and that call needs `BitlockerKey.Read.All`.
+
+With delegated permissions, the signed-in user must be the registered owner of the device, or hold one of these Entra roles: Cloud Device Administrator, Helpdesk Administrator, Intune Administrator, Security Administrator, Security Reader, or Global Reader. Application permissions exist for both scopes if you run this unattended. The examples below use delegated sign-in.
+
+The export script also reads device names, so it needs `Device.Read.All`. The delete script needs only `BitlockerKey.ReadBasic.All` for keys, because it compares key IDs and never reads a key. Deleting a device is stricter: the Graph delete page lists `Directory.AccessAsUser.All` as the only delegated permission (`Device.ReadWrite.All` for application), and the signed-in user needs Cloud Device Administrator, Intune Administrator, or Windows 365 Administrator.
+
+## Step 2: Make an escrow certificate
+
+The export is encrypted with `Protect-CmsMessage` to a certificate's public key. Anyone can encrypt to the `.cer` file. Only the holder of the private key can decrypt. The certificate needs the Document Encryption EKU (`1.3.6.1.4.1.311.80.1`).
+
+On Windows, a self-signed one works for a start. Use your internal PKI if you have one.
+
+```powershell
+$certSplat = @{
+    Type              = 'DocumentEncryptionCert'
+    Subject           = 'CN=BitLocker Key Escrow'
+    CertStoreLocation = 'Cert:\CurrentUser\My'
+    KeyExportPolicy   = 'Exportable'
+    NotAfter          = (Get-Date).AddYears(10)
+}
+$escrowCert = New-SelfSignedCertificate @certSplat
+Export-Certificate -Cert $escrowCert -FilePath 'D:\Escrow\bitlocker-escrow.cer'
+```
+
+Export the private key (`.pfx`) once, put it in your vault or HSM, and remove it from the workstation that runs the export. If the private key lives in one admin's user profile, the escrow file is useless the day that profile goes away.
+
+> **Where to store the export.** The `.cms` file unlocks every drive in it once someone has the private key. Keep the file and the private key in separate places with separate access. Don't put either in a shared drive, a Teams channel, a ticket attachment, or a Git repo. Keep the file for as long as the hardware might come back, which is longer than the 30-day soft-delete window.
+
+## Step 3: Export the keys before the cleanup
+
+The script takes device IDs from the pipeline, lists each device's keys, reads each key with `$select=key`, and holds everything in memory. At the end it encrypts the whole set into one file and writes a plain manifest without keys. Nothing with a key goes to the console or the pipeline.
+
+```powershell
+#Requires -Version 7.2
+#Requires -Modules Microsoft.Graph.Identity.DirectoryManagement, Microsoft.Graph.Identity.SignIns
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory, ValueFromPipelineByPropertyName)]
+    [ValidateNotNullOrEmpty()]
+    [string[]]$DeviceId,
+
+    # Path to the escrow certificate's public .cer file, or its thumbprint in the cert store.
+    [Parameter(Mandatory)]
+    [ValidateNotNullOrEmpty()]
+    [string]$RecipientCertificate,
+
+    # Encrypted output. Gets the keys.
+    [Parameter(Mandatory)]
+    [ValidateNotNullOrEmpty()]
+    [string]$OutputPath,
+
+    # Plain CSV manifest. Gets device IDs and key IDs only, never key material.
+    [Parameter(Mandatory)]
+    [ValidateNotNullOrEmpty()]
+    [string]$ManifestPath
+)
+
+begin {
+    $ErrorActionPreference = 'Stop'
+    foreach ($path in $OutputPath, $ManifestPath) {
+        if (Test-Path -LiteralPath $path) {
+            throw "Refusing to overwrite '$path'. Pick a new file name."
+        }
+    }
+
+    $graphHeaders = @{
+        'ocp-client-name'    = 'Export-BitLockerKeyEscrow'
+        'ocp-client-version' = '1.0'
+    }
+    $records = [System.Collections.Generic.List[object]]::new()
+    $exportedUtc = [datetime]::UtcNow.ToString('o')
+}
+
+process {
+    foreach ($id in $DeviceId) {
+        $device = Get-MgDevice -Filter "deviceId eq '$id'" -Property 'id,deviceId,displayName'
+        $keyList = @(Get-MgInformationProtectionBitlockerRecoveryKey -Filter "deviceId eq '$id'" -All -Headers $graphHeaders)
+
+        foreach ($meta in $keyList) {
+            # $select=key is the audited read. One "Read BitLocker key" event per call.
+            $withKey = Get-MgInformationProtectionBitlockerRecoveryKey -BitlockerRecoveryKeyId $meta.Id -Property 'key' -Headers $graphHeaders
+            $records.Add([pscustomobject]@{
+                DeviceId        = $id
+                DisplayName     = $device.DisplayName
+                KeyId           = $meta.Id
+                VolumeType      = $meta.VolumeType
+                CreatedDateTime = $meta.CreatedDateTime
+                Key             = $withKey.Key
+                ExportedUtc     = $exportedUtc
+            })
+        }
+
+        # Summary goes to the pipeline. No key material.
+        [pscustomobject]@{
+            DeviceId    = $id
+            DisplayName = $device.DisplayName
+            KeyCount    = $keyList.Count
+        }
+    }
+}
+
+end {
+    if ($records.Count -eq 0) {
+        Write-Warning 'No BitLocker keys found for the devices passed in. Nothing written.'
+        return
+    }
+
+    $json = ConvertTo-Json -InputObject $records.ToArray() -Depth 3
+    Protect-CmsMessage -To $RecipientCertificate -Content $json -OutFile $OutputPath
+
+    $records |
+        Select-Object -Property DeviceId, DisplayName, KeyId, VolumeType, CreatedDateTime, ExportedUtc |
+        Export-Csv -LiteralPath $ManifestPath -NoTypeInformation
+
+    $json = $null
+    $records.Clear()
+}
+```
+
+Run it against the same set of devices your cleanup will target. This uses the 90-day filter from Microsoft's stale-device page, and skips devices with a blank timestamp, because Learn warns that some active devices have one.
+
+```powershell
+Connect-MgGraph -Scopes 'Device.Read.All', 'BitlockerKey.Read.All' -NoWelcome
+
+$cutoff = (Get-Date).AddDays(-90)
+
+Get-MgDevice -All |
+    Where-Object -FilterScript {
+        $null -ne $_.ApproximateLastSignInDateTime -and
+        $_.ApproximateLastSignInDateTime -le $cutoff
+    } |
+    .\Export-BitLockerKeyEscrow.ps1 `
+        -RecipientCertificate 'D:\Escrow\bitlocker-escrow.cer' `
+        -OutputPath 'D:\Escrow\bitlocker-2026-11-21.cms' `
+        -ManifestPath 'D:\Escrow\bitlocker-2026-11-21-manifest.csv'
+```
+
+The pipeline output is one row per device with a key count. A count of 0 means Entra holds no key for that device. That can be correct for an unencrypted device. It's worth a look before you delete a Windows laptop with 0 keys.
+
+About the headers: the Graph docs list `User-Agent` as required and `ocp-client-name` and `ocp-client-version` as optional, used for debugging. I pass the two optional ones so the calls are easy to identify in a support case. I didn't check on the wire which `User-Agent` the SDK sends.
+
+## Step 4: Tell your security team before you run it
+
+Reading key material is audited. The Graph docs say that adding `$select` to the get call triggers an Entra audit entry, and the audit activity reference lists it as **Read BitLocker key** in the KeyManagement category. The script makes one of those calls per key, so 400 devices with two volumes each means 800 audit events from one account in one run. If your SOC alerts on bulk key reads, warn them first.
+
+Check the trail afterwards. This needs `AuditLog.Read.All` and a role such as Reports Reader, Security Reader, or Security Administrator.
+
+```powershell
+Connect-MgGraph -Scopes 'AuditLog.Read.All' -NoWelcome
+
+Get-MgAuditLogDirectoryAudit -Filter "activityDisplayName eq 'Read BitLocker key'" -Top 50 |
+    Select-Object -Property ActivityDateTime, ActivityDisplayName,
+        @{ Name = 'Actor'; Expression = { $_.InitiatedBy.User.UserPrincipalName } }
+```
+
+## Step 5: Delete only what's in the manifest
+
+Microsoft's own delete sample loops over disabled devices and calls `Remove-MgDevice`, which doesn't prompt. Between your export and the delete, a device can back up a new key, for example after a rotation. The gate re-reads each device's current key IDs (metadata only) and skips the device if any ID is missing from the manifest.
+
+```powershell
+#Requires -Version 7.2
+#Requires -Modules Microsoft.Graph.Identity.DirectoryManagement, Microsoft.Graph.Identity.SignIns
+[CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'High')]
+param(
+    [Parameter(Mandatory)]
+    [ValidateNotNullOrEmpty()]
+    [string]$ManifestPath,
+
+    [ValidateRange(21, 3650)]
+    [int]$InactiveDays = 120
+)
+
+$ErrorActionPreference = 'Stop'
+$manifest = Import-Csv -LiteralPath $ManifestPath
+$escrowedKeyIds = [System.Collections.Generic.HashSet[string]]::new([string[]]$manifest.KeyId)
+$cutoff = (Get-Date).AddDays(-$InactiveDays)
+
+$candidates = Get-MgDevice -All |
+    Where-Object -FilterScript {
+        $_.AccountEnabled -eq $false -and
+        $null -ne $_.ApproximateLastSignInDateTime -and
+        $_.ApproximateLastSignInDateTime -le $cutoff
+    }
+
+foreach ($device in $candidates) {
+    $currentKeys = @(Get-MgInformationProtectionBitlockerRecoveryKey -Filter "deviceId eq '$($device.DeviceId)'" -All)
+    $notEscrowed = @($currentKeys | Where-Object -FilterScript { -not $escrowedKeyIds.Contains($_.Id) })
+
+    if ($notEscrowed.Count -gt 0) {
+        Write-Warning "Skipping $($device.DisplayName) ($($device.DeviceId)): $($notEscrowed.Count) key(s) not in the escrow manifest."
+        [pscustomobject]@{ DeviceId = $device.DeviceId; DisplayName = $device.DisplayName; Action = 'Skipped'; Reason = 'Key not escrowed' }
+        continue
+    }
+
+    # Remove-MgDevice -DeviceId takes the object id ($device.Id), not the deviceId property.
+    if ($PSCmdlet.ShouldProcess("$($device.DisplayName) ($($device.DeviceId))", 'Remove-MgDevice')) {
+        Remove-MgDevice -DeviceId $device.Id
+        [pscustomobject]@{ DeviceId = $device.DeviceId; DisplayName = $device.DisplayName; Action = 'Deleted'; Reason = "$($currentKeys.Count) key(s) escrowed" }
+    }
+}
+```
+
+The 21-day floor on `-InactiveDays` comes from Learn. Entra only updates the activity timestamp when the old value is more than 14 days old, give or take 5 days, so anything younger than 21 days doesn't prove a device is stale.
+
+Run it with `-WhatIf` first:
+
+```powershell
+Connect-MgGraph -Scopes 'Directory.AccessAsUser.All', 'BitlockerKey.ReadBasic.All' -NoWelcome
+
+.\Remove-EscrowedStaleDevice.ps1 -ManifestPath 'D:\Escrow\bitlocker-2026-11-21-manifest.csv' -InactiveDays 120 -WhatIf
+```
+
+In my mocked run, one device had a new key added after the export. The output:
+
+```text
+What if: Performing the operation "Remove-MgDevice" on target "PC-A (dev-a)".
+WARNING: Skipping PC-B (dev-b): 1 key(s) not in the escrow manifest.
+```
+
+Fix a skip by rerunning the export for that device into a new file. The script refuses to overwrite an existing export, so you keep both.
+
+## What broke, and the fix
+
+**The ID mix-up.** A device has two IDs. `DeviceId` is what BitLocker keys are filed under, and what you filter keys by. `Id` is the directory object ID. `Remove-MgDevice -DeviceId` takes the object `Id`, despite the parameter name, and Microsoft's own sample passes `$Device.Id`. The soft-delete restore call also takes the object ID. Keep both columns in every report.
+
+**The key that wasn't in the list.** The list call never returns the key, even with `BitlockerKey.Read.All`. Only the per-key get with `$select=key` does. An export built from the list call alone gives you a tidy CSV of key IDs that unlocks nothing.
+
+**Plaintext keys on a file share.** The quick version of this script writes a CSV with a Key column to wherever the admin's console happens to be. That file is now the most sensitive thing on the share. Encrypt in memory, write only ciphertext, and keep the manifest free of keys.
+
+**Intune devices.** Learn says to retire a device in Intune, or your MDM, before you disable or delete it in Entra. Autopilot devices are system-managed. Don't delete them in Entra; clean them up in Intune. Compare your delete list with `Get-MgDeviceManagementWindowsAutopilotDeviceIdentity` first.
+
+**Hybrid joined devices.** Disable or delete them in on-premises AD and let Entra Connect sync the change. If you delete a Windows 10 or newer hybrid device only in Entra, it syncs back as a new object in Pending state.
+
+## When you deleted one anyway: soft delete (preview)
+
+Entra device soft delete moves a deleted device into a soft-deleted container for 30 days instead of removing it. As of Nov 20, 2026 it's in preview, and Microsoft says behavior might change before general availability.
+
+What Learn says about BitLocker keys during soft delete:
+
+- Keys stored with the device are preserved and remain accessible to administrators.
+- After a restore, the keys are available again, including self-service recovery by the registered owner.
+- After 30 days the device is hard deleted, and the keys are gone for good.
+
+What else to know before you count on it:
+
+- Supported: Entra joined, Entra hybrid joined, and Entra registered devices.
+- Hard deleted immediately: devices without a recognized trust type (such as ones created directly through Graph), secure VMs with managed identities, non-persistent VDI, and printers.
+- Older Azure AD Graph APIs that don't recognize soft delete might hard delete instead.
+- There's no portal view during the preview. Restore is Graph or PowerShell only.
+- A soft-deleted device is hidden from the portal, Intune, and Graph queries, which return 404. Its DeviceId stays reserved until it's restored or permanently deleted.
+- `IsCompliant` is reset to False and stays False until the device checks in with Intune again.
+
+List soft-deleted devices with the beta endpoint. Listing needs `Device.Read.All`; restoring needs `Device.ReadWrite.All`.
+
+```powershell
+Connect-MgGraph -Scopes 'Device.ReadWrite.All' -NoWelcome
+
+# Soft-deleted devices live under the beta deletedItems endpoint during the preview.
+$uri = 'https://graph.microsoft.com/beta/directory/deletedItems/microsoft.graph.device'
+$deletedDevices = while ($uri) {
+    $page = Invoke-MgGraphRequest -Method GET -Uri $uri
+    $page.value
+    $uri = $page.'@odata.nextLink'
+}
+
+$deletedDevices |
+    ForEach-Object -Process {
+        [pscustomobject]@{
+            Id              = $_.id
+            DeviceId        = $_.deviceId
+            DisplayName     = $_.displayName
+            DeletedDateTime = $_.deletedDateTime
+        }
+    } |
+    Sort-Object -Property DeletedDateTime -Descending
+```
+
+Restore by object ID, then confirm the keys are back on the active device:
+
+```powershell
+$target = $deletedDevices | Where-Object -FilterScript { $_.deviceId -eq '1ab40ab2-32a8-4b00-b6b5-ba724e407de9' }
+
+# Restore takes the directory object id, not the deviceId.
+Invoke-MgGraphRequest -Method POST -Uri "https://graph.microsoft.com/beta/directory/deletedItems/$($target.id)/restore"
+
+# Keys should be back on the active device.
+Get-MgInformationProtectionBitlockerRecoveryKey -Filter "deviceId eq '$($target.deviceId)'" -All |
+    Select-Object -Property Id, DeviceId, VolumeType, CreatedDateTime
+```
+
+Who can restore: the soft-delete page names Cloud Device Administrator, Intune Administrator, and Global Administrator. The beta Graph restore page lists Cloud Device Administrator, Intune Administrator, and Windows 365 Administrator. Custom roles can't restore during the preview. Device owners can soft delete their own device but can't restore it.
+
+What I couldn't confirm from Learn:
+
+- Whether `Remove-MgDevice` goes through soft delete. The soft-delete page says a device an admin deletes isn't permanently removed, and it calls out only the older Azure AD Graph APIs as an exception. I expect the Graph PowerShell SDK to soft delete, but no page says so directly.
+- Whether the BitLocker key list API returns keys for a device while it's soft deleted. Learn says the keys "remain accessible to administrators" without naming the interface. Plan on restoring the device first.
+- Whether soft delete is on in every tenant during the preview. The page doesn't mention an opt-in.
+
+Before you rely on soft delete, test it in a lab tenant: delete a test VM's device object, find it in `deletedItems`, restore it, and run the key list. The export in Step 3 doesn't depend on any of these answers.
+
+## Read one key back when a drive locks
+
+The BitLocker recovery screen shows a recovery key ID. Microsoft's sample function prints the Graph key `id` as the key ID, so look it up by `KeyId`. Run this on the machine that holds the escrow private key. It prints one key, the one you need.
+
+```powershell
+# Run on the machine that holds the escrow certificate's private key.
+$keyId = '4290b6c0-b17a-497a-8552-272cc30e80d4'   # Recovery key ID from the preboot screen
+
+Unprotect-CmsMessage -Path 'D:\Escrow\bitlocker-2026-11-21.cms' |
+    ConvertFrom-Json |
+    Where-Object -FilterScript { $_.KeyId -eq $keyId } |
+    Select-Object -Property DisplayName, KeyId, Key
+```
+
+## Checklist before the next cleanup
+
+- [ ] The cleanup account has the role it needs, and the export account has `BitlockerKey.Read.All` plus a key-reading role.
+- [ ] The escrow certificate's private key is in a vault, with a tested restore, separate from the export files.
+- [ ] Devices are retired in Intune first. Autopilot devices are excluded.
+- [ ] Devices were disabled for a grace period before deletion. The cutoff is 21 days or more.
+- [ ] The export ran against the same device set, and the SOC knew about the burst of "Read BitLocker key" audit events.
+- [ ] `Remove-EscrowedStaleDevice.ps1 -WhatIf` shows no unexpected skips.
+- [ ] The `.cms` file is stored for as long as the hardware might come back.
+- [ ] You know the soft-delete restore call and have tested it in a lab.
+
+## References
+
+- [How to manage stale devices in Microsoft Entra ID](https://learn.microsoft.com/en-us/entra/identity/devices/manage-stale-devices)
+- [Device soft delete in Microsoft Entra ID (preview)](https://learn.microsoft.com/en-us/entra/identity/devices/concept-soft-delete-devices)
+- [bitlockerRecoveryKey resource type](https://learn.microsoft.com/en-us/graph/api/resources/bitlockerrecoverykey?view=graph-rest-1.0)
+- [List recoveryKeys](https://learn.microsoft.com/en-us/graph/api/bitlocker-list-recoverykeys?view=graph-rest-1.0)
+- [Get bitlockerRecoveryKey](https://learn.microsoft.com/en-us/graph/api/bitlockerrecoverykey-get?view=graph-rest-1.0)
+- [Microsoft Graph permissions reference](https://learn.microsoft.com/en-us/graph/permissions-reference)
+- [Microsoft Entra built-in roles](https://learn.microsoft.com/en-us/entra/identity/role-based-access-control/permissions-reference)
+- [Microsoft Entra audit log activity reference](https://learn.microsoft.com/en-us/entra/identity/monitoring-health/reference-audit-activities)
+- [Manage device identities (Show Recovery Key is audited)](https://learn.microsoft.com/en-us/entra/identity/devices/manage-device-identities)
+- [Delete device](https://learn.microsoft.com/en-us/graph/api/device-delete?view=graph-rest-1.0)
+- [List directoryAudits](https://learn.microsoft.com/en-us/graph/api/directoryaudit-list?view=graph-rest-1.0)
+- [List deleted items (beta)](https://learn.microsoft.com/en-us/graph/api/directory-deleteditems-list?view=graph-rest-beta)
+- [Restore deleted item (beta)](https://learn.microsoft.com/en-us/graph/api/directory-deleteditems-restore?view=graph-rest-beta)
+- [BitLocker recovery process](https://learn.microsoft.com/en-us/windows/security/operating-system-security/data-protection/bitlocker/recovery-process)
+- [Protect-CmsMessage](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.security/protect-cmsmessage?view=powershell-7.5)
+- [New-SelfSignedCertificate](https://learn.microsoft.com/en-us/powershell/module/pki/new-selfsignedcertificate?view=windowsserver2025-ps)
