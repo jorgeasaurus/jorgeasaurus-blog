@@ -7,6 +7,7 @@
     "dev": "vite",
     "generate:rss": "node scripts/generate-rss.mjs",
     "generate:sitemap": "node scripts/generate-sitemap.mjs",
+    "generate:wallpaper": "node scripts/generate-pnw-wallpaper.mjs",
     "newsletter:latest": "node scripts/notify-latest-post.mjs",
     "newsletter:template:adhoc": "node scripts/create-adhoc-template.mjs",
     "newsletter:count": "node scripts/count-newsletter-members.mjs",
@@ -43,6 +44,7 @@
     "rehype-highlight": "^7.0.2",
     "remark-frontmatter": "^5.0.0",
     "remark-gfm": "^4.0.1",
+    "sharp": "^0.35.5",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8.58.2",
     "vite": "^8.0.10"

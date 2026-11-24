@@ -391,58 +391,17 @@ async function expectCreditFollowsPage(page: Page) {
   expect(order).not.toBeNull()
   expect(order!.navPrecedes).toBe(true)
   expect(order!.contentPrecedes).toBe(true)
-  const creditAt = order!.sequence.findIndex((item) => item.startsWith('credit:'))
-  const lastNavAt = order!.sequence.map((item, index) => (item.startsWith('nav:') ? index : -1)).filter((index) => index >= 0).at(-1) ?? -1
-  const contentStops = order!.sequence
-    .map((item, index) => (item.startsWith('content:') ? index : -1))
-    .filter((index) => index >= 0)
-  expect(creditAt).toBeGreaterThan(lastNavAt)
-  expect(contentStops.length === 0 || Math.max(...contentStops) < creditAt).toBe(true)
-  expect(order!.sequence.slice(creditAt)).toEqual([
-    'credit:Colchuck Lake',
-    'credit:Buidhe',
-    'credit:CC BY-SA 4.0',
-  ])
-
-  await page.evaluate(() => {
-    const creditLink = document.querySelector<HTMLElement>('.backdrop-credit a')
-    const nodes = [...document.querySelectorAll<HTMLElement>('a[href], button, input, select, textarea, [tabindex]')]
-    const visible = nodes.filter((element) => {
-      if (element.tabIndex < 0) return false
-      if ('disabled' in element && element.disabled) return false
-      if (element.closest('[aria-hidden="true"]')) return false
-      const style = getComputedStyle(element)
-      return style.display !== 'none' && style.visibility !== 'hidden'
-    })
-    const sequence = [
-      ...visible.filter((element) => element.tabIndex > 0),
-      ...visible.filter((element) => element.tabIndex === 0),
-    ]
-    sequence[sequence.indexOf(creditLink!) - 1]?.focus()
-  })
-  await page.keyboard.press('Tab')
-  await expect(page.getByRole('link', { name: 'Colchuck Lake', exact: true })).toBeFocused()
+  // Original illustration credit is plain text — no focusable links inside it.
+  expect(order!.sequence.some((item) => item.startsWith('credit:'))).toBe(false)
+  await expect(page.locator('.backdrop-credit a')).toHaveCount(0)
 }
 
-test('publishes the Colchuck Lake backdrop credit', async ({ page }) => {
+test('publishes the Pacific Northwest dither backdrop credit', async ({ page }) => {
   await page.goto('/')
   const credit = page.locator('.backdrop-credit')
   await expect(credit).toBeVisible()
-  await expect(credit).toContainText('Backdrop:')
-  await expect(credit).toContainText('(cropped to 16:9, WebP)')
-
-  const links = [
-    ['Colchuck Lake', 'https://commons.wikimedia.org/wiki/File:Colchuck_Lake_(11_October_2024)_10.jpg'],
-    ['Buidhe', 'https://commons.wikimedia.org/wiki/User:Buidhe'],
-    ['CC BY-SA 4.0', 'https://creativecommons.org/licenses/by-sa/4.0/'],
-  ] as const
-
-  for (const [name, href] of links) {
-    const link = credit.getByRole('link', { name, exact: true })
-    await expect(link).toHaveAttribute('href', href)
-    await expect(link).toHaveAttribute('target', '_blank')
-    await expect(link).toHaveAttribute('rel', 'noopener noreferrer')
-  }
+  await expect(credit).toHaveText('Backdrop: Pacific Northwest dither illustration')
+  await expect(credit.locator('a')).toHaveCount(0)
 
   await page.goto('/ai-agents-changed-how-i-build-things')
   await expect(page.locator('.reading-status')).toBeVisible()
