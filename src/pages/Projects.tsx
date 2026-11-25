@@ -89,11 +89,19 @@ const repositoryProjects: Project[] = [
     cta: 'Visit site',
   },
   {
-    name: 'MgGraphIndex',
-    href: 'https://jorgeasaurus.github.io/MgGraphIndex/',
+    name: 'PSIndex',
+    href: 'https://psindex.vercel.app',
     description:
-      'Searchable static index for Microsoft Graph PowerShell cmdlets, refreshed by GitHub Actions.',
-    tags: ['Graph', 'PowerShell', 'Reference'],
+      'Searchable reference for Microsoft Graph, Azure, Entra, Exchange, Teams, SharePoint, and MECM PowerShell cmdlets, with an MCP endpoint.',
+    tags: ['PowerShell', 'Reference', 'MCP'],
+    cta: 'Visit site',
+  },
+  {
+    name: 'ErrorIndex',
+    href: 'https://jorgeasaurus.github.io/errorindex/',
+    description:
+      'Searchable static reference for error codes across Entra ID, Microsoft Graph, Intune, SCCM, Exchange, Windows Installer, and Windows Update.',
+    tags: ['Errors', 'Windows', 'Reference'],
     cta: 'Visit site',
   },
   {
